@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Modo Aleatorio</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .aleat-icon {
+      font-size: 7rem;
+      line-height: 1;
+      animation: flotar 2.8s ease-in-out infinite;
+      display: block;
+      text-align: center;
+    }
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0);    }
+      50%       { transform: translateY(-12px); }
+    }
+    .aleat-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--gray-900, #111827);
+      text-align: center;
+      margin: 12px 0 4px;
+    }
+    .aleat-subtitle {
+      font-size: 1rem;
+      color: var(--gray-500, #6b7280);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .aleat-subtitle span {
+      display: inline-block;
+      opacity: 0;
+      animation: aparecer .4s forwards;
+    }
+    @keyframes aparecer { to { opacity: 1; } }
+
+    .aleat-rules {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+    .aleat-rule {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      border-radius: 16px;
+      padding: 14px 18px;
+      opacity: 0;
+      transform: translateX(-24px);
+      animation: slidein .4s forwards;
+    }
+    .aleat-rule:nth-child(1) { animation-delay: .3s; }
+    .aleat-rule:nth-child(2) { animation-delay: .75s; }
+    .aleat-rule:nth-child(3) { animation-delay: 1.2s; }
+    @keyframes slidein { to { opacity: 1; transform: translateX(0); } }
+
+    .aleat-rule__icon { font-size: 1.9rem; flex-shrink: 0; }
+    .aleat-rule__text {
+      font-size: .93rem;
+      font-weight: 600;
+      color: #1c1917;
+      line-height: 1.3;
+    }
+    .aleat-rule__text span {
+      display: block;
+      font-weight: 400;
+      color: #78716c;
+      font-size: .83rem;
+      margin-top: 2px;
+    }
+    .libre-intro__main {
+      justify-content: center;
+      gap: 0;
+      padding: 28px 24px 0;
+    }
+  </style>
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <button class="libre-back" id="introBackBtn" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Aleatorio</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main class="libre-intro__main">
+    <span class="aleat-icon">🎲</span>
+    <h2 class="aleat-title">Aleatorio</h2>
+    <p class="aleat-subtitle" id="aleatSubtitulo">Pon a prueba todo lo que sabes</p>
+
+    <div class="aleat-rules">
+      <div class="aleat-rule">
+        <span class="aleat-rule__icon">🎲</span>
+        <div class="aleat-rule__text">
+          Preguntas al azar
+          <span>De todas las materias, sin orden ni límite</span>
+        </div>
+      </div>
+      <div class="aleat-rule">
+        <span class="aleat-rule__icon">🏁</span>
+        <div class="aleat-rule__text">
+          Sin límite de tiempo
+          <span>Juega hasta cuando quieras y para cuando decidas</span>
+        </div>
+      </div>
+      <div class="aleat-rule">
+        <span class="aleat-rule__icon">📊</span>
+        <div class="aleat-rule__text">
+          Ve tus resultados
+          <span>Al terminar verás cuántas acertaste</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="libre-footer">
+    <button class="libre-cta" id="btnJugar">¡Empezar!</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('access_token');
+    if (!token) location.href = '/';
+
+    const sfxHover = new Audio('/static/bloop.mp3');
+    const sfxClick = new Audio('/static/lib_audio.mp3');
+    const sfxBack  = new Audio('/static/back.mp3');
+    sfxHover.volume = 0.5;
+    sfxClick.volume = 0.8;
+    sfxBack.volume  = 0.8;
+
+    // Subtítulo letra a letra
+    const sub   = document.getElementById('aleatSubtitulo');
+    const texto = sub.textContent;
+    sub.textContent = '';
+    [...texto].forEach((char, i) => {
+      const sp = document.createElement('span');
+      sp.textContent = char === ' ' ? '\u00A0' : char;
+      sp.style.animationDelay = `${i * 0.04}s`;
+      sub.appendChild(sp);
+    });
+
+    document.getElementById('introBackBtn').addEventListener('click', () => {
+      sfxBack.currentTime = 0;
+      sfxBack.onended = () => history.back();
+      sfxBack.play().catch(() => history.back());
+      setTimeout(() => history.back(), 600);
+    });
+
+    const btnJugar = document.getElementById('btnJugar');
+    btnJugar.addEventListener('mouseenter', () => {
+      sfxHover.currentTime = 0;
+      sfxHover.play().catch(() => {});
+    });
+    btnJugar.addEventListener('click', () => {
+      sfxClick.currentTime = 0;
+      sfxClick.onended = () => location.href = 'aleatorio.html';
+      sfxClick.play().catch(() => location.href = 'aleatorio.html');
+      setTimeout(() => location.href = 'aleatorio.html', 1200);
+    });
+  </script>
+</body>
+</html>

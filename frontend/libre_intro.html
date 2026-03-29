@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Modo Libre</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header class="libre-header">
+    <button class="libre-back" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Libre</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <!-- ── Contenido principal ─────────────────────────────── -->
+  <main class="libre-intro__main">
+    <div class="libre-intro__icon">
+      <img src="/static/img/nube_libre.png" alt="Modo Libre" />
+    </div>
+    <h2 class="libre-intro__title">Libre</h2>
+    <p class="libre-intro__subtitle">(Escoge el tema que más te guste)</p>
+  </main>
+
+  <!-- ── Botón inferior ──────────────────────────────────── -->
+  <div class="libre-footer">
+    <button class="libre-cta" id="btnElegirTema">
+      Elegir tema
+    </button>
+  </div>
+
+  <script src="/static/js/libre.js"></script>
+  <script>
+    // ── Letras una a una ──────────────────────────────────────
+    const subtitulo = document.querySelector('.libre-intro__subtitle');
+    const texto = subtitulo.textContent;
+    subtitulo.textContent = '';
+
+    [...texto].forEach((char, i) => {
+      const span = document.createElement('span');
+      span.textContent = char === ' ' ? '\u00A0' : char;
+      span.style.animationDelay = `${i * 0.04}s`;
+      subtitulo.appendChild(span);
+    });
+
+    const duracionTotal = texto.length * 0.04 + 0.2;
+    setTimeout(() => subtitulo.classList.add('pulsa'), duracionTotal * 1000);
+
+    // ── Sonidos ───────────────────────────────────────────────
+    const sfxHover = new Audio('/static/bip.mp3');
+    const sfxClick = new Audio('/static/lib_audio.mp3');
+    sfxHover.volume = 0.4;
+    sfxClick.volume = 0.8;
+
+    const btnElegir = document.getElementById('btnElegirTema');
+
+    btnElegir.addEventListener('mouseenter', () => {
+      sfxHover.currentTime = 0;
+      sfxHover.play().catch(() => {});
+    });
+
+    btnElegir.addEventListener('click', () => {
+      sfxClick.currentTime = 0;
+      sfxClick.play().catch(() => {});
+      // Navegar cuando termine el audio (o máximo 1.2s)
+      sfxClick.onended = () => location.href = 'libre_temas.html';
+      setTimeout(() => location.href = 'libre_temas.html', 1200);
+    });
+  </script>
+</body>
+</html>

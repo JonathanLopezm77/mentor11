@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+import uvicorn
 
 from app.core.config import settings
 from app.api.v1.endpoints import auth, juego, admin, perfil
@@ -91,3 +92,8 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     print("[STOP] Servidor detenido correctamente")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

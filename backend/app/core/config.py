@@ -3,6 +3,7 @@ app/core/config.py
 Configuración central del proyecto. Lee variables desde .env automáticamente.
 """
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -15,7 +16,24 @@ class Settings(BaseSettings):
 
     # ── Base de datos ─────────────────────────────────
     DATABASE_URL: str
-    DATABASE_URL_SYNC: str
+    DATABASE_URL_SYNC: str = ""
+
+    # Railway provee DATABASE_URL como postgresql://, lo convertimos al driver correcto
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_async_url(cls, v: str) -> str:
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("DATABASE_URL_SYNC", mode="before")
+    @classmethod
+    def fix_sync_url(cls, v: str) -> str:
+        if not v:
+            return ""
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return v
 
     # ── Seguridad / JWT ───────────────────────────────
     SECRET_KEY: str

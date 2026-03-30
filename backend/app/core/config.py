@@ -18,12 +18,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATABASE_URL_SYNC: str = ""
 
-    # Railway provee DATABASE_URL como postgresql://, lo convertimos al driver correcto
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def fix_async_url(cls, v: str) -> str:
-        if v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         return v
 
     @field_validator("DATABASE_URL_SYNC", mode="before")
@@ -31,9 +30,19 @@ class Settings(BaseSettings):
     def fix_sync_url(cls, v: str) -> str:
         if not v:
             return ""
-        if v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        v = v.replace("postgresql://", "postgresql+psycopg2://", 1)
+        v = v.replace("postgres://", "postgresql+psycopg2://", 1)
         return v
+
+    def get_sync_url(self) -> str:
+        """Devuelve DATABASE_URL_SYNC, o lo deriva de DATABASE_URL si está vacío."""
+        if self.DATABASE_URL_SYNC:
+            return self.DATABASE_URL_SYNC
+        return (
+            self.DATABASE_URL
+            .replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+            .replace("postgres+asyncpg://", "postgresql+psycopg2://")
+        )
 
     # ── Seguridad / JWT ───────────────────────────────
     SECRET_KEY: str

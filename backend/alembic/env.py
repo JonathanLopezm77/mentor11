@@ -18,7 +18,7 @@ import app.models  # noqa: F401 — importa todos los modelos para que Alembic l
 config = context.config
 
 # Inyectar la URL sync desde nuestro .env
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL_SYNC)
+config.set_main_option("sqlalchemy.url", settings.get_sync_url())
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -42,7 +42,7 @@ def run_migrations_offline() -> None:
 # ── Modo online (conecta a la BD y aplica cambios) ───────────────────────────
 def run_migrations_online() -> None:
     connectable = engine_from_config(
-        {"sqlalchemy.url": settings.DATABASE_URL_SYNC},
+        {"sqlalchemy.url": settings.get_sync_url()},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

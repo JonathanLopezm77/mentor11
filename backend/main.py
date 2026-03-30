@@ -62,8 +62,8 @@ async def health_check():
 
 
 # ─── Frontend estático ────────────────────────────────────────────────────────
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
-print(f"[FRONTEND] Buscando en: {os.path.abspath(FRONTEND_DIR)} — existe: {os.path.exists(FRONTEND_DIR)}")
+FRONTEND_DIR = os.environ.get("FRONTEND_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend"))
+print(f"[FRONTEND] Ruta: {os.path.abspath(FRONTEND_DIR)} | Existe: {os.path.exists(FRONTEND_DIR)}")
 
 if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")

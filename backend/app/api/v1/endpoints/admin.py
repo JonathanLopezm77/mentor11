@@ -3,19 +3,26 @@ app/api/v1/endpoints/admin.py
 Endpoints del panel de administración.
 Solo accesibles con rol admin_tech.
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin, get_db
 from app.models.usuario import Usuario
 from app.schemas.admin import (
-    PreguntaCrear, PreguntaEditar,
-    PreguntaDetalle, PaginacionRespuesta,
+    PreguntaCrear,
+    PreguntaEditar,
+    PreguntaDetalle,
+    PaginacionRespuesta,
     ResultadoCargaMasiva,
 )
 from app.services.admin_service import (
-    crear_pregunta, listar_preguntas, obtener_pregunta,
-    editar_pregunta, eliminar_pregunta, cargar_preguntas_csv,
+    crear_pregunta,
+    listar_preguntas,
+    obtener_pregunta,
+    editar_pregunta,
+    eliminar_pregunta,
+    cargar_preguntas_csv,
     AdminError,
 )
 
@@ -23,6 +30,7 @@ router = APIRouter()
 
 
 # ─── Listar preguntas ─────────────────────────────────────────────────────────
+
 
 @router.get("/preguntas", response_model=PaginacionRespuesta)
 async def listar(
@@ -40,6 +48,7 @@ async def listar(
 
 # ─── Descargar plantilla CSV ──────────────────────────────────────────────────
 
+
 @router.get("/preguntas/plantilla")
 async def descargar_plantilla(
     admin: Usuario = Depends(get_admin),
@@ -50,12 +59,12 @@ async def descargar_plantilla(
     from fastapi.responses import Response
 
     plantilla = (
-        "materia_codigo,enunciado,nivel,opcion_a,opcion_b,opcion_c,opcion_d,correcta,explicacion,pista\n"
-        "MAT,¿Cuánto es 2 + 2?,facil,3,4,5,6,B,La suma de 2 + 2 es 4,Piensa en contar con los dedos\n"
-        "LC,¿Qué figura retórica es 'el tiempo es oro'?,medio,Metáfora,Hipérbole,Símil,Paradoja,A,"
-        "Una metáfora compara sin usar 'como',Piensa en comparaciones directas\n"
-        "ING,Choose the correct verb: She ___ to school,facil,go,goes,going,gone,B,"
-        "Third person singular uses -s,Think about he/she/it\n"
+        "materia_codigo;enunciado;nivel;opcion_a;opcion_b;opcion_c;opcion_d;correcta;explicacion;pista\n"
+        "MAT;¿Cuánto es 2 + 2?;facil;3;4;5;6;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos\n"
+        "LC;¿Qué figura retórica es 'el tiempo es oro'?;medio;Metáfora;Hipérbole;Símil;Paradoja;A;"
+        "Una metáfora compara sin usar 'como';Piensa en comparaciones directas\n"
+        "ING;Choose the correct verb: She ___ to school;facil;go;goes;going;gone;B;"
+        "Third person singular uses -s;Think about he/she/it\n"
     )
 
     return Response(
@@ -64,7 +73,9 @@ async def descargar_plantilla(
         headers={"Content-Disposition": "attachment; filename=plantilla_preguntas.csv"},
     )
 
+
 # ─── Ver detalle de una pregunta ──────────────────────────────────────────────
+
 
 @router.get("/preguntas/{pregunta_id}", response_model=PreguntaDetalle)
 async def ver_pregunta(
@@ -80,6 +91,7 @@ async def ver_pregunta(
 
 
 # ─── Crear pregunta individual ────────────────────────────────────────────────
+
 
 @router.post("/preguntas", response_model=PreguntaDetalle, status_code=201)
 async def crear(
@@ -98,6 +110,7 @@ async def crear(
 
 
 # ─── Editar pregunta ──────────────────────────────────────────────────────────
+
 
 @router.put("/preguntas/{pregunta_id}", response_model=PreguntaDetalle)
 async def editar(
@@ -118,6 +131,7 @@ async def editar(
 
 # ─── Eliminar pregunta ────────────────────────────────────────────────────────
 
+
 @router.delete("/preguntas/{pregunta_id}")
 async def eliminar(
     pregunta_id: int,
@@ -132,6 +146,7 @@ async def eliminar(
 
 
 # ─── Carga masiva desde CSV/Excel ─────────────────────────────────────────────
+
 
 @router.post("/preguntas/carga-masiva", response_model=ResultadoCargaMasiva)
 async def carga_masiva(
@@ -164,10 +179,12 @@ async def carga_masiva(
         raise HTTPException(status_code=400, detail="El archivo está vacío")
 
     try:
-        resultado = await cargar_preguntas_csv(db, admin.id, contenido, archivo.filename)
+        resultado = await cargar_preguntas_csv(
+            db, admin.id, contenido, archivo.filename
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando el archivo: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error procesando el archivo: {str(e)}"
+        )
 
     return resultado
-
-

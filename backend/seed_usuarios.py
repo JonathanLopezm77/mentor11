@@ -4,6 +4,7 @@ Inserta únicamente los usuarios de prueba en la BD.
 Ejecutar desde la carpeta backend:
     python seed_usuarios.py
 """
+
 import asyncio
 
 from app.core.security import hash_password
@@ -52,15 +53,6 @@ async def main():
                 ),
             ]
             session.add_all(usuarios)
-            await session.flush()
-
-            avatares = [
-                Avatar(usuario_id=usuarios[0].id, animal_base="tigre",  color_primario="#FF6B00"),
-                Avatar(usuario_id=usuarios[1].id, animal_base="aguila", color_primario="#2A5FD4"),
-                Avatar(usuario_id=usuarios[2].id, animal_base="zorro",  color_primario="#27AE60"),
-            ]
-            session.add_all(avatares)
-
             await session.commit()
 
             print("✅ Usuarios creados exitosamente\n")

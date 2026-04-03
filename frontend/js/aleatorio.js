@@ -5,44 +5,44 @@
  */
 
 const API_BASE = '/api/v1';
-const token    = localStorage.getItem('access_token');
+const token = localStorage.getItem('access_token');
 
 if (!token) location.href = '/';
 
 // ── Sonidos ───────────────────────────────────────────────
 const SFX = {};
 [
-  ['/static/correcta.mp3',    0.8],
-  ['/static/error.mp3',       0.8],
-  ['/static/back.mp3',        0.7],
-  ['/static/bop.mp3',         0.8],
-  ['/static/bloop.mp3',       0.7],
-  ['/static/sig_pregun.mp3',  0.7],
+  ['/static/correcta.mp3', 0.8],
+  ['/static/error.mp3', 0.8],
+  ['/static/back.mp3', 0.7],
+  ['/static/bop.mp3', 0.8],
+  ['/static/bloop.mp3', 0.7],
+  ['/static/sig_pregun.mp3', 0.7],
   ['/static/arcade_stat.mp3', 0.6],
 ].forEach(([src, vol]) => {
   const a = new Audio(src);
   a.preload = 'auto';
-  a.volume  = vol;
-  SFX[src]  = a;
+  a.volume = vol;
+  SFX[src] = a;
 });
 
 const playSfx = (src) => {
   const a = SFX[src]?.cloneNode();
   if (!a) return;
   a.volume = SFX[src].volume;
-  a.play().catch(() => {});
+  a.play().catch(() => { });
 };
 
 // ── Estado ────────────────────────────────────────────────
-let sesionId    = null;
-let materiaIds  = [];
-let preguntas   = [];
-let actual      = 0;
-let correctas   = 0;
+let sesionId = null;
+let materiaIds = [];
+let preguntas = [];
+let actual = 0;
+let correctas = 0;
 let incorrectas = 0;
-let vistasIds   = new Set();
+let vistasIds = new Set();
 let cargandoMas = false;
-let respondida  = false;
+let respondida = false;
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
@@ -63,8 +63,8 @@ async function init() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        modo_juego:      'libre',
-        materia_ids:     materiaIds,
+        modo_juego: 'aleatorio',
+        materia_ids: materiaIds,
         total_preguntas: 999,
       }),
     });
@@ -104,13 +104,13 @@ async function cargarMasPreguntas() {
         vistasIds.add(p.id);
       }
     }
-  } catch (_) {}
+  } catch (_) { }
   cargandoMas = false;
 }
 
 // ── Actualizar marcador en header ─────────────────────────
 function actualizarScore() {
-  document.getElementById('scoreOk').textContent   = `✓ ${correctas}`;
+  document.getElementById('scoreOk').textContent = `✓ ${correctas}`;
   document.getElementById('scoreFail').textContent = `✗ ${incorrectas}`;
   const total = correctas + incorrectas;
   document.getElementById('progresoBarra').style.width =
@@ -149,7 +149,7 @@ function mostrarPregunta() {
   });
 
   document.getElementById('siguienteBtn').hidden = true;
-  document.getElementById('explicacion').hidden  = true;
+  document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
 }
 
@@ -174,7 +174,7 @@ async function responder(opcionId, preguntaId) {
     // Colorear botones
     document.querySelectorAll('.opcion-btn').forEach(btn => {
       const id = Number(btn.dataset.id);
-      if (id === data.opcion_correcta_id)            btn.classList.add('opcion-btn--correcta');
+      if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
       else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
     });
 
@@ -214,12 +214,12 @@ async function finalizarSesion() {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-  } catch (_) {}
+  } catch (_) { }
 
   const puntosAntes = JSON.parse(localStorage.getItem('usuario') ?? '{}')?.puntos_totales ?? 0;
 
   sessionStorage.setItem('resultado_aleatorio', JSON.stringify({
-    total:       correctas + incorrectas,
+    total: correctas + incorrectas,
     correctas,
     incorrectas,
     puntosAntes,

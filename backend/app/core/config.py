@@ -2,6 +2,7 @@
 app/core/config.py
 Configuración central del proyecto. Lee variables desde .env automáticamente.
 """
+
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 
@@ -38,11 +39,9 @@ class Settings(BaseSettings):
         """Devuelve DATABASE_URL_SYNC, o lo deriva de DATABASE_URL si está vacío."""
         if self.DATABASE_URL_SYNC:
             return self.DATABASE_URL_SYNC
-        return (
-            self.DATABASE_URL
-            .replace("postgresql+asyncpg://", "postgresql+psycopg2://")
-            .replace("postgres+asyncpg://", "postgresql+psycopg2://")
-        )
+        return self.DATABASE_URL.replace(
+            "postgresql+asyncpg://", "postgresql+psycopg2://"
+        ).replace("postgres+asyncpg://", "postgresql+psycopg2://")
 
     # ── Seguridad / JWT ───────────────────────────────
     SECRET_KEY: str
@@ -54,11 +53,9 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
 
     # ── Email ─────────────────────────────────────────
-    SMTP_HOST: str = ""
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    EMAIL_FROM: str = "noreply@mentor11.com"
+    GMAIL_USER: str = ""
+    GMAIL_PASSWORD: str = ""
+    EMAIL_FROM: str = "elmentor11@gmail.com"
 
     # ── IA (Premium) ──────────────────────────────────
     OPENAI_API_KEY: str = ""

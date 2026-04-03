@@ -3,13 +3,21 @@ app/services/admin_service.py
 Lógica de negocio para el panel de administración de contenido.
 CRUD completo de preguntas + carga masiva desde CSV/Excel.
 """
+
 import io
 import csv
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.contenido import Materia, Pregunta, Respuesta, Pista, NivelDificultad, TipoPregunta
+from app.models.contenido import (
+    Materia,
+    Pregunta,
+    Respuesta,
+    Pista,
+    NivelDificultad,
+    TipoPregunta,
+)
 from app.schemas.admin import PreguntaCrear, PreguntaEditar
 
 
@@ -20,6 +28,7 @@ class AdminError(Exception):
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _formatear_pregunta(p: Pregunta) -> dict:
     letras = ["A", "B", "C", "D"]
@@ -36,7 +45,12 @@ def _formatear_pregunta(p: Pregunta) -> dict:
         "veces_respondida": p.veces_respondida,
         "veces_incorrecta": p.veces_incorrecta,
         "opciones": [
-            {"id": o.id, "letra": letras[i], "texto": o.texto, "es_correcta": o.es_correcta}
+            {
+                "id": o.id,
+                "letra": letras[i],
+                "texto": o.texto,
+                "es_correcta": o.es_correcta,
+            }
             for i, o in enumerate(p.respuestas)
         ],
         "pista": p.pistas[0].texto_pista if p.pistas else None,
@@ -57,6 +71,7 @@ async def _cargar_pregunta_completa(db: AsyncSession, pregunta_id: int) -> Pregu
 
 
 # ─── Crear pregunta individual ────────────────────────────────────────────────
+
 
 async def crear_pregunta(
     db: AsyncSession,
@@ -80,11 +95,13 @@ async def crear_pregunta(
     await db.flush()
 
     for opcion_datos in datos.opciones:
-        db.add(Respuesta(
-            pregunta_id=pregunta.id,
-            texto=opcion_datos.texto,
-            es_correcta=opcion_datos.es_correcta,
-        ))
+        db.add(
+            Respuesta(
+                pregunta_id=pregunta.id,
+                texto=opcion_datos.texto,
+                es_correcta=opcion_datos.es_correcta,
+            )
+        )
 
     if datos.pista:
         db.add(Pista(pregunta_id=pregunta.id, texto_pista=datos.pista, orden=1))
@@ -95,6 +112,7 @@ async def crear_pregunta(
 
 
 # ─── Listar preguntas ─────────────────────────────────────────────────────────
+
 
 async def listar_preguntas(
     db: AsyncSession,
@@ -116,9 +134,13 @@ async def listar_preguntas(
     if activa is not None:
         query = query.where(Pregunta.esta_activa == activa)
 
-    total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar()
+    total = (
+        await db.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar()
     offset = (pagina - 1) * por_pagina
-    resultado = await db.execute(query.order_by(Pregunta.id.desc()).offset(offset).limit(por_pagina))
+    resultado = await db.execute(
+        query.order_by(Pregunta.id.desc()).offset(offset).limit(por_pagina)
+    )
     preguntas = resultado.scalars().all()
 
     return {
@@ -129,7 +151,9 @@ async def listar_preguntas(
             {
                 "id": p.id,
                 "materia_nombre": p.materia.nombre if p.materia else "—",
-                "enunciado": p.enunciado[:100] + "..." if len(p.enunciado) > 100 else p.enunciado,
+                "enunciado": (
+                    p.enunciado[:100] + "..." if len(p.enunciado) > 100 else p.enunciado
+                ),
                 "nivel_dificultad": p.nivel_dificultad,
                 "tipo": p.tipo,
                 "esta_activa": p.esta_activa,
@@ -142,6 +166,7 @@ async def listar_preguntas(
 
 # ─── Obtener pregunta por ID ──────────────────────────────────────────────────
 
+
 async def obtener_pregunta(db: AsyncSession, pregunta_id: int) -> dict:
     p = await _cargar_pregunta_completa(db, pregunta_id)
     if not p:
@@ -151,7 +176,10 @@ async def obtener_pregunta(db: AsyncSession, pregunta_id: int) -> dict:
 
 # ─── Editar pregunta ──────────────────────────────────────────────────────────
 
-async def editar_pregunta(db: AsyncSession, pregunta_id: int, datos: PreguntaEditar) -> dict:
+
+async def editar_pregunta(
+    db: AsyncSession, pregunta_id: int, datos: PreguntaEditar
+) -> dict:
     p = await _cargar_pregunta_completa(db, pregunta_id)
     if not p:
         raise AdminError("Pregunta no encontrada", 404)
@@ -174,11 +202,13 @@ async def editar_pregunta(db: AsyncSession, pregunta_id: int, datos: PreguntaEdi
             await db.delete(opcion)
         await db.flush()
         for opcion_datos in datos.opciones:
-            db.add(Respuesta(
-                pregunta_id=p.id,
-                texto=opcion_datos.texto,
-                es_correcta=opcion_datos.es_correcta,
-            ))
+            db.add(
+                Respuesta(
+                    pregunta_id=p.id,
+                    texto=opcion_datos.texto,
+                    es_correcta=opcion_datos.es_correcta,
+                )
+            )
 
     if datos.pista is not None:
         for pista in list(p.pistas):
@@ -194,6 +224,7 @@ async def editar_pregunta(db: AsyncSession, pregunta_id: int, datos: PreguntaEdi
 
 # ─── Eliminar pregunta ────────────────────────────────────────────────────────
 
+
 async def eliminar_pregunta(db: AsyncSession, pregunta_id: int) -> dict:
     p = await _cargar_pregunta_completa(db, pregunta_id)
     if not p:
@@ -205,6 +236,7 @@ async def eliminar_pregunta(db: AsyncSession, pregunta_id: int) -> dict:
 
 # ─── Carga masiva desde CSV/Excel ─────────────────────────────────────────────
 
+
 async def cargar_preguntas_csv(
     db: AsyncSession,
     admin_id: int,
@@ -214,14 +246,7 @@ async def cargar_preguntas_csv(
     """
     Procesa un archivo CSV o Excel con preguntas y las inserta en la BD.
     Omite preguntas duplicadas (mismo enunciado + misma materia).
-
-    Formato esperado (con encabezados):
-    materia_codigo | enunciado | nivel | opcion_a | opcion_b | opcion_c | opcion_d | correcta | explicacion | pista
-
-    - materia_codigo: LC, MAT, SOC, CN, ING
-    - nivel: facil, medio, dificil
-    - correcta: A, B, C o D
-    - explicacion y pista: opcionales
+    Soporta CSV con separador coma o punto y coma, y múltiples encodings.
     """
     errores = []
     exitosas = 0
@@ -229,11 +254,12 @@ async def cargar_preguntas_csv(
     resultado = await db.execute(select(Materia))
     materias = {m.codigo_icfes: m.id for m in resultado.scalars().all()}
 
-    es_excel = nombre_archivo.lower().endswith(('.xlsx', '.xls'))
+    es_excel = nombre_archivo.lower().endswith((".xlsx", ".xls"))
 
     if es_excel:
         try:
             import openpyxl
+
             wb = openpyxl.load_workbook(io.BytesIO(contenido))
             ws = wb.active
             filas = []
@@ -243,52 +269,96 @@ async def cargar_preguntas_csv(
                     headers = [str(c).strip().lower() if c else "" for c in row]
                 else:
                     if any(c is not None for c in row):
-                        filas.append(dict(zip(headers, [str(c).strip() if c is not None else "" for c in row])))
+                        filas.append(
+                            dict(
+                                zip(
+                                    headers,
+                                    [
+                                        str(c).strip() if c is not None else ""
+                                        for c in row
+                                    ],
+                                )
+                            )
+                        )
         except ImportError:
             return {
                 "total_procesadas": 0,
                 "total_exitosas": 0,
                 "total_fallidas": 0,
-                "errores": ["Para procesar archivos Excel instala: pip install openpyxl"],
+                "errores": [
+                    "Para procesar archivos Excel instala: pip install openpyxl"
+                ],
             }
     else:
-        texto = contenido.decode("utf-8-sig")
-        reader = csv.DictReader(io.StringIO(texto))
+        # Intentar múltiples encodings
+        texto = None
+        for encoding in ("utf-8-sig", "utf-8", "latin-1", "cp1252"):
+            try:
+                texto = contenido.decode(encoding)
+                break
+            except (UnicodeDecodeError, ValueError):
+                continue
+
+        if texto is None:
+            raise AdminError(
+                "No se pudo leer el archivo. Guárdalo como CSV UTF-8 desde Excel."
+            )
+
+        # Detectar delimitador automáticamente (coma o punto y coma)
+        muestra = texto[:2048]
+        delimitador = ";" if muestra.count(";") > muestra.count(",") else ","
+
+        reader = csv.DictReader(io.StringIO(texto), delimiter=delimitador)
         filas = [
-            {k.strip().lower(): v.strip() for k, v in fila.items()}
-            for fila in reader
+            {k.strip().lower(): v.strip() for k, v in fila.items()} for fila in reader
         ]
 
     total = len(filas)
 
+    if total == 0:
+        return {
+            "total_procesadas": 0,
+            "total_exitosas": 0,
+            "total_fallidas": 0,
+            "errores": [
+                "El archivo no contiene filas de datos. Verifica que tenga encabezados y preguntas."
+            ],
+        }
+
     for i, fila in enumerate(filas, start=2):
         fila_num = f"Fila {i}"
         try:
-            codigo      = fila.get("materia_codigo", "").upper()
-            enunciado   = fila.get("enunciado", "").strip()
-            nivel_str   = fila.get("nivel", "medio").strip().lower()
-            opcion_a    = fila.get("opcion_a", "").strip()
-            opcion_b    = fila.get("opcion_b", "").strip()
-            opcion_c    = fila.get("opcion_c", "").strip()
-            opcion_d    = fila.get("opcion_d", "").strip()
-            correcta    = fila.get("correcta", "").strip().upper()
+            codigo = fila.get("materia_codigo", "").upper()
+            enunciado = fila.get("enunciado", "").strip()
+            nivel_str = fila.get("nivel", "medio").strip().lower()
+            opcion_a = fila.get("opcion_a", "").strip()
+            opcion_b = fila.get("opcion_b", "").strip()
+            opcion_c = fila.get("opcion_c", "").strip()
+            opcion_d = fila.get("opcion_d", "").strip()
+            correcta = fila.get("correcta", "").strip().upper()
             explicacion = fila.get("explicacion", "").strip() or None
-            pista       = fila.get("pista", "").strip() or None
+            pista = fila.get("pista", "").strip() or None
 
             if not enunciado:
                 errores.append(f"{fila_num}: enunciado vacío")
                 continue
             if codigo not in materias:
-                errores.append(f"{fila_num}: materia_codigo '{codigo}' no válido. Usar: {list(materias.keys())}")
+                errores.append(
+                    f"{fila_num}: materia_codigo '{codigo}' no válido. Usar: {list(materias.keys())}"
+                )
                 continue
             if nivel_str not in ("facil", "medio", "dificil"):
-                errores.append(f"{fila_num}: nivel '{nivel_str}' no válido. Usar: facil, medio, dificil")
+                errores.append(
+                    f"{fila_num}: nivel '{nivel_str}' no válido. Usar: facil, medio, dificil"
+                )
                 continue
             if not opcion_a or not opcion_b:
                 errores.append(f"{fila_num}: se requieren al menos opcion_a y opcion_b")
                 continue
             if correcta not in ("A", "B", "C", "D"):
-                errores.append(f"{fila_num}: correcta '{correcta}' no válido. Usar: A, B, C o D")
+                errores.append(
+                    f"{fila_num}: correcta '{correcta}' no válido. Usar: A, B, C o D"
+                )
                 continue
 
             existente = await db.execute(
@@ -298,7 +368,9 @@ async def cargar_preguntas_csv(
                 )
             )
             if existente.scalar_one_or_none():
-                errores.append(f"{fila_num}: omitida — ya existe una pregunta con ese enunciado en esa materia")
+                errores.append(
+                    f"{fila_num}: omitida — ya existe una pregunta con ese enunciado en esa materia"
+                )
                 continue
 
             nivel_enum = NivelDificultad(nivel_str)
@@ -313,14 +385,21 @@ async def cargar_preguntas_csv(
             db.add(pregunta)
             await db.flush()
 
-            opciones_texto = {"A": opcion_a, "B": opcion_b, "C": opcion_c, "D": opcion_d}
-            for letra, texto in opciones_texto.items():
-                if texto:
-                    db.add(Respuesta(
-                        pregunta_id=pregunta.id,
-                        texto=texto,
-                        es_correcta=(letra == correcta),
-                    ))
+            opciones_texto = {
+                "A": opcion_a,
+                "B": opcion_b,
+                "C": opcion_c,
+                "D": opcion_d,
+            }
+            for letra, texto_op in opciones_texto.items():
+                if texto_op:
+                    db.add(
+                        Respuesta(
+                            pregunta_id=pregunta.id,
+                            texto=texto_op,
+                            es_correcta=(letra == correcta),
+                        )
+                    )
 
             if pista:
                 db.add(Pista(pregunta_id=pregunta.id, texto_pista=pista, orden=1))

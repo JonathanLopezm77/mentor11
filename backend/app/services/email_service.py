@@ -15,7 +15,7 @@ def enviar_correo_recuperacion(email_destino: str, token: str, username: str) ->
     Envía el correo de recuperación de contraseña con el token.
     Retorna True si se envió correctamente, False si hubo error.
     """
-    enlace = f"http://localhost:8000/resetear_password.html?token={token}"
+    enlace = f"https://mentor11-production.up.railway.app/resetear_password.html?token={token}"
 
     html = f"""
     <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">

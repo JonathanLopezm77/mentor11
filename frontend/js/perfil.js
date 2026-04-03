@@ -3,7 +3,7 @@
  * Agregar al final de dashboard_estudiante.js o en un <script> separado
  */
 
-const API_BASE_PERFIL = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 const perfilOverlay = document.getElementById('perfilOverlay');
 const perfilClose = document.getElementById('perfilClose');
 

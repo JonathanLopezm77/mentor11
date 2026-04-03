@@ -3,18 +3,18 @@
  * Conecta con POST /api/v1/auth/login del backend FastAPI.
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 // ── Elementos del DOM ────────────────────────────────────────
-const form         = document.getElementById('loginForm');
+const form = document.getElementById('loginForm');
 const identifierEl = document.getElementById('identifier');
-const passwordEl   = document.getElementById('password');
-const toggleBtn    = document.getElementById('togglePassword');
-const eyeIcon      = document.getElementById('eyeIcon');
-const submitBtn    = document.getElementById('submitBtn');
-const btnText      = submitBtn.querySelector('.btn__text');
-const btnSpinner   = submitBtn.querySelector('.btn__spinner');
-const loginAlert   = document.getElementById('loginAlert');
+const passwordEl = document.getElementById('password');
+const toggleBtn = document.getElementById('togglePassword');
+const eyeIcon = document.getElementById('eyeIcon');
+const submitBtn = document.getElementById('submitBtn');
+const btnText = submitBtn.querySelector('.btn__text');
+const btnSpinner = submitBtn.querySelector('.btn__spinner');
+const loginAlert = document.getElementById('loginAlert');
 const loginAlertMsg = document.getElementById('loginAlertMsg');
 
 // ── Mostrar / ocultar contraseña ─────────────────────────────
@@ -25,17 +25,17 @@ toggleBtn.addEventListener('click', () => {
   // Cambiar ícono ojo abierto / tachado
   eyeIcon.innerHTML = isPassword
     ? /* ojo tachado */
-      `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+    `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
        <line x1="1" y1="1" x2="23" y2="23"/>`
     : /* ojo normal */
-      `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
        <circle cx="12" cy="12" r="3"/>`;
 });
 
 // ── Validación en tiempo real ────────────────────────────────
 identifierEl.addEventListener('input', () => clearFieldError('identifier'));
-passwordEl.addEventListener('input',   () => clearFieldError('password'));
+passwordEl.addEventListener('input', () => clearFieldError('password'));
 
 function clearFieldError(fieldId) {
   const el = document.getElementById(fieldId);
@@ -45,7 +45,7 @@ function clearFieldError(fieldId) {
 }
 
 function showFieldError(fieldId, msg) {
-  const el  = document.getElementById(fieldId);
+  const el = document.getElementById(fieldId);
   const err = document.getElementById(fieldId + 'Error');
   el.classList.add('is-invalid');
   if (err) err.textContent = msg;
@@ -75,8 +75,8 @@ function validate() {
 // ── Estado del botón ─────────────────────────────────────────
 function setLoading(loading) {
   submitBtn.disabled = loading;
-  btnText.hidden     = loading;
-  btnSpinner.hidden  = !loading;
+  btnText.hidden = loading;
+  btnSpinner.hidden = !loading;
 }
 
 function showAlert(msg) {
@@ -135,17 +135,17 @@ form.addEventListener('submit', async (e) => {
     }
 
     // Guardar tokens en localStorage
-    localStorage.setItem('access_token',  data.access_token);
+    localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
-    localStorage.setItem('usuario',       JSON.stringify(data.usuario));
+    localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
     // Mostrar notificación de éxito y redirigir según rol
     showToast(`¡Bienvenido, ${data.usuario.username}!`);
     const destinos = {
-      estudiante:      'dashboard_estudiante.html',
-      profesor:        'dashboard_profesor.html',
+      estudiante: 'dashboard_estudiante.html',
+      profesor: 'dashboard_profesor.html',
       admin_contenido: 'dashboard_admin.html',
-      admin_tech:      'dashboard_admin.html',
+      admin_tech: 'dashboard_admin.html',
     };
     const destino = destinos[data.usuario.rol] ?? 'dashboard_estudiante.html';
     setTimeout(() => { window.location.href = destino; }, 1800);

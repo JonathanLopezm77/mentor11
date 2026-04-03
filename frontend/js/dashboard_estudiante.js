@@ -14,69 +14,69 @@ if (!usuario || !token) {
 // ── Avatar Creator (canvas) ───────────────────────────────
 
 const AVATARES_LIST = [
-  { key: 'buho',     label: 'Búho',     src: '/static/img/avatares/buho_n.png' },
-  { key: 'tiburon',  label: 'Tiburón',  src: '/static/img/avatares/tiburon_n.png' },
-  { key: 'gato',     label: 'Gato',     src: '/static/img/avatares/gato_n.png' },
-  { key: 'mono',     label: 'Mono',     src: '/static/img/avatares/mono_n.png' },
-  { key: 'perro',    label: 'Perro',    src: '/static/img/avatares/perro_n.png' },
-  { key: 'tigre',    label: 'Tigre',    src: '/static/img/avatares/tigre_n.png' },
-  { key: 'ardilla',  label: 'Ardilla',  src: '/static/img/avatares/ardilla_n.png' },
-  { key: 'conejo',   label: 'Conejo',   src: '/static/img/avatares/conejo_n.png' },
-  { key: 'lobo',     label: 'Lobo',     src: '/static/img/avatares/lobo_n.png' },
+  { key: 'buho', label: 'Búho', src: '/static/img/avatares/buho_n.png' },
+  { key: 'tiburon', label: 'Tiburón', src: '/static/img/avatares/tiburon_n.png' },
+  { key: 'gato', label: 'Gato', src: '/static/img/avatares/gato_n.png' },
+  { key: 'mono', label: 'Mono', src: '/static/img/avatares/mono_n.png' },
+  { key: 'perro', label: 'Perro', src: '/static/img/avatares/perro_n.png' },
+  { key: 'tigre', label: 'Tigre', src: '/static/img/avatares/tigre_n.png' },
+  { key: 'ardilla', label: 'Ardilla', src: '/static/img/avatares/ardilla_n.png' },
+  { key: 'conejo', label: 'Conejo', src: '/static/img/avatares/conejo_n.png' },
+  { key: 'lobo', label: 'Lobo', src: '/static/img/avatares/lobo_n.png' },
   { key: 'pinguino', label: 'Pingüino', src: '/static/img/avatares/pinguino_n.png' },
 ];
 
 const SOMBREROS_LIST = [
-  { key: null,              label: 'Sin sombrero', src: null },
-  { key: 'ac_sombruj',     label: 'Bruja',        src: '/static/img/sombreros/ac_sombruj.png' },
-  { key: 'ac_somvaq',      label: 'Vaquero',      src: '/static/img/sombreros/ac_somvaq.png' },
-  { key: 'ac_somfiesta',   label: 'Fiesta',       src: '/static/img/sombreros/ac_somfiesta.png' },
-  { key: 'ac_sommagofan',  label: 'Mago',         src: '/static/img/sombreros/ac_sommagofan.png' },
-  { key: 'ac_sompirata',  label: 'Pirata',       src: '/static/img/sombreros/ac_sompirata.png' },
-  { key: 'ac_somchino',  label: 'Chino',        src: '/static/img/sombreros/ac_somchino.png' },
-  { key: 'ac_sommexi',  label: 'Mexicano',     src: '/static/img/sombreros/ac_sommexi.png' },
-  { key: 'ac_somele',  label: 'Elefante',     src: '/static/img/sombreros/ac_somele.png' },
-  { key: 'ac_somcoro', label: 'Corona',       src: '/static/img/sombreros/ac_somcoro.png' },
-  { key: 'ac_somdrag', label: 'Dragón',       src: '/static/img/sombreros/ac_somdrag.png' },
-  { key: 'ac_somnavi', label: 'Navidad',      src: '/static/img/sombreros/ac_somnavi.png' },
+  { key: null, label: 'Sin sombrero', src: null },
+  { key: 'ac_sombruj', label: 'Bruja', src: '/static/img/sombreros/ac_sombruj.png' },
+  { key: 'ac_somvaq', label: 'Vaquero', src: '/static/img/sombreros/ac_somvaq.png' },
+  { key: 'ac_somfiesta', label: 'Fiesta', src: '/static/img/sombreros/ac_somfiesta.png' },
+  { key: 'ac_sommagofan', label: 'Mago', src: '/static/img/sombreros/ac_sommagofan.png' },
+  { key: 'ac_sompirata', label: 'Pirata', src: '/static/img/sombreros/ac_sompirata.png' },
+  { key: 'ac_somchino', label: 'Chino', src: '/static/img/sombreros/ac_somchino.png' },
+  { key: 'ac_sommexi', label: 'Mexicano', src: '/static/img/sombreros/ac_sommexi.png' },
+  { key: 'ac_somele', label: 'Elefante', src: '/static/img/sombreros/ac_somele.png' },
+  { key: 'ac_somcoro', label: 'Corona', src: '/static/img/sombreros/ac_somcoro.png' },
+  { key: 'ac_somdrag', label: 'Dragón', src: '/static/img/sombreros/ac_somdrag.png' },
+  { key: 'ac_somnavi', label: 'Navidad', src: '/static/img/sombreros/ac_somnavi.png' },
 ];
 
 const GAFAS_LIST = [
-  { key: null,                   label: 'Sin gafas',   src: null },
-  { key: 'ac_gafasfiesta',      label: 'Fiesta',      src: '/static/img/gafas/ac_gafasfiesta.png' },
-  { key: 'ac_gafassol',         label: 'Sol',         src: '/static/img/gafas/ac_gafassol.png' },
-  { key: 'ac_gafasarc',         label: 'Arcoíris',    src: '/static/img/gafas/ac_gafasarc.png' },
-  { key: 'ac_gafasantifiesta',  label: 'Anti-fiesta', src: '/static/img/gafas/ac_gafasantifiesta.png' },
-  { key: 'ac_gafascine',        label: 'Cine',        src: '/static/img/gafas/ac_gafascine.png' },
-  { key: 'ac_gafascora',        label: 'Corazón',     src: '/static/img/gafas/ac_gafascora.png' },
-  { key: 'ac_gafasvisor',       label: 'Visor',       src: '/static/img/gafas/ac_gafasvisor.png' },
-  { key: 'ac_gafaspixeleadas',  label: 'Pixeladas',   src: '/static/img/gafas/ac_gafaspixeleadas.png' },
-  { key: 'ac_gafaspixel',      label: 'Pixel',       src: '/static/img/gafas/ac_gafaspixel.png' },
-  { key: 'ac_gafasojogran',     label: 'Ojo Grande',  src: '/static/img/gafas/ac_gafasojogran.png' },
-  { key: 'ac_gafasdorada',      label: 'Doradas',     src: '/static/img/gafas/ac_gafasdorada.png' },
+  { key: null, label: 'Sin gafas', src: null },
+  { key: 'ac_gafasfiesta', label: 'Fiesta', src: '/static/img/gafas/ac_gafasfiesta.png' },
+  { key: 'ac_gafassol', label: 'Sol', src: '/static/img/gafas/ac_gafassol.png' },
+  { key: 'ac_gafasarc', label: 'Arcoíris', src: '/static/img/gafas/ac_gafasarc.png' },
+  { key: 'ac_gafasantifiesta', label: 'Anti-fiesta', src: '/static/img/gafas/ac_gafasantifiesta.png' },
+  { key: 'ac_gafascine', label: 'Cine', src: '/static/img/gafas/ac_gafascine.png' },
+  { key: 'ac_gafascora', label: 'Corazón', src: '/static/img/gafas/ac_gafascora.png' },
+  { key: 'ac_gafasvisor', label: 'Visor', src: '/static/img/gafas/ac_gafasvisor.png' },
+  { key: 'ac_gafaspixeleadas', label: 'Pixeladas', src: '/static/img/gafas/ac_gafaspixeleadas.png' },
+  { key: 'ac_gafaspixel', label: 'Pixel', src: '/static/img/gafas/ac_gafaspixel.png' },
+  { key: 'ac_gafasojogran', label: 'Ojo Grande', src: '/static/img/gafas/ac_gafasojogran.png' },
+  { key: 'ac_gafasdorada', label: 'Doradas', src: '/static/img/gafas/ac_gafasdorada.png' },
 ];
 
 const AJUSTES_AVATAR = {
-  '/static/img/avatares/buho_n.png':     { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
-  '/static/img/avatares/tiburon_n.png':  { sombrero: { x: 100, y: -45, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 3, y: 55 }, gafasOverrides: { '/static/img/gafas/ac_gafasantifiesta.png': { escalaX: 0.69, escalaY: 0.6, offsetX: 3, y: 55 } } },
-  '/static/img/avatares/gato_n.png':     { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
-  '/static/img/avatares/mono_n.png':     { sombrero: { x: 100, y: -35, w: 300, h: 280 }, sombreroOverrides: { '/static/img/sombreros/ac_sommagofan.png': { x: 100, y: -45, w: 300, h: 280 } }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
-  '/static/img/avatares/perro_n.png':    { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 2, y: 92 }, gafasOverrides: { '/static/img/gafas/ac_gafasantifiesta.png': { escala: 0.6, offsetX: 2, y: 77 } } },
-  '/static/img/avatares/tigre_n.png':    { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
-  '/static/img/avatares/ardilla_n.png':  { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.7, offsetX: 2, y: 62 } },
-  '/static/img/avatares/conejo_n.png':   { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.7, offsetX: 2, y: 62 } },
-  '/static/img/avatares/lobo_n.png':     { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
+  '/static/img/avatares/buho_n.png': { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
+  '/static/img/avatares/tiburon_n.png': { sombrero: { x: 100, y: -45, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 3, y: 55 }, gafasOverrides: { '/static/img/gafas/ac_gafasantifiesta.png': { escalaX: 0.69, escalaY: 0.6, offsetX: 3, y: 55 } } },
+  '/static/img/avatares/gato_n.png': { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
+  '/static/img/avatares/mono_n.png': { sombrero: { x: 100, y: -35, w: 300, h: 280 }, sombreroOverrides: { '/static/img/sombreros/ac_sommagofan.png': { x: 100, y: -45, w: 300, h: 280 } }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
+  '/static/img/avatares/perro_n.png': { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 2, y: 92 }, gafasOverrides: { '/static/img/gafas/ac_gafasantifiesta.png': { escala: 0.6, offsetX: 2, y: 77 } } },
+  '/static/img/avatares/tigre_n.png': { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
+  '/static/img/avatares/ardilla_n.png': { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.7, offsetX: 2, y: 62 } },
+  '/static/img/avatares/conejo_n.png': { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.7, offsetX: 2, y: 62 } },
+  '/static/img/avatares/lobo_n.png': { sombrero: { x: 100, y: -20, w: 300, h: 280 }, gafas: { escala: 0.6, offsetX: 15, y: 92 } },
   '/static/img/avatares/pinguino_n.png': { sombrero: { x: 100, y: -25, w: 300, h: 280 }, gafas: { escala: 0.7, offsetX: 2, y: 62 } },
 };
 
-let iAvatar   = 0;
+let iAvatar = 0;
 let iSombrero = 0;
-let iGafas    = 0;
+let iGafas = 0;
 
 // ── Cargar avatar guardado desde el servidor ──────────────────
 async function cargarAvatar() {
   try {
-    const res = await fetch('http://localhost:8000/api/v1/perfil/avatar', {
+    const res = await fetch('/api/v1/perfil/avatar', {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!res.ok) return;
@@ -163,13 +163,13 @@ function playBop() {
 
 // ── Canvas render ─────────────────────────────────────────
 const avatarCanvas = document.getElementById('avatarCanvas');
-const avatarCtx    = avatarCanvas.getContext('2d');
-const CANVAS_S     = 1.0; // canvas 500px = resolución nativa de los ajustes
+const avatarCtx = avatarCanvas.getContext('2d');
+const CANVAS_S = 1.0; // canvas 500px = resolución nativa de los ajustes
 
 function cargarImgCanvas(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload  = () => resolve(img);
+    img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`No se pudo cargar: ${src}`));
     img.src = src;
   });
@@ -192,7 +192,7 @@ async function renderAvatarCanvas() {
       try {
         const imgG = await cargarImgCanvas(gafasItem.src);
         const g = (cfg.gafasOverrides && cfg.gafasOverrides[gafasItem.src]) || cfg.gafas;
-        const gw = imgG.naturalWidth  * (g.escalaX || g.escala) * CANVAS_S;
+        const gw = imgG.naturalWidth * (g.escalaX || g.escala) * CANVAS_S;
         const gh = imgG.naturalHeight * (g.escalaY || g.escala) * CANVAS_S;
         const gx = (W - gw) / 2 + g.offsetX * CANVAS_S;
         avatarCtx.drawImage(imgG, gx, g.y * CANVAS_S, gw, gh);
@@ -212,8 +212,8 @@ async function renderAvatarCanvas() {
 
 // ── Modal de avatar ───────────────────────────────────────
 const avatarOverlay = document.getElementById('avatarOverlay');
-const avatarClose   = document.getElementById('avatarClose');
-const userBadge     = document.querySelector('.dash-user-badge');
+const avatarClose = document.getElementById('avatarClose');
+const userBadge = document.querySelector('.dash-user-badge');
 
 function actualizarSlotsBloqueo() {
   const puntos = JSON.parse(localStorage.getItem('usuario') ?? '{}')?.puntos_totales ?? 0;
@@ -329,9 +329,9 @@ document.getElementById('avatarSaveBtn').addEventListener('click', async () => {
   msg.style.display = 'none';
 
   try {
-    const animal   = AVATARES_LIST[iAvatar];
+    const animal = AVATARES_LIST[iAvatar];
     const sombrero = SOMBREROS_LIST[iSombrero];
-    const gafas    = GAFAS_LIST[iGafas];
+    const gafas = GAFAS_LIST[iGafas];
 
     await renderAvatarCanvas();
     const imagenSrc = avatarCanvas.toDataURL('image/png');
@@ -340,17 +340,17 @@ document.getElementById('avatarSaveBtn').addEventListener('click', async () => {
     const perfilImg = document.getElementById('perfilAvatarImg');
     if (perfilImg) perfilImg.src = imagenSrc;
 
-    const res = await fetch('http://localhost:8000/api/v1/perfil/avatar', {
+    const res = await fetch('/api/v1/perfil/avatar', {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        imagen_src:         imagenSrc,
-        animal_base:        animal.key,
+        imagen_src: imagenSrc,
+        animal_base: animal.key,
         accesorio_sombrero: sombrero.key ?? null,
-        accesorio_gafas:    gafas.key ?? null,
+        accesorio_gafas: gafas.key ?? null,
       }),
     });
 

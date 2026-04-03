@@ -3,20 +3,20 @@
  * Conecta con POST /api/v1/auth/registro del backend FastAPI.
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 // ── Elementos del DOM ────────────────────────────────────────
-const form         = document.getElementById('registroForm');
-const usernameEl   = document.getElementById('username');
-const emailEl      = document.getElementById('email');
-const passwordEl   = document.getElementById('password');
-const fechaEl      = document.getElementById('fecha_nacimiento');
-const toggleBtn    = document.getElementById('togglePassword');
-const eyeIcon      = document.getElementById('eyeIcon');
-const submitBtn    = document.getElementById('submitBtn');
-const btnText      = submitBtn.querySelector('.btn__text');
-const btnSpinner   = submitBtn.querySelector('.btn__spinner');
-const registroAlert    = document.getElementById('registroAlert');
+const form = document.getElementById('registroForm');
+const usernameEl = document.getElementById('username');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+const fechaEl = document.getElementById('fecha_nacimiento');
+const toggleBtn = document.getElementById('togglePassword');
+const eyeIcon = document.getElementById('eyeIcon');
+const submitBtn = document.getElementById('submitBtn');
+const btnText = submitBtn.querySelector('.btn__text');
+const btnSpinner = submitBtn.querySelector('.btn__spinner');
+const registroAlert = document.getElementById('registroAlert');
 const registroAlertMsg = document.getElementById('registroAlertMsg');
 
 // ── Mostrar / ocultar contraseña ─────────────────────────────
@@ -33,18 +33,18 @@ toggleBtn.addEventListener('click', () => {
 
 // ── Validación en tiempo real ────────────────────────────────
 usernameEl.addEventListener('input', () => clearFieldError('username'));
-emailEl.addEventListener('input',    () => clearFieldError('email'));
+emailEl.addEventListener('input', () => clearFieldError('email'));
 passwordEl.addEventListener('input', () => clearFieldError('password'));
 
 function clearFieldError(fieldId) {
-  const el  = document.getElementById(fieldId);
+  const el = document.getElementById(fieldId);
   const err = document.getElementById(fieldId + 'Error');
   el.classList.remove('is-invalid');
   if (err) err.textContent = '';
 }
 
 function showFieldError(fieldId, msg) {
-  const el  = document.getElementById(fieldId);
+  const el = document.getElementById(fieldId);
   const err = document.getElementById(fieldId + 'Error');
   el.classList.add('is-invalid');
   if (err) err.textContent = msg;
@@ -90,8 +90,8 @@ function validate() {
 // ── Estado del botón ─────────────────────────────────────────
 function setLoading(loading) {
   submitBtn.disabled = loading;
-  btnText.hidden     = loading;
-  btnSpinner.hidden  = !loading;
+  btnText.hidden = loading;
+  btnSpinner.hidden = !loading;
 }
 
 function showAlert(msg) {
@@ -152,9 +152,9 @@ form.addEventListener('submit', async (e) => {
   // Construir payload
   const rol = document.querySelector('input[name="rol"]:checked').value;
   const payload = {
-    username:         usernameEl.value.trim(),
-    email:            emailEl.value.trim(),
-    password:         passwordEl.value,
+    username: usernameEl.value.trim(),
+    email: emailEl.value.trim(),
+    password: passwordEl.value,
     rol,
     fecha_nacimiento: fechaEl.value ? `${fechaEl.value}T00:00:00` : null,
   };
@@ -175,16 +175,16 @@ form.addEventListener('submit', async (e) => {
     }
 
     // Guardar tokens igual que en login
-    localStorage.setItem('access_token',  data.access_token);
+    localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
-    localStorage.setItem('usuario',       JSON.stringify(data.usuario));
+    localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
     showTigerAnimation();
     const destinos = {
-      estudiante:      'dashboard_estudiante.html',
-      profesor:        'dashboard_profesor.html',
+      estudiante: 'dashboard_estudiante.html',
+      profesor: 'dashboard_profesor.html',
       admin_contenido: 'dashboard_admin.html',
-      admin_tech:      'dashboard_admin.html',
+      admin_tech: 'dashboard_admin.html',
     };
     const destino = destinos[data.usuario.rol] ?? 'dashboard_estudiante.html';
     setTimeout(() => { window.location.href = destino; }, 3200);

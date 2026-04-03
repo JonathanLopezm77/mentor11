@@ -4,54 +4,54 @@
  * Game over al perder la 3ra vida.
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
-const token    = localStorage.getItem('access_token');
+const API_BASE = '/api/v1';
+const token = localStorage.getItem('access_token');
 
 if (!token) location.href = '/';
 
 // ── Sonidos ───────────────────────────────────────────────
 const SFX = {};
 [
-  ['/static/correcta.mp3',        0.8],
-  ['/static/error.mp3',           0.8],
-  ['/static/back.mp3',            0.7],
-  ['/static/bop.mp3',             0.8],
-  ['/static/game_over.mp3',       1.0],
-  ['/static/bloop.mp3',           0.7],
+  ['/static/correcta.mp3', 0.8],
+  ['/static/error.mp3', 0.8],
+  ['/static/back.mp3', 0.7],
+  ['/static/bop.mp3', 0.8],
+  ['/static/game_over.mp3', 1.0],
+  ['/static/bloop.mp3', 0.7],
   ['/static/arcade_reintentar.mp3', 0.8],
-  ['/static/back_menu.mp3',       0.8],
+  ['/static/back_menu.mp3', 0.8],
 ].forEach(([src, vol]) => {
   const a = new Audio(src);
   a.preload = 'auto';
-  a.volume  = vol;
-  SFX[src]  = a;
+  a.volume = vol;
+  SFX[src] = a;
 });
 
 const playSfx = (src) => {
   const a = SFX[src]?.cloneNode();
   if (!a) return;
   a.volume = SFX[src].volume;
-  a.play().catch(() => {});
+  a.play().catch(() => { });
 };
 
 // ── Música de fondo (muy baja) ────────────────────────────
 const bgMusic = new Audio('/static/arcade_musica.mp3');
-bgMusic.loop   = true;
+bgMusic.loop = true;
 bgMusic.volume = 0.015;
-bgMusic.muted  = sessionStorage.getItem('arcade_muted') === '1';
+bgMusic.muted = sessionStorage.getItem('arcade_muted') === '1';
 bgMusic.play().catch(() => {
-  document.addEventListener('pointerdown', () => bgMusic.play().catch(() => {}), { once: true });
+  document.addEventListener('pointerdown', () => bgMusic.play().catch(() => { }), { once: true });
 });
 
 // ── Estado ────────────────────────────────────────────────
-let sesionId    = null;
-let materiaIds  = [];
-let preguntas   = [];
-let actual      = 0;
-let vidas       = 3;
-let puntaje     = 0;
-let correctas   = 0;
-let vistasIds   = new Set();
+let sesionId = null;
+let materiaIds = [];
+let preguntas = [];
+let actual = 0;
+let vidas = 3;
+let puntaje = 0;
+let correctas = 0;
+let vistasIds = new Set();
 let cargandoMas = false;
 let juegoTerminado = false;
 
@@ -106,7 +106,7 @@ async function cargarAvatarBar() {
     if (data.imagen_src) {
       document.getElementById('arcadeAvatarImg').src = data.imagen_src;
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 // ── Cargar más preguntas (excluye ya vistas) ──────────────
@@ -131,7 +131,7 @@ async function cargarMasPreguntas() {
         vistasIds.add(p.id);
       }
     }
-  } catch (_) {}
+  } catch (_) { }
   cargandoMas = false;
 }
 
@@ -174,7 +174,7 @@ function mostrarPregunta() {
   });
 
   document.getElementById('siguienteBtn').hidden = true;
-  document.getElementById('explicacion').hidden  = true;
+  document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
 }
 
@@ -197,12 +197,12 @@ async function responder(opcionId, preguntaId) {
     // Colorear botones
     document.querySelectorAll('.opcion-btn').forEach(btn => {
       const id = Number(btn.dataset.id);
-      if (id === data.opcion_correcta_id)       btn.classList.add('opcion-btn--correcta');
+      if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
       else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
     });
 
     if (data.es_correcta) {
-      puntaje  += 10;
+      puntaje += 10;
       correctas++;
       document.getElementById('arcadeScore').textContent = puntaje;
       playSfx('/static/correcta.mp3');
@@ -232,20 +232,20 @@ async function responder(opcionId, preguntaId) {
 function perderVida() {
   vidas--;
   const hearts = document.querySelectorAll('.arcade-heart');
-  const idx    = 2 - vidas;
+  const idx = 2 - vidas;
 
   if (hearts[idx]) {
     const rect = hearts[idx].getBoundingClientRect();
-    const cx   = window.innerWidth  / 2;
-    const cy   = window.innerHeight / 2;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
 
     // Clonar el corazón en posición fija
     const fly = document.createElement('span');
     fly.textContent = '❤️';
     fly.style.cssText = [
       `position:fixed`,
-      `left:${rect.left + rect.width  / 2}px`,
-      `top:${rect.top  + rect.height / 2}px`,
+      `left:${rect.left + rect.width / 2}px`,
+      `top:${rect.top + rect.height / 2}px`,
       `transform:translate(-50%,-50%) scale(1)`,
       `font-size:2rem`,
       `z-index:9999`,
@@ -257,15 +257,15 @@ function perderVida() {
     // Fase 1: volar al centro
     fly.getBoundingClientRect(); // force reflow
     fly.style.transition = 'left .35s cubic-bezier(.34,1.56,.64,1), top .35s cubic-bezier(.34,1.56,.64,1), font-size .35s';
-    fly.style.left     = `${cx}px`;
-    fly.style.top      = `${cy}px`;
+    fly.style.left = `${cx}px`;
+    fly.style.top = `${cy}px`;
     fly.style.fontSize = '3.5rem';
 
     // Fase 2: partir el corazón en el centro
     setTimeout(() => {
       // Pequeño shake antes de romperse
       fly.style.transition = 'transform .08s';
-      fly.style.transform  = 'translate(-50%,-50%) scale(1.25) rotate(-10deg)';
+      fly.style.transform = 'translate(-50%,-50%) scale(1.25) rotate(-10deg)';
       setTimeout(() => {
         fly.style.transform = 'translate(-50%,-50%) scale(1.25) rotate(10deg)';
         setTimeout(() => {
@@ -295,15 +295,15 @@ function perderVida() {
           sL.getBoundingClientRect(); // force reflow
 
           sL.style.transition = 'left .6s ease-out, top .65s ease-in, opacity .55s, transform .65s';
-          sL.style.left      = `${cx - 90}px`;
-          sL.style.top       = `${cy + 210}px`;
-          sL.style.opacity   = '0';
+          sL.style.left = `${cx - 90}px`;
+          sL.style.top = `${cy + 210}px`;
+          sL.style.opacity = '0';
           sL.style.transform = 'translate(-50%,-50%) rotate(-40deg) scale(0.7)';
 
           sR.style.transition = 'left .6s ease-out, top .65s ease-in, opacity .55s, transform .65s';
-          sR.style.left      = `${cx + 90}px`;
-          sR.style.top       = `${cy + 210}px`;
-          sR.style.opacity   = '0';
+          sR.style.left = `${cx + 90}px`;
+          sR.style.top = `${cy + 210}px`;
+          sR.style.opacity = '0';
           sR.style.transform = 'translate(-50%,-50%) rotate(40deg) scale(0.7)';
 
           setTimeout(() => { sL.remove(); sR.remove(); }, 700);
@@ -335,7 +335,7 @@ async function mostrarGameOver() {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-  } catch (_) {}
+  } catch (_) { }
 
   sessionStorage.setItem('resultado_arcade', JSON.stringify({
     puntaje, correctas, puntosAntes,
@@ -356,9 +356,9 @@ document.getElementById('arcadeBackBtn').addEventListener('click', () => {
   const pa = JSON.parse(localStorage.getItem('usuario') ?? '{}')?.puntos_totales ?? 0;
   const finalize = sesionId
     ? fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => {})
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => { })
     : Promise.resolve();
 
   finalize.finally(() => {

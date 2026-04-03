@@ -3,7 +3,7 @@
  * Compartido por libre_intro.html y libre_temas.html
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
 if (!usuario) window.location.href = '/';
@@ -49,23 +49,23 @@ const ICONOS = {
 // ── Sonidos precargados ───────────────────────────────────
 const SFX = {};
 [
-  ['/static/materias_en.mp3',  0.5],
+  ['/static/materias_en.mp3', 0.5],
   ['/static/clic_materia.mp3', 0.7],
-  ['/static/bip.mp3',          0.4],
-  ['/static/lib_audio.mp3',    0.8],
-  ['/static/back.mp3',         0.7],
+  ['/static/bip.mp3', 0.4],
+  ['/static/lib_audio.mp3', 0.8],
+  ['/static/back.mp3', 0.7],
 ].forEach(([src, vol]) => {
   const a = new Audio(src);
   a.preload = 'auto';
-  a.volume  = vol;
-  SFX[src]  = a;
+  a.volume = vol;
+  SFX[src] = a;
 });
 
 const playSfx = (src) => {
   const a = SFX[src];
   if (!a) return;
   a.currentTime = 0;
-  a.play().catch(() => {});
+  a.play().catch(() => { });
 };
 
 // ── Botón volver — todas las pantallas libre ──────────────
@@ -82,7 +82,7 @@ if (backBtn) {
 
 // ── libre_temas.html ──────────────────────────────────────
 const materiasList = document.getElementById('materiasList');
-const comenzarBtn  = document.getElementById('comenzarBtn');
+const comenzarBtn = document.getElementById('comenzarBtn');
 
 // Input de cantidad (default 10, máx 20)
 const cantidadInput = document.getElementById('cantidadInput');
@@ -169,7 +169,7 @@ if (comenzarBtn) {
       setTimeout(resolve, 1200);
     });
 
-    const ids     = [...document.querySelectorAll('.materia-item.selected')]
+    const ids = [...document.querySelectorAll('.materia-item.selected')]
       .map(el => Number(el.dataset.id));
     const cantidad = getCantidad();   // se lee UNA sola vez aquí
 

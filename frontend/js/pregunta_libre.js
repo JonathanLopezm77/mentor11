@@ -5,14 +5,14 @@
 // ── Sonidos precargados ───────────────────────────────────
 const SFX_P = {};
 [
-  ['/static/correcta.mp3',   0.8],
-  ['/static/error.mp3',      0.8],
+  ['/static/correcta.mp3', 0.8],
+  ['/static/error.mp3', 0.8],
   ['/static/sig_pregun.mp3', 0.7],
-  ['/static/back.mp3',       0.7],
+  ['/static/back.mp3', 0.7],
 ].forEach(([src, vol]) => {
   const a = new Audio(src);
   a.preload = 'auto';
-  a.volume  = vol;
+  a.volume = vol;
   SFX_P[src] = a;
 });
 
@@ -20,13 +20,13 @@ const playSfxP = (src) => {
   const a = SFX_P[src];
   if (!a) return;
   a.currentTime = 0;
-  a.play().catch(() => {});
+  a.play().catch(() => { });
 };
 
-const API_BASE   = 'http://localhost:8000/api/v1';
-const token      = localStorage.getItem('access_token');
-const sesionId       = sessionStorage.getItem('sesion_id');
-const materiaIds     = sessionStorage.getItem('materia_ids');
+const API_BASE = '/api/v1';
+const token = localStorage.getItem('access_token');
+const sesionId = sessionStorage.getItem('sesion_id');
+const materiaIds = sessionStorage.getItem('materia_ids');
 const totalPreguntas = new URLSearchParams(window.location.search).get('cantidad') ?? 10;
 
 // Redirigir si no hay sesión activa
@@ -34,9 +34,9 @@ if (!token || !sesionId) {
   location.href = '/';
 }
 
-let preguntas  = [];
-let actual     = 0;
-let correctas  = 0;
+let preguntas = [];
+let actual = 0;
+let correctas = 0;
 let incorrectas = 0;
 
 // ── Inicializar: cargar todas las preguntas ───────────────
@@ -104,7 +104,7 @@ function mostrarPregunta() {
 
   // Ocultar elementos post-respuesta
   document.getElementById('siguienteBtn').hidden = true;
-  document.getElementById('explicacion').hidden  = true;
+  document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
 }
 
@@ -169,10 +169,10 @@ async function finalizarSesion() {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
-  } catch (_) {}
+  } catch (_) { }
 
   sessionStorage.setItem('resultado_libre', JSON.stringify({
-    total:       correctas + incorrectas,
+    total: correctas + incorrectas,
     correctas,
     incorrectas,
     puntosGanados,
@@ -182,7 +182,7 @@ async function finalizarSesion() {
 
   const sfx = new Audio('/static/arcade_stat.mp3');
   sfx.volume = 0.6;
-  sfx.play().catch(() => {});
+  sfx.play().catch(() => { });
   setTimeout(() => location.href = 'resultado_libre.html', 400);
 }
 

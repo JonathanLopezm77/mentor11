@@ -33,3 +33,4 @@ aiofiles==23.2.1
 
 # Utilidades
 python-dateutil==2.9.0
+resend==2.26.0

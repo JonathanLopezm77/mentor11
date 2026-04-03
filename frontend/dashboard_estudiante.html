@@ -91,7 +91,7 @@
           <line x1="6" y1="20" x2="6" y2="14" />
         </svg>
       </button>
-      <button class="dash-nav__btn" aria-label="Global">
+      <button class="dash-nav__btn" id="onlineBtn" aria-label="Online">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -471,6 +471,10 @@
       sfxContrareloj.onended = () => location.href = 'contrareloj_intro.html';
       sfxContrareloj.play().catch(() => location.href = 'contrareloj_intro.html');
       setTimeout(() => location.href = 'contrareloj_intro.html', 1200);
+    });
+
+    document.getElementById('onlineBtn').addEventListener('click', () => {
+      location.href = 'online_intro.html';
     });
   </script>
   <script src="/static/js/perfil.js"></script>

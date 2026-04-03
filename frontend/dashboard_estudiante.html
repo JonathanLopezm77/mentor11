@@ -473,8 +473,13 @@
       setTimeout(() => location.href = 'contrareloj_intro.html', 1200);
     });
 
+    const sfxOnline = new Audio('/static/bop.mp3');
+    sfxOnline.volume = 0.8;
     document.getElementById('onlineBtn').addEventListener('click', () => {
-      location.href = 'online_intro.html';
+      sfxOnline.currentTime = 0;
+      sfxOnline.onended = () => location.href = 'online_intro.html';
+      sfxOnline.play().catch(() => location.href = 'online_intro.html');
+      setTimeout(() => location.href = 'online_intro.html', 1200);
     });
   </script>
   <script src="/static/js/perfil.js"></script>

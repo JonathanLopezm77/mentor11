@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Resultado Aleatorio</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link rel="stylesheet" href="/static/css/progresion.css?v=8" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <div class="libre-header__spacer"></div>
+    <h1 class="libre-header__title">Resultado</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main class="resultado-main">
+
+    <!-- Tarjeta de puntaje -->
+    <div class="resultado-score-card">
+      <span class="resultado-emoji" id="resultEmoji">🎲</span>
+      <div class="resultado-pct" id="resultPct">0 %</div>
+      <div class="resultado-pct-label">de acierto</div>
+    </div>
+
+    <!-- Fila de stats -->
+    <div class="resultado-stats-row">
+      <div class="resultado-stat">
+        <span class="resultado-stat__num resultado-stat__num--ok" id="statCorrectas">0</span>
+        <span class="resultado-stat__label">Correctas</span>
+      </div>
+      <div class="resultado-stat">
+        <span class="resultado-stat__num resultado-stat__num--fail" id="statIncorrectas">0</span>
+        <span class="resultado-stat__label">Incorrectas</span>
+      </div>
+      <div class="resultado-stat">
+        <span class="resultado-stat__num" id="statTotal">0</span>
+        <span class="resultado-stat__label">Total</span>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="resultado-acciones">
+      <button class="libre-cta" id="btnJugarOtra">Jugar de nuevo</button>
+      <button class="libre-cta resultado-btn-sec" id="btnInicio">Ir al inicio</button>
+    </div>
+
+  </main>
+
+  <script>
+    const sfxEntrada = new Audio('/static/arcade_stat.mp3');
+    sfxEntrada.volume = 0.6;
+    sfxEntrada.play().catch(() => {});
+
+    const sfxBtn = new Audio('/static/bip.mp3');
+    sfxBtn.volume = 0.5;
+
+    const data        = JSON.parse(sessionStorage.getItem('resultado_aleatorio') ?? '{}');
+    const total       = data.total       ?? 0;
+    const correctas   = data.correctas   ?? 0;
+    const incorrectas = data.incorrectas ?? 0;
+    const pct         = total > 0 ? Math.round((correctas / total) * 100) : 0;
+
+    document.getElementById('statTotal').textContent       = total;
+    document.getElementById('statCorrectas').textContent   = correctas;
+    document.getElementById('statIncorrectas').textContent = incorrectas;
+
+    // Emoji dinámico según rendimiento
+    document.getElementById('resultEmoji').textContent = '🎲';
+
+    // Animación del porcentaje
+    const pctEl = document.getElementById('resultPct');
+    const dur   = 900;
+    const start = performance.now();
+    (function tick(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+      pctEl.textContent = `${Math.round(e * pct)} %`;
+      if (t < 1) requestAnimationFrame(tick);
+    })(performance.now());
+
+    function playBip() {
+      const s = sfxBtn.cloneNode();
+      s.volume = 0.5;
+      s.play().catch(() => {});
+    }
+
+    document.getElementById('btnJugarOtra').addEventListener('click', () => {
+      playBip();
+      setTimeout(() => location.href = 'aleatorio_intro.html', 200);
+    });
+
+    document.getElementById('btnInicio').addEventListener('click', () => {
+      playBip();
+      setTimeout(() => location.href = 'dashboard_estudiante.html', 200);
+    });
+
+    // Mostrar progresión 1s después de cargar
+    const puntosAntes = data.puntosAntes ?? 0;
+    setTimeout(() => mostrarProgreso(puntosAntes, null), 1000);
+  </script>
+  <script src="/static/js/progresion.js?v=9"></script>
+</body>
+</html>

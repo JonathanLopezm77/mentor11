@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Resultado Arcade</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link rel="stylesheet" href="/static/css/progresion.css?v=8" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <div class="libre-header__spacer"></div>
+    <h1 class="libre-header__title">Game Over</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main class="resultado-main">
+
+    <div class="resultado-score-card">
+      <span class="resultado-emoji">💀</span>
+      <div class="resultado-pct" id="resultPts">0</div>
+      <div class="resultado-pct-label">puntos</div>
+    </div>
+
+    <div class="resultado-stats-row">
+      <div class="resultado-stat">
+        <span class="resultado-stat__num resultado-stat__num--ok" id="statCorrectas">0</span>
+        <span class="resultado-stat__label">Correctas</span>
+      </div>
+    </div>
+
+    <div class="resultado-acciones">
+      <button class="libre-cta" id="btnJugarOtra">Jugar de nuevo</button>
+      <button class="libre-cta resultado-btn-sec" id="btnInicio">Ir al inicio</button>
+    </div>
+
+  </main>
+
+  <script>
+    const sfxEntrada = new Audio('/static/game_over.mp3');
+    sfxEntrada.volume = 0.5;
+    sfxEntrada.play().catch(() => {});
+
+    const sfxBtn = new Audio('/static/bip.mp3');
+    sfxBtn.volume = 0.5;
+
+    const data      = JSON.parse(sessionStorage.getItem('resultado_arcade') ?? '{}');
+    const puntaje   = data.puntaje   ?? 0;
+    const correctas = data.correctas ?? 0;
+    const puntosAntes = data.puntosAntes ?? 0;
+
+    document.getElementById('resultPts').textContent     = puntaje;
+    document.getElementById('statCorrectas').textContent = correctas;
+
+    function playBip() { const s = sfxBtn.cloneNode(); s.volume = 0.5; s.play().catch(() => {}); }
+
+    document.getElementById('btnJugarOtra').addEventListener('click', () => {
+      playBip();
+      setTimeout(() => location.href = 'arcade.html', 200);
+    });
+    document.getElementById('btnInicio').addEventListener('click', () => {
+      playBip();
+      setTimeout(() => location.href = 'dashboard_estudiante.html', 200);
+    });
+
+    setTimeout(() => mostrarProgreso(puntosAntes, null), 1000);
+  </script>
+  <script src="/static/js/progresion.js?v=9"></script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Contra el Reloj</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .ctr-intro-icon {
+      font-size: 7rem;
+      line-height: 1;
+      animation: flotar 2.8s ease-in-out infinite;
+      display: block;
+      text-align: center;
+    }
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0);    }
+      50%       { transform: translateY(-12px); }
+    }
+    .ctr-intro-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--gray-900, #111827);
+      text-align: center;
+      margin: 12px 0 4px;
+    }
+    .ctr-intro-subtitle {
+      font-size: 1rem;
+      color: var(--gray-500, #6b7280);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .ctr-intro-subtitle span {
+      display: inline-block;
+      opacity: 0;
+      animation: aparecer .4s forwards;
+    }
+    @keyframes aparecer { to { opacity: 1; } }
+
+    .ctr-intro-rules {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+    .ctr-intro-rule {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      border-radius: 16px;
+      padding: 14px 18px;
+      opacity: 0;
+      transform: translateX(-24px);
+      animation: slidein .4s forwards;
+    }
+    .ctr-intro-rule:nth-child(1) { animation-delay: .3s; }
+    .ctr-intro-rule:nth-child(2) { animation-delay: .75s; }
+    .ctr-intro-rule:nth-child(3) { animation-delay: 1.2s; }
+    .ctr-intro-rule:nth-child(4) { animation-delay: 1.65s; }
+    @keyframes slidein { to { opacity: 1; transform: translateX(0); } }
+
+    .ctr-intro-rule__icon { font-size: 1.9rem; flex-shrink: 0; }
+    .ctr-intro-rule__text {
+      font-size: .93rem;
+      font-weight: 600;
+      color: #1c1917;
+      line-height: 1.3;
+    }
+    .ctr-intro-rule__text span {
+      display: block;
+      font-weight: 400;
+      color: #78716c;
+      font-size: .83rem;
+      margin-top: 2px;
+    }
+    .libre-intro__main {
+      justify-content: center;
+      gap: 0;
+      padding: 28px 24px 0;
+    }
+  </style>
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <button class="libre-back" id="introBackBtn" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Contrarreloj</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main class="libre-intro__main">
+    <span class="ctr-intro-icon">⏱️</span>
+    <h2 class="ctr-intro-title">Contrarreloj</h2>
+    <p class="ctr-intro-subtitle" id="ctrSubtitulo">¿Cuánto sabes en 3 minutos?</p>
+
+    <div class="ctr-intro-rules">
+      <div class="ctr-intro-rule">
+        <span class="ctr-intro-rule__icon">⏱️</span>
+        <div class="ctr-intro-rule__text">
+          3 minutos en el reloj
+          <span>Empieza con 3:00 y responde todo lo que puedas</span>
+        </div>
+      </div>
+      <div class="ctr-intro-rule">
+        <span class="ctr-intro-rule__icon">✅</span>
+        <div class="ctr-intro-rule__text">
+          Correcta = +10 segundos
+          <span>Cada acierto te da más tiempo para seguir jugando</span>
+        </div>
+      </div>
+      <div class="ctr-intro-rule">
+        <span class="ctr-intro-rule__icon">❌</span>
+        <div class="ctr-intro-rule__text">
+          Incorrecta = −15 segundos
+          <span>Los errores te cuestan tiempo, ¡no te apresures!</span>
+        </div>
+      </div>
+      <div class="ctr-intro-rule">
+        <span class="ctr-intro-rule__icon">💀</span>
+        <div class="ctr-intro-rule__text">
+          Time Out
+          <span>Cuando el reloj llegue a cero, el juego termina</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="libre-footer">
+    <button class="libre-cta" id="btnJugar">¡Empezar!</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('access_token');
+    if (!token) location.href = '/';
+
+    const sfxHover = new Audio('/static/bloop.mp3');
+    const sfxClick = new Audio('/static/lib_audio.mp3');
+    const sfxBack  = new Audio('/static/back.mp3');
+    sfxHover.volume = 0.5;
+    sfxClick.volume = 0.8;
+    sfxBack.volume  = 0.8;
+
+    // Subtítulo letra a letra
+    const sub   = document.getElementById('ctrSubtitulo');
+    const texto = sub.textContent;
+    sub.textContent = '';
+    [...texto].forEach((char, i) => {
+      const sp = document.createElement('span');
+      sp.textContent = char === ' ' ? '\u00A0' : char;
+      sp.style.animationDelay = `${i * 0.04}s`;
+      sub.appendChild(sp);
+    });
+
+    document.getElementById('introBackBtn').addEventListener('click', () => {
+      sfxBack.currentTime = 0;
+      sfxBack.onended = () => history.back();
+      sfxBack.play().catch(() => history.back());
+      setTimeout(() => history.back(), 600);
+    });
+
+    const btnJugar = document.getElementById('btnJugar');
+    btnJugar.addEventListener('mouseenter', () => {
+      sfxHover.currentTime = 0;
+      sfxHover.play().catch(() => {});
+    });
+    btnJugar.addEventListener('click', () => {
+      sfxClick.currentTime = 0;
+      sfxClick.onended = () => location.href = 'contrareloj.html';
+      sfxClick.play().catch(() => location.href = 'contrareloj.html');
+      setTimeout(() => location.href = 'contrareloj.html', 1200);
+    });
+  </script>
+</body>
+</html>

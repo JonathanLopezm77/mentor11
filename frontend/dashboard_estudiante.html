@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Dashboard</title>
+  <link rel="stylesheet" href="/static/css/styles.css?v=3" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=16" />
+  <link rel="stylesheet" href="/static/css/perfil.css" />
+  <link rel="stylesheet" href="/static/css/progresion.css?v=8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+
+<body class="dash-body">
+
+  <div class="dash-page">
+
+    <!-- ── Header ───────────────────────────────────────────── -->
+    <header class="dash-header">
+      <div class="dash-user-badge">
+        <div class="dash-avatar">
+          <img src="/static/img/avatares/buho_n.png" alt="Avatar" />
+        </div>
+        <span class="dash-rank" id="rankLabel">Novato</span>
+      </div>
+      <button class="dash-bell" id="bellBtn" aria-label="Notificaciones">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ── Racha ─────────────────────────────────────────────── -->
+    <section class="dash-streak">
+      <button class="dash-streak__btn">
+        <span class="dash-streak__icon">🔥</span>
+        <span class="dash-streak__count" id="streakCount">0</span>
+      </button>
+    </section>
+
+    <!-- ── Modos de juego ────────────────────────────────────── -->
+    <section class="dash-modes">
+      <div class="dash-grid">
+
+        <button class="dash-mode-card" id="contrarelojBtn">
+          <span class="dash-mode-card__icon">⏰</span>
+          <span class="dash-mode-card__label">Contrarreloj</span>
+        </button>
+
+        <button class="dash-mode-card" id="aleatorioBtn">
+          <span class="dash-mode-card__icon">🎲</span>
+          <span class="dash-mode-card__label">Aleatorio</span>
+        </button>
+
+        <button class="dash-mode-card" id="libreBtn">
+          <span class="dash-mode-card__icon">☁️</span>
+          <span class="dash-mode-card__label">Libre</span>
+        </button>
+
+        <button class="dash-mode-card" id="arcadeBtn">
+          <span class="dash-mode-card__icon">🕹️</span>
+          <span class="dash-mode-card__label">Arcade</span>
+        </button>
+
+      </div>
+
+      <!-- Aula ocupa el ancho completo -->
+      <button class="dash-mode-card dash-mode-card--wide" onclick="location.href='#'">
+        <span class="dash-mode-card__icon">🎓</span>
+        <span class="dash-mode-card__label">Aula</span>
+      </button>
+    </section>
+
+    <!-- ── Nav inferior ──────────────────────────────────────── -->
+    <nav class="dash-nav">
+      <button class="dash-nav__btn dash-nav__btn--active" aria-label="Inicio">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+      </button>
+      <button class="dash-nav__btn" id="statsBtn" aria-label="Estadísticas">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      </button>
+      <button class="dash-nav__btn" aria-label="Global">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </svg>
+      </button>
+      <button class="dash-nav__btn" aria-label="Perfil" id="profileBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ── Modal personalización de avatar ──────────────────── -->
+  <div class="avatar-modal-overlay" id="avatarOverlay">
+    <div class="avatar-modal">
+
+      <button class="avatar-modal__close" id="avatarClose">✕</button>
+
+      <div class="avatar-modal__preview">
+        <div class="avatar-canvas-wrap">
+          <canvas id="avatarCanvas" width="500" height="500"></canvas>
+        </div>
+      </div>
+
+      <div class="avatar-modal__tabs">
+        <button class="avatar-tab avatar-tab--active" data-tab="avatar">Avatar</button>
+        <button class="avatar-tab" data-tab="sombrero">Sombrero</button>
+        <button class="avatar-tab" data-tab="gafas">Gafas</button>
+      </div>
+
+      <!-- Grid: Avatares -->
+      <div class="avatar-modal__grid" id="gridAvatar">
+        <div class="avatar-slot avatar-slot--filled" data-animal="buho">
+          <img src="/static/img/avatares/buho_n.png" alt="Búho" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="tiburon">
+          <img src="/static/img/avatares/tiburon_n.png" alt="Tiburón" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="gato">
+          <img src="/static/img/avatares/gato_n.png" alt="Gato" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="mono">
+          <img src="/static/img/avatares/mono_n.png" alt="Mono" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="perro">
+          <img src="/static/img/avatares/perro_n.png" alt="Perro" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="tigre">
+          <img src="/static/img/avatares/tigre_n.png" alt="Tigre" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="ardilla">
+          <img src="/static/img/avatares/ardilla_n.png" alt="Ardilla" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="conejo">
+          <img src="/static/img/avatares/conejo_n.png" alt="Conejo" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="lobo">
+          <img src="/static/img/avatares/lobo_n.png" alt="Lobo" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-animal="pinguino">
+          <img src="/static/img/avatares/pinguino_n.png" alt="Pingüino" />
+        </div>
+      </div>
+
+      <!-- Grid: Sombreros -->
+      <div class="avatar-modal__grid" id="gridSombrero" style="display:none">
+        <div class="avatar-slot avatar-slot--filled avatar-slot--symbol" data-sombrero="none">
+          <span>Ninguno</span>
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_sombruj">
+          <img src="/static/img/sombreros/ac_sombruj.png" alt="Bruja" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somvaq">
+          <img src="/static/img/sombreros/ac_somvaq.png" alt="Vaquero" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somfiesta">
+          <img src="/static/img/sombreros/ac_somfiesta.png" alt="Fiesta" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_sommagofan">
+          <img src="/static/img/sombreros/ac_sommagofan.png" alt="Mago" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_sompirata">
+          <img src="/static/img/sombreros/ac_sompirata.png" alt="Pirata" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somchino">
+          <img src="/static/img/sombreros/ac_somchino.png" alt="Chino" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_sommexi">
+          <img src="/static/img/sombreros/ac_sommexi.png" alt="Mexicano" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somele">
+          <img src="/static/img/sombreros/ac_somele.png" alt="Elefante" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somcoro">
+          <img src="/static/img/sombreros/ac_somcoro.png" alt="Corona" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somdrag">
+          <img src="/static/img/sombreros/ac_somdrag.png" alt="Dragón" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-sombrero="ac_somnavi">
+          <img src="/static/img/sombreros/ac_somnavi.png" alt="Navidad" />
+        </div>
+      </div>
+
+      <!-- Grid: Gafas -->
+      <div class="avatar-modal__grid" id="gridGafas" style="display:none">
+        <div class="avatar-slot avatar-slot--filled avatar-slot--symbol" data-gafas="none">
+          <span>Ninguno</span>
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasfiesta">
+          <img src="/static/img/gafas/ac_gafasfiesta.png" alt="Fiesta" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafassol">
+          <img src="/static/img/gafas/ac_gafassol.png" alt="Sol" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasarc">
+          <img src="/static/img/gafas/ac_gafasarc.png" alt="Arcoíris" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasantifiesta">
+          <img src="/static/img/gafas/ac_gafasantifiesta.png" alt="Anti-fiesta" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafascine">
+          <img src="/static/img/gafas/ac_gafascine.png" alt="Cine" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafascora">
+          <img src="/static/img/gafas/ac_gafascora.png" alt="Corazón" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasvisor">
+          <img src="/static/img/gafas/ac_gafasvisor.png" alt="Visor" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafaspixeleadas">
+          <img src="/static/img/gafas/ac_gafaspixeleadas.png" alt="Pixeladas" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafaspixel">
+          <img src="/static/img/gafas/ac_gafaspixel.png" alt="Pixel" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasojogran">
+          <img src="/static/img/gafas/ac_gafasojogran.png" alt="Ojo Grande" />
+        </div>
+        <div class="avatar-slot avatar-slot--filled" data-gafas="ac_gafasdorada">
+          <img src="/static/img/gafas/ac_gafasdorada.png" alt="Doradas" />
+        </div>
+      </div>
+
+      <button class="avatar-save-btn" id="avatarSaveBtn">Guardar avatar</button>
+      <p id="avatarSaveMsg" style="display:none;text-align:center;margin-top:8px;font-size:0.85rem;"></p>
+
+    </div>
+  </div>
+
+  <!-- ── Modal de estadísticas ──────────────────────────────── -->
+  <div class="stats-overlay" id="statsOverlay">
+    <div class="stats-modal">
+
+      <div class="stats-radar-float" id="statsRadarFloat">
+        <img id="statsRadarFloatImg" src="" alt="Avatar" />
+      </div>
+
+      <div class="stats-modal__header">
+        <button class="stats-modal__back" id="statsClose" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="stats-modal__header-icon">
+          <img src="/static/img/estadistica.png" alt="Estadísticas" width="100" height="100" />
+        </div>
+      </div>
+
+      <div class="stats-resumen-card">
+        <span class="stats-resumen-label">Resumen</span>
+        <div class="stats-resumen-pct" id="promedioGeneral">— %</div>
+        <div class="stats-resumen-sub">Promedio general</div>
+      </div>
+
+      <div class="stats-subjects-card">
+        <div class="stats-section-title">Progreso por Materia</div>
+        <div id="statsBars">
+          <p class="stats-loading-msg">Cargando...</p>
+        </div>
+      </div>
+
+      <div class="stats-view-pill-wrap">
+        <div class="stats-view-pill" id="statsViewTabs">
+          <button class="stats-pill-tab stats-pill-tab--active" data-view="bars">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="2" y="3" width="18" height="4" rx="2" fill="currentColor" />
+              <rect x="2" y="9" width="13" height="4" rx="2" fill="currentColor" />
+              <rect x="2" y="15" width="8" height="4" rx="2" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="stats-pill-tab" data-view="columns">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="1" y="8" width="4" height="13" rx="2" fill="currentColor" />
+              <rect x="7" y="4" width="4" height="17" rx="2" fill="currentColor" />
+              <rect x="13" y="11" width="4" height="10" rx="2" fill="currentColor" />
+              <rect x="17" y="6" width="4" height="15" rx="2" fill="currentColor" opacity="0.6" />
+            </svg>
+          </button>
+          <button class="stats-pill-tab" data-view="radial">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="2" />
+              <path d="M11 11 L11 2 A9 9 0 0 1 20 11 Z" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="stats-pill-tab" data-view="radar">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <polygon points="11,1 20.5,7.5 17,20 5,20 1.5,7.5" stroke="currentColor" stroke-width="1.8" fill="none"
+                stroke-linejoin="round" />
+              <polygon points="11,6 16,9.5 14,16 8,16 6,9.5" fill="currentColor" opacity="0.55" stroke="currentColor"
+                stroke-width="0.8" stroke-linejoin="round" />
+              <circle cx="11" cy="1" r="1.5" fill="currentColor" />
+              <circle cx="20.5" cy="7.5" r="1.5" fill="currentColor" />
+              <circle cx="17" cy="20" r="1.5" fill="currentColor" />
+              <circle cx="5" cy="20" r="1.5" fill="currentColor" />
+              <circle cx="1.5" cy="7.5" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Overlay de Perfil ──────────────────────────────────── -->
+  <div class="perfil-overlay" id="perfilOverlay">
+    <div class="perfil-modal">
+
+      <div class="perfil-modal__header">
+        <button class="perfil-modal__back" id="perfilClose" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <span class="perfil-modal__title">Mi Perfil</span>
+        <button class="perfil-logout-btn" id="perfilLogoutBtn" title="Cerrar sesión">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Avatar + nombre + rango -->
+      <div class="perfil-hero">
+        <div class="perfil-avatar-wrap">
+          <img id="perfilAvatarImg" src="/static/img/avatares/buho_n.png" alt="Avatar" />
+        </div>
+        <div class="perfil-hero__info">
+          <div class="perfil-hero__username" id="perfilUsername">—</div>
+          <div class="perfil-hero__rango" id="perfilRango">Novato</div>
+        </div>
+      </div>
+
+      <!-- Stats rápidas -->
+      <div class="perfil-stats-row">
+        <div class="perfil-stat">
+          <span class="perfil-stat__icon">🔥</span>
+          <span class="perfil-stat__val" id="perfilRachaActual">0</span>
+          <span class="perfil-stat__label">Racha</span>
+        </div>
+        <div class="perfil-stat perfil-stat--divider"></div>
+        <div class="perfil-stat">
+          <span class="perfil-stat__icon">🏆</span>
+          <span class="perfil-stat__val" id="perfilRachaMax">0</span>
+          <span class="perfil-stat__label">Mejor racha</span>
+        </div>
+        <div class="perfil-stat perfil-stat--divider"></div>
+        <div class="perfil-stat">
+          <span class="perfil-stat__icon">⭐</span>
+          <span class="perfil-stat__val" id="perfilPuntos">0</span>
+          <span class="perfil-stat__label">Puntos</span>
+        </div>
+      </div>
+
+      <!-- Editar perfil -->
+      <div class="perfil-section">
+        <div class="perfil-section__title">Información personal</div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Usuario</label>
+          <input type="text" class="perfil-field__input" id="perfilInputUsername" placeholder="Tu username" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Correo</label>
+          <input type="email" class="perfil-field__input" id="perfilInputEmail" placeholder="Tu correo" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Fecha de nacimiento</label>
+          <input type="date" class="perfil-field__input" id="perfilInputFecha" />
+        </div>
+
+        <div class="perfil-msg" id="perfilMsg" hidden></div>
+
+        <button class="perfil-save-btn" id="perfilSaveBtn">
+          <span id="perfilSaveBtnText">Guardar cambios</span>
+        </button>
+      </div>
+
+      <!-- Cambiar contraseña -->
+      <div class="perfil-section">
+        <div class="perfil-section__title">Cambiar contraseña</div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Contraseña actual</label>
+          <input type="password" class="perfil-field__input" id="perfilPassActual" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Nueva contraseña</label>
+          <input type="password" class="perfil-field__input" id="perfilPassNueva" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Confirmar nueva contraseña</label>
+          <input type="password" class="perfil-field__input" id="perfilPassConfirm" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-msg" id="perfilPassMsg" hidden></div>
+
+        <button class="perfil-save-btn perfil-save-btn--secondary" id="perfilPassBtn">
+          <span id="perfilPassBtnText">Cambiar contraseña</span>
+        </button>
+      </div>
+
+      <div style="height: 32px;"></div>
+
+    </div>
+  </div>
+
+  <script src="/static/js/progresion.js?v=9"></script>
+  <script src="/static/js/dashboard_estudiante.js?v=10"></script>
+  <script>
+    const sfxLibre = new Audio('/static/bop.mp3');
+    sfxLibre.volume = 0.8;
+    document.getElementById('libreBtn').addEventListener('click', () => {
+      sfxLibre.currentTime = 0;
+      sfxLibre.onended = () => location.href = 'libre_intro.html';
+      sfxLibre.play().catch(() => location.href = 'libre_intro.html');
+      setTimeout(() => location.href = 'libre_intro.html', 1200);
+    });
+
+    const sfxArcade = new Audio('/static/bop.mp3');
+    sfxArcade.volume = 0.8;
+    document.getElementById('arcadeBtn').addEventListener('click', () => {
+      sfxArcade.currentTime = 0;
+      sfxArcade.onended = () => location.href = 'arcade_intro.html';
+      sfxArcade.play().catch(() => location.href = 'arcade_intro.html');
+      setTimeout(() => location.href = 'arcade_intro.html', 1200);
+    });
+
+    const sfxAleatorio = new Audio('/static/bloop.mp3');
+    sfxAleatorio.volume = 0.8;
+    document.getElementById('aleatorioBtn').addEventListener('click', () => {
+      sfxAleatorio.currentTime = 0;
+      sfxAleatorio.onended = () => location.href = 'aleatorio_intro.html';
+      sfxAleatorio.play().catch(() => location.href = 'aleatorio_intro.html');
+      setTimeout(() => location.href = 'aleatorio_intro.html', 1200);
+    });
+
+    const sfxContrareloj = new Audio('/static/bop.mp3');
+    sfxContrareloj.volume = 0.8;
+    document.getElementById('contrarelojBtn').addEventListener('click', () => {
+      sfxContrareloj.currentTime = 0;
+      sfxContrareloj.onended = () => location.href = 'contrareloj_intro.html';
+      sfxContrareloj.play().catch(() => location.href = 'contrareloj_intro.html');
+      setTimeout(() => location.href = 'contrareloj_intro.html', 1200);
+    });
+  </script>
+  <script src="/static/js/perfil.js"></script>
+</body>
+
+</html>

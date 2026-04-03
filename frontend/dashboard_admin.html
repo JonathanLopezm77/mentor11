@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin — Mentor 11</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1, h2 { border-bottom: 2px solid #333; padding-bottom: 6px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
+    .opciones-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: center; margin-top: 6px; }
+    .opciones-grid input[type="text"] { width: 100%; }
+    button { margin-top: 14px; padding: 8px 20px; cursor: pointer; }
+    .btn-eliminar { background: #dc2626; color: white; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 0.9rem; }
+    th { background: #f3f3f3; }
+    #msg { margin-top: 10px; font-weight: bold; }
+    .ok  { color: green; }
+    .err { color: red; }
+  </style>
+</head>
+<body>
+
+<h1>Panel Admin</h1>
+<p id="bienvenida"></p>
+<button onclick="cerrarSesion()">Cerrar sesion</button>
+
+<h2>Crear pregunta</h2>
+<form id="formCrear">
+
+  <label>Materia</label>
+  <select id="materiaId" required>
+    <option value="">Cargando...</option>
+  </select>
+
+  <label>Enunciado</label>
+  <textarea id="enunciado" rows="3" required></textarea>
+
+  <label>Nivel</label>
+  <select id="nivel">
+    <option value="facil">Facil</option>
+    <option value="medio" selected>Medio</option>
+    <option value="dificil">Dificil</option>
+  </select>
+
+  <label>Opciones (marca el circulo de la correcta)</label>
+  <div class="opciones-grid">
+    <input type="radio" name="correcta" value="0" checked /> <input type="text" id="op0" placeholder="Opcion A" required />
+    <input type="radio" name="correcta" value="1" />         <input type="text" id="op1" placeholder="Opcion B" required />
+    <input type="radio" name="correcta" value="2" />         <input type="text" id="op2" placeholder="Opcion C" />
+    <input type="radio" name="correcta" value="3" />         <input type="text" id="op3" placeholder="Opcion D" />
+  </div>
+
+  <label>Explicacion (opcional)</label>
+  <input type="text" id="explicacion" />
+
+  <label>Pista (opcional)</label>
+  <input type="text" id="pista" />
+
+  <button type="submit">Crear pregunta</button>
+</form>
+<p id="msg"></p>
+
+<h2>Preguntas existentes</h2>
+<button onclick="cargarLista()">Recargar lista</button>
+<table>
+  <thead>
+    <tr><th>ID</th><th>Materia</th><th>Enunciado</th><th>Nivel</th><th></th></tr>
+  </thead>
+  <tbody id="tablaBody"></tbody>
+</table>
+
+<script>
+const API     = 'http://localhost:8000/api/v1';
+const token   = localStorage.getItem('access_token');
+const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
+
+if (!token || !usuario || usuario.rol !== 'admin_tech') {
+  alert('Acceso solo para administradores.');
+  location.href = '/';
+}
+
+document.getElementById('bienvenida').textContent = 'Bienvenido, ' + (usuario?.username ?? '');
+
+const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + token });
+
+async function cargarMaterias() {
+  const res = await fetch(API + '/juego/materias', { headers: authHeaders() });
+  const materias = await res.json();
+  const sel = document.getElementById('materiaId');
+  sel.innerHTML = materias.map(m => '<option value="' + m.id + '">' + m.nombre + '</option>').join('');
+}
+
+document.getElementById('formCrear').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg');
+  const correctaIdx = Number(document.querySelector('input[name="correcta"]:checked').value);
+  const textos = [0, 1, 2, 3].map(i => document.getElementById('op' + i).value.trim());
+  const opciones = textos.filter(t => t !== '').map((texto, i) => ({ texto, es_correcta: i === correctaIdx }));
+
+  if (opciones.length < 2) {
+    msg.textContent = 'Debes escribir al menos 2 opciones.';
+    msg.className = 'err';
+    return;
+  }
+
+  const body = {
+    materia_id:        Number(document.getElementById('materiaId').value),
+    enunciado:         document.getElementById('enunciado').value.trim(),
+    nivel_dificultad:  document.getElementById('nivel').value,
+    opciones,
+    explicacion_texto: document.getElementById('explicacion').value.trim() || null,
+    pista:             document.getElementById('pista').value.trim() || null,
+  };
+
+  const res = await fetch(API + '/admin/preguntas', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    msg.textContent = 'Pregunta #' + data.id + ' creada correctamente.';
+    msg.className = 'ok';
+    document.getElementById('formCrear').reset();
+    cargarLista();
+  } else {
+    const err = await res.json().catch(() => ({}));
+    msg.textContent = 'Error: ' + (err.detail ?? res.status);
+    msg.className = 'err';
+  }
+});
+
+async function cargarLista() {
+  const res = await fetch(API + '/admin/preguntas?por_pagina=50', { headers: authHeaders() });
+  const data = await res.json();
+  const tbody = document.getElementById('tablaBody');
+  tbody.innerHTML = data.preguntas.map(p =>
+    '<tr><td>' + p.id + '</td><td>' + p.materia_nombre + '</td><td>' + p.enunciado +
+    '</td><td>' + p.nivel_dificultad + '</td><td><button class="btn-eliminar" onclick="eliminar(' +
+    p.id + ')">Eliminar</button></td></tr>'
+  ).join('');
+}
+
+async function eliminar(id) {
+  if (!confirm('Eliminar pregunta #' + id + '?')) return;
+  const res = await fetch(API + '/admin/preguntas/' + id, { method: 'DELETE', headers: authHeaders() });
+  if (res.ok) { cargarLista(); } else { alert('Error al eliminar.'); }
+}
+
+function cerrarSesion() { localStorage.clear(); location.href = '/'; }
+
+cargarMaterias();
+cargarLista();
+</script>
+</body>
+</html>

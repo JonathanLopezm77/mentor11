@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Contrarreloj</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header class="libre-header arcade-header">
+    <button class="libre-back" id="ctrBackBtn" aria-label="Terminar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+
+    <span class="arcade-title">⏱️ Contrarreloj</span>
+
+    <!-- Temporizador circular -->
+    <div class="ctr-timer-wrap">
+      <svg class="ctr-timer-svg" viewBox="0 0 50 50">
+        <circle class="ctr-timer-bg"   cx="25" cy="25" r="20"/>
+        <circle class="ctr-timer-ring" cx="25" cy="25" r="20" id="timerRing"/>
+      </svg>
+      <span class="ctr-timer-text" id="timerText">3:00</span>
+    </div>
+  </header>
+
+  <!-- ── Barra de progreso (aciertos) ────────────────────── -->
+  <div class="progreso-barra">
+    <div class="progreso-barra__fill" id="progresoBarra" style="width: 0%"></div>
+  </div>
+
+  <!-- ── Marcador ✓ · ✗ ──────────────────────────────────── -->
+  <div class="ctr-score-bar">
+    <span class="aleat-score-ok"   id="scoreOk">✓ 0</span>
+    <span class="aleat-score-sep">·</span>
+    <span class="aleat-score-fail" id="scoreFail">✗ 0</span>
+  </div>
+
+  <!-- ── Contenido principal ─────────────────────────────── -->
+  <main class="pregunta-main">
+    <div class="pregunta-card">
+      <p class="pregunta-enunciado" id="enunciado">Cargando...</p>
+    </div>
+    <div class="opciones-grid" id="opcionesGrid"></div>
+    <div class="pregunta-explicacion" id="explicacion" hidden></div>
+  </main>
+
+  <!-- ── Footer ──────────────────────────────────────────── -->
+  <div class="libre-footer">
+    <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
+  </div>
+
+  <!-- ── Time Out overlay ─────────────────────────────────── -->
+  <div class="arcade-gameover" id="ctrGameover" hidden>
+    <div class="arcade-gameover__card">
+      <span class="arcade-gameover__icon">⏱️</span>
+      <h2 class="arcade-gameover__title">¡Se acabó el tiempo!</h2>
+      <p class="arcade-gameover__score">
+        Correctas <strong id="goCorrectas">0</strong>
+        &nbsp;·&nbsp;
+        Incorrectas <strong id="goIncorrectas">0</strong>
+      </p>
+      <p class="arcade-gameover__sub" id="goTotal">0 preguntas respondidas</p>
+      <button class="libre-cta arcade-gameover__btn" id="reiniciarBtn">Jugar de nuevo</button>
+      <button class="libre-cta arcade-gameover__btn arcade-gameover__btn--sec" id="volverBtn">Volver al inicio</button>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="/static/css/progresion.css?v=8" />
+  <script src="/static/js/progresion.js?v=9"></script>
+  <script src="/static/js/contrareloj.js?v=6"></script>
+  <script>
+    var _paCtr = JSON.parse(localStorage.getItem('usuario') || '{}').puntos_totales || 0;
+    (function poll() {
+      if (!document.getElementById('ctrGameover').hidden) {
+        setTimeout(function() { mostrarProgreso(_paCtr, null); }, 1200);
+      } else {
+        setTimeout(poll, 300);
+      }
+    })();
+  </script>
+</body>
+</html>

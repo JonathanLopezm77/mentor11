@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Elegir Tema</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header class="libre-header">
+    <button class="libre-back" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Libre</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <!-- ── Contenido principal ─────────────────────────────── -->
+  <main class="libre-temas__main">
+
+    <!-- Ícono + título pequeño -->
+    <div class="libre-temas__top">
+      <div class="libre-temas__cloud">
+        <img src="/static/img/nube_libre.png" alt="Modo Libre" />
+      </div>
+      <h2 class="libre-temas__title">Libre</h2>
+    </div>
+
+    <!-- Lista de materias -->
+    <p class="libre-temas__label">Selecciona las materias:</p>
+
+    <ul class="libre-temas__list" id="materiasList">
+      <!-- Se llena dinámicamente desde /api/v1/juego/materias -->
+      <li class="prof-preview__empty">Cargando materias...</li>
+    </ul>
+
+    <!-- Cantidad de preguntas -->
+    <div class="libre-cantidad">
+      <p class="libre-temas__label"><span class="signo-baile">¿</span>Cuántas preguntas<span class="signo-baile signo-baile--delay">?</span> <span class="libre-cantidad__max">(máx. 20)</span></p>
+      <input class="libre-cantidad__input" id="cantidadInput"
+        type="number" min="1" max="20" value="10" />
+    </div>
+  </main>
+
+  <!-- ── Botón inferior ──────────────────────────────────── -->
+  <div class="libre-footer">
+    <button class="libre-cta" id="comenzarBtn" disabled>
+      Comenzar
+    </button>
+  </div>
+
+  <script src="/static/js/libre.js"></script>
+</body>
+</html>

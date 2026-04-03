@@ -2,7 +2,7 @@
  * Mentor 11 — Dashboard Profesor
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
 
@@ -29,9 +29,9 @@ async function cargarStats() {
 
     if (res.ok) {
       const data = await res.json();
-      document.getElementById('statAulas').textContent        = data.aulas        ?? 0;
-      document.getElementById('statEstudiantes').textContent  = data.estudiantes  ?? 0;
-      document.getElementById('statRetos').textContent        = data.retos        ?? 0;
+      document.getElementById('statAulas').textContent = data.aulas ?? 0;
+      document.getElementById('statEstudiantes').textContent = data.estudiantes ?? 0;
+      document.getElementById('statRetos').textContent = data.retos ?? 0;
       renderEstudiantes(data.estudiantes_lista ?? []);
     }
   } catch (err) {

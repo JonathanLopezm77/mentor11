@@ -556,3 +556,45 @@ html, body {
     height: 80px;
   }
 }
+
+/* ============================================================
+   Responsive: móvil vs escritorio
+   El contenedor principal ocupa toda la pantalla en móvil
+   y se muestra como tarjeta centrada en escritorio.
+   ============================================================ */
+
+/* ── MÓVIL (< 640px): pantalla completa ─────────────────── */
+@media (max-width: 639px) {
+  .dash-page,
+  .libre-body {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* ── ESCRITORIO (≥ 640px): tarjeta centrada ─────────────── */
+@media (min-width: 640px) {
+  /* Fondo detrás de la tarjeta */
+  html {
+    background: linear-gradient(160deg, #fff7ed 0%, #f1f5f9 100%);
+  }
+
+  /* Dashboard: el .dash-page ya tiene max-width + margin auto */
+  .dash-page {
+    max-width: 460px;
+    border-radius: 24px;
+    margin: 28px auto;
+    min-height: calc(100vh - 56px);
+    box-shadow: 0 20px 80px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.07);
+    overflow: hidden;
+  }
+
+  /* Páginas de juego: .libre-body está en <body>, html da el fondo */
+  .libre-body {
+    max-width: 460px;
+    box-shadow: 0 0 80px rgba(0,0,0,0.15);
+  }
+}

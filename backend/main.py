@@ -11,7 +11,7 @@ import os
 import uvicorn
 
 from app.core.config import settings
-from app.api.v1.endpoints import auth, juego, admin, perfil
+from app.api.v1.endpoints import auth, juego, admin, perfil, online
 
 # ─── Crear la aplicación ──────────────────────────────────────────────────────
 app = FastAPI(
@@ -52,6 +52,10 @@ app.include_router(
     perfil.router,
     prefix=f"{settings.API_V1_PREFIX}/perfil",
     tags=["Perfil"],
+)
+app.include_router(
+    online.router,
+    tags=["Modo Online"],
 )
 
 

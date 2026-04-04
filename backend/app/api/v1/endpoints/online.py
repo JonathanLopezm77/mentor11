@@ -13,33 +13,31 @@ from app.core.security import decode_token
 
 router = APIRouter()
 
-_queue: list[dict] = []
-_queue_lock = asyncio.Lock()
-_rooms: dict[str, dict] = {}
+_cola: list[dict] = []
+_cola_lock = asyncio.Lock()
+_salas: dict[str, dict] = {}
 
 
-async def _send(ws: WebSocket, data: dict):
+async def _enviar(ws: WebSocket, datos: dict):
     try:
-        await ws.send_json(data)
+        await ws.send_json(datos)
     except Exception:
         pass
 
 
-async def _close_room_delayed(room_id: str, user_id: int):
+async def _cerrar_sala_delayed(sala_id: str, usuario_id: int):
     """Espera 15s antes de cerrar la sala — permite reconexión al navegar de página."""
     await asyncio.sleep(15)
-    room = _rooms.get(room_id)
-    if not room:
+    sala = _salas.get(sala_id)
+    if not sala:
         return
-    # Verificar si el jugador ya se reconectó
-    for p in room["players"]:
-        if p["user_id"] == user_id and p.get("reconectado"):
+    for p in sala["jugadores"]:
+        if p["usuario_id"] == usuario_id and p.get("reconectado"):
             return
-    # No reconectó — notificar al rival y cerrar
-    _rooms.pop(room_id, None)
-    for p in room["players"]:
-        if p["user_id"] != user_id:
-            await _send(p["ws"], {
+    _salas.pop(sala_id, None)
+    for p in sala["jugadores"]:
+        if p["usuario_id"] != usuario_id:
+            await _enviar(p["ws"], {
                 "type": "rival_disconnected",
                 "msg": "Tu rival se desconectó. Partida cancelada.",
             })
@@ -54,13 +52,13 @@ async def online_ws(websocket: WebSocket):
         await websocket.close(code=4001)
         return
 
-    user_id: int = int(payload["sub"])
-    username: str = websocket.query_params.get("username") or f"Jugador{user_id}"
+    usuario_id: int = int(payload["sub"])
+    nombre: str = websocket.query_params.get("username") or f"Jugador{usuario_id}"
 
     await websocket.accept()
 
-    player = {"ws": websocket, "user_id": user_id, "username": username, "reconectado": False}
-    room_id: Optional[str] = None
+    jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "reconectado": False}
+    sala_id: Optional[str] = None
 
     try:
         # ── Revisar si viene de reconexión (join_room al inicio) ──
@@ -71,106 +69,103 @@ async def online_ws(websocket: WebSocket):
             primer_msg = None
 
         if primer_msg and primer_msg.get("type") == "join_room":
-            room_id = primer_msg.get("room_id")
-            room = _rooms.get(room_id)
-            if room:
-                for p in room["players"]:
-                    if p["user_id"] == user_id:
+            sala_id = primer_msg.get("room_id")
+            sala = _salas.get(sala_id)
+            if sala:
+                for p in sala["jugadores"]:
+                    if p["usuario_id"] == usuario_id:
                         p["ws"] = websocket
                         p["reconectado"] = True
-                await _send(websocket, {"type": "rejoined", "room_id": room_id,
-                                        "rival": next((p["username"] for p in room["players"] if p["user_id"] != user_id), "")})
+                rival = next((p["nombre"] for p in sala["jugadores"] if p["usuario_id"] != usuario_id), "")
+                await _enviar(websocket, {"type": "rejoined", "room_id": sala_id, "rival": rival})
             else:
-                await _send(websocket, {"type": "room_not_found"})
+                await _enviar(websocket, {"type": "room_not_found"})
                 return
         else:
             # ── Matchmaking normal ────────────────────────────────
-            async with _queue_lock:
-                if _queue:
-                    rival = _queue.pop(0)
-                    room_id = str(uuid.uuid4())
-                    _rooms[room_id] = {
-                        "players": [rival, player],
-                        "mode": None,
-                        "host_id": rival["user_id"],
+            async with _cola_lock:
+                if _cola:
+                    rival = _cola.pop(0)
+                    sala_id = str(uuid.uuid4())
+                    _salas[sala_id] = {
+                        "jugadores": [rival, jugador],
+                        "modo": None,
+                        "anfitrion_id": rival["usuario_id"],
                     }
-                    await _send(rival["ws"], {
+                    await _enviar(rival["ws"], {
                         "type": "match_found",
-                        "room_id": room_id,
-                        "rival": username,
+                        "room_id": sala_id,
+                        "rival": nombre,
                         "is_host": True,
                     })
-                    await _send(websocket, {
+                    await _enviar(websocket, {
                         "type": "match_found",
-                        "room_id": room_id,
-                        "rival": rival["username"],
+                        "room_id": sala_id,
+                        "rival": rival["nombre"],
                         "is_host": False,
                     })
                 else:
-                    _queue.append(player)
-                    await _send(websocket, {"type": "searching"})
+                    _cola.append(jugador)
+                    await _enviar(websocket, {"type": "searching"})
 
-            # Procesar el primer mensaje si no fue join_room
             if primer_msg:
-                msg_type = primer_msg.get("type")
-                if msg_type == "cancel_search":
-                    async with _queue_lock:
-                        if player in _queue:
-                            _queue.remove(player)
-                    await _send(websocket, {"type": "search_cancelled"})
+                if primer_msg.get("type") == "cancel_search":
+                    async with _cola_lock:
+                        if jugador in _cola:
+                            _cola.remove(jugador)
+                    await _enviar(websocket, {"type": "search_cancelled"})
                     return
 
         # ── Bucle principal de mensajes ───────────────────────
         while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
+            datos = await websocket.receive_json()
+            tipo = datos.get("type")
 
-            if msg_type == "cancel_search":
-                async with _queue_lock:
-                    if player in _queue:
-                        _queue.remove(player)
-                await _send(websocket, {"type": "search_cancelled"})
+            if tipo == "cancel_search":
+                async with _cola_lock:
+                    if jugador in _cola:
+                        _cola.remove(jugador)
+                await _enviar(websocket, {"type": "search_cancelled"})
                 break
 
-            if msg_type == "select_mode" and room_id:
-                room = _rooms.get(room_id)
-                if room and room["host_id"] == user_id and not room.get("mode"):
-                    mode = data.get("mode", "aleatorio")
-                    room["mode"] = mode
-                    for p in room["players"]:
-                        await _send(p["ws"], {
+            if tipo == "select_mode" and sala_id:
+                sala = _salas.get(sala_id)
+                if sala and sala["anfitrion_id"] == usuario_id and not sala.get("modo"):
+                    modo = datos.get("mode", "libre")
+                    sala["modo"] = modo
+                    for p in sala["jugadores"]:
+                        await _enviar(p["ws"], {
                             "type": "mode_selected",
-                            "mode": mode,
-                            "room_id": room_id,
+                            "mode": modo,
+                            "room_id": sala_id,
                         })
 
-            if msg_type == "progress" and room_id:
-                room = _rooms.get(room_id)
-                if room:
-                    for p in room["players"]:
-                        if p["user_id"] != user_id:
-                            await _send(p["ws"], {
+            if tipo == "progress" and sala_id:
+                sala = _salas.get(sala_id)
+                if sala:
+                    for p in sala["jugadores"]:
+                        if p["usuario_id"] != usuario_id:
+                            await _enviar(p["ws"], {
                                 "type": "rival_progress",
-                                "value": data.get("value", 0),
+                                "value": datos.get("value", 0),
                             })
 
-            if msg_type == "finish" and room_id:
-                room = _rooms.get(room_id)
-                if room:
-                    for p in room["players"]:
-                        if p["user_id"] != user_id:
-                            await _send(p["ws"], {"type": "rival_finished"})
-                    await _send(websocket, {"type": "you_win"})
-                    _rooms.pop(room_id, None)
-                    room_id = None
+            if tipo == "finish" and sala_id:
+                sala = _salas.get(sala_id)
+                if sala:
+                    for p in sala["jugadores"]:
+                        if p["usuario_id"] != usuario_id:
+                            await _enviar(p["ws"], {"type": "rival_finished"})
+                    await _enviar(websocket, {"type": "you_win"})
+                    _salas.pop(sala_id, None)
+                    sala_id = None
                 break
 
     except WebSocketDisconnect:
         pass
     finally:
-        async with _queue_lock:
-            if player in _queue:
-                _queue.remove(player)
-        if room_id:
-            # Grace period: esperar 15s antes de cerrar por si el jugador navega de página
-            asyncio.create_task(_close_room_delayed(room_id, user_id))
+        async with _cola_lock:
+            if jugador in _cola:
+                _cola.remove(jugador)
+        if sala_id:
+            asyncio.create_task(_cerrar_sala_delayed(sala_id, usuario_id))

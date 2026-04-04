@@ -389,7 +389,7 @@
     // ── Conexión WebSocket ────────────────────────────────
     function conectarWS() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      const url   = `${proto}://${location.host}/ws/online?token=${token}`;
+      const url   = `${proto}://${location.host}/ws/online?token=${token}&username=${encodeURIComponent(miNombre)}`;
       ws = new WebSocket(url);
 
       ws.onopen = () => {

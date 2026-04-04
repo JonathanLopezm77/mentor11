@@ -75,7 +75,7 @@ async def online_ws(websocket: WebSocket):
         return
 
     user_id: int = int(payload["sub"])
-    username: str = payload.get("username", f"Jugador{user_id}")
+    username: str = websocket.query_params.get("username") or f"Jugador{user_id}"
 
     await websocket.accept()
 

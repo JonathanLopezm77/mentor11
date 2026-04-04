@@ -151,6 +151,16 @@
     </div>
   </div>
 
+  <!-- ── Overlay: empate ───────────────────────────────────── -->
+  <div class="overlay-fin" id="overlayEmpate">
+    <div class="overlay-fin__card">
+      <span class="overlay-fin__icon">🤝</span>
+      <p class="overlay-fin__title">¡Empate!</p>
+      <p class="overlay-fin__sub">Los dos respondieron igual de bien.</p>
+      <button class="overlay-fin__btn" id="btnEmpateOk">Volver al inicio</button>
+    </div>
+  </div>
+
   <!-- ── Overlay: rival desconectado ───────────────────────── -->
   <div class="overlay-fin" id="overlayDesc">
     <div class="overlay-fin__card">
@@ -208,7 +218,8 @@
         }
 
         if (data.type === 'resultado') {
-          if (data.ganaste) mostrarOverlay('overlayGana');
+          if (data.empate) mostrarOverlay('overlayEmpate');
+          else if (data.ganaste) mostrarOverlay('overlayGana');
           else mostrarOverlay('overlayPierde');
         }
 
@@ -411,6 +422,7 @@
     document.getElementById('btnGanaOk').addEventListener('click', volverInicio);
     document.getElementById('btnPierdeOk').addEventListener('click', volverInicio);
     document.getElementById('btnDescOk').addEventListener('click', volverInicio);
+    document.getElementById('btnEmpateOk').addEventListener('click', volverInicio);
 
     // ── Botón Siguiente ───────────────────────────────────────
     document.getElementById('siguienteBtn').addEventListener('click', () => {

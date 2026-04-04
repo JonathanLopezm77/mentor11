@@ -84,8 +84,16 @@ async def online_ws(websocket: WebSocket):
         else:
             # ── Matchmaking normal ────────────────────────────────
             async with _cola_lock:
-                if _cola:
-                    rival = _cola.pop(0)
+                # Buscar rival que no sea el mismo usuario
+                rival_encontrado = None
+                for candidato in _cola:
+                    if candidato["usuario_id"] != usuario_id:
+                        rival_encontrado = candidato
+                        _cola.remove(candidato)
+                        break
+
+                if rival_encontrado:
+                    rival = rival_encontrado
                     sala_id = str(uuid.uuid4())
                     _salas[sala_id] = {
                         "jugadores": [rival, jugador],
@@ -172,17 +180,21 @@ async def online_ws(websocket: WebSocket):
                         correctas_a = sala["finalizados"][ids[0]]
                         correctas_b = sala["finalizados"][ids[1]]
 
-                        if correctas_a != correctas_b:
-                            ganador_id = ids[0] if correctas_a > correctas_b else ids[1]
+                        if correctas_a == correctas_b:
+                            for p in sala["jugadores"]:
+                                await _enviar(p["ws"], {
+                                    "type": "resultado",
+                                    "empate": True,
+                                    "ganaste": False,
+                                })
                         else:
-                            # Empate: gana el primero en terminar
-                            ganador_id = sala.get("primer_fin", ids[0])
-
-                        for p in sala["jugadores"]:
-                            await _enviar(p["ws"], {
-                                "type": "resultado",
-                                "ganaste": p["usuario_id"] == ganador_id,
-                            })
+                            ganador_id = ids[0] if correctas_a > correctas_b else ids[1]
+                            for p in sala["jugadores"]:
+                                await _enviar(p["ws"], {
+                                    "type": "resultado",
+                                    "empate": False,
+                                    "ganaste": p["usuario_id"] == ganador_id,
+                                })
                         _salas.pop(sala_id, None)
                         sala_id = None
                     else:

@@ -335,8 +335,19 @@
           else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
         });
 
-        if (data.es_correcta) { correctas++; play('/static/correcta.mp3'); }
-        else { incorrectas++; play('/static/error.mp3'); }
+        if (data.es_correcta) {
+          correctas++;
+          play('/static/correcta.mp3');
+          // La barra solo avanza con respuestas correctas
+          const pct = Math.round((correctas / preguntas.length) * 100);
+          document.getElementById('barYo').style.width = pct + '%';
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'progress', value: pct }));
+          }
+        } else {
+          incorrectas++;
+          play('/static/error.mp3');
+        }
 
         if (data.explicacion) {
           const exp = document.getElementById('explicacion');
@@ -344,16 +355,8 @@
           exp.hidden = false;
         }
 
-        // Avanzar progreso
         const siguienteIdx = actual + 1;
-        const pct = Math.round((siguienteIdx / preguntas.length) * 100);
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'progress', value: pct }));
-        }
-        document.getElementById('barYo').style.width = pct + '%';
-
         if (siguienteIdx >= preguntas.length) {
-          // Terminamos todas las preguntas
           document.getElementById('siguienteBtn').textContent = 'Ver resultado';
           document.getElementById('siguienteBtn').hidden = false;
         } else {

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Online</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Barras de progreso duales ── */
+    .dual-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px 16px 0;
+    }
+    .dual-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dual-bar-label {
+      font-size: .72rem;
+      font-weight: 700;
+      width: 38px;
+      flex-shrink: 0;
+      color: var(--gray-500);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dual-bar-track {
+      flex: 1;
+      height: 7px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .dual-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+      width: 0%;
+    }
+    .dual-bar-fill--yo   { background: var(--orange-500); }
+    .dual-bar-fill--rival { background: #f59e0b; }
+
+    /* ── Overlays de fin de partida ── */
+    .overlay-fin {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 32px 24px;
+    }
+    .overlay-fin--active { display: flex; }
+    .overlay-fin__card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 28px;
+      text-align: center;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .overlay-fin__icon  { font-size: 4rem; line-height: 1; }
+    .overlay-fin__title { font-size: 1.7rem; font-weight: 800; color: var(--gray-900); }
+    .overlay-fin__sub   { font-size: .92rem; color: var(--gray-500); }
+    .overlay-fin__btn   {
+      margin-top: 8px;
+      padding: 14px 32px;
+      background: var(--orange-500);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="libre-body">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="libre-header">
+    <button class="libre-back" id="backBtn" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Online</h1>
+    <span class="libre-contador" id="contador">1 / ?</span>
+  </header>
+
+  <!-- ── Barras de progreso duales ──────────────────────────── -->
+  <div class="dual-bars">
+    <div class="dual-bar-row">
+      <span class="dual-bar-label" id="labelYo">Tú</span>
+      <div class="dual-bar-track"><div class="dual-bar-fill dual-bar-fill--yo" id="barYo"></div></div>
+    </div>
+    <div class="dual-bar-row">
+      <span class="dual-bar-label" id="labelRival">Rival</span>
+      <div class="dual-bar-track"><div class="dual-bar-fill dual-bar-fill--rival" id="barRival"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Contenido principal ────────────────────────────────── -->
+  <main class="pregunta-main">
+    <div class="pregunta-card">
+      <p class="pregunta-enunciado" id="enunciado">Conectando...</p>
+    </div>
+    <div class="opciones-grid" id="opcionesGrid"></div>
+    <div class="pregunta-explicacion" id="explicacion" hidden></div>
+  </main>
+
+  <!-- ── Botón siguiente ────────────────────────────────────── -->
+  <div class="libre-footer">
+    <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
+  </div>
+
+  <!-- ── Overlay: ganaste ───────────────────────────────────── -->
+  <div class="overlay-fin" id="overlayGana">
+    <div class="overlay-fin__card">
+      <span class="overlay-fin__icon">🏆</span>
+      <p class="overlay-fin__title">¡Ganaste!</p>
+      <p class="overlay-fin__sub">Terminaste primero. ¡Excelente!</p>
+      <button class="overlay-fin__btn" id="btnGanaOk">Volver al inicio</button>
+    </div>
+  </div>
+
+  <!-- ── Overlay: perdiste ──────────────────────────────────── -->
+  <div class="overlay-fin" id="overlayPierde">
+    <div class="overlay-fin__card">
+      <span class="overlay-fin__icon">😔</span>
+      <p class="overlay-fin__title">¡Tu rival ganó!</p>
+      <p class="overlay-fin__sub" id="pieردeSub">Sigue practicando, ¡la próxima es tuya!</p>
+      <button class="overlay-fin__btn" id="btnPierdeOk">Volver al inicio</button>
+    </div>
+  </div>
+
+  <!-- ── Overlay: rival desconectado ───────────────────────── -->
+  <div class="overlay-fin" id="overlayDesc">
+    <div class="overlay-fin__card">
+      <span class="overlay-fin__icon">🔌</span>
+      <p class="overlay-fin__title">Rival desconectado</p>
+      <p class="overlay-fin__sub">Tu rival abandonó la partida.</p>
+      <button class="overlay-fin__btn" id="btnDescOk">Volver al inicio</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Sonidos ────────────────────────────────────────────────
+    const SFX = {};
+    [['/static/correcta.mp3',.8],['/static/error.mp3',.8],
+     ['/static/sig_pregun.mp3',.7],['/static/arcade_stat.mp3',.6]].forEach(([src,vol]) => {
+      const a = new Audio(src); a.preload = 'auto'; a.volume = vol; SFX[src] = a;
+    });
+    const play = src => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(()=>{}); };
+
+    // ── Estado desde sessionStorage ───────────────────────────
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    const onlineState = JSON.parse(sessionStorage.getItem('online_state') ?? 'null');
+
+    if (!token || !onlineState) { location.replace('online_intro.html'); }
+
+    const { room_id, rival, modo, username } = onlineState;
+
+    document.getElementById('labelYo').textContent = username ?? 'Tú';
+    document.getElementById('labelRival').textContent = rival ?? 'Rival';
+
+    let ws = null;
+    let sesionId = null;
+    let preguntas = [];
+    let actual = 0;
+    let correctas = 0;
+    let incorrectas = 0;
+    let respondida = false;
+    let partidaTerminada = false;
+
+    // ── WebSocket ─────────────────────────────────────────────
+    function conectarWS() {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}/ws/online?token=${token}&username=${encodeURIComponent(username)}`);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'join_room', room_id }));
+      };
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'rival_progress') {
+          document.getElementById('barRival').style.width = (data.value ?? 0) + '%';
+        }
+
+        if (data.type === 'rival_finished') {
+          mostrarOverlay('overlayPierde');
+        }
+
+        if (data.type === 'you_win') {
+          mostrarOverlay('overlayGana');
+        }
+
+        if (data.type === 'rival_disconnected') {
+          mostrarOverlay('overlayDesc');
+        }
+
+        if (data.type === 'room_not_found') {
+          // La sala ya no existe — iniciar igual sin rival
+        }
+      };
+
+      ws.onerror = () => {};
+      ws.onclose = () => {};
+    }
+
+    function enviarProgreso() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      const total = preguntas.length;
+      const pct = total > 0 ? Math.round((actual / total) * 100) : 0;
+      ws.send(JSON.stringify({ type: 'progress', value: pct }));
+      document.getElementById('barYo').style.width = pct + '%';
+    }
+
+    function enviarFinish() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'finish' }));
+    }
+
+    // ── Cargar materias y preguntas ───────────────────────────
+    async function init() {
+      conectarWS();
+
+      try {
+        // Obtener todas las materias
+        const matRes = await fetch(`${API}/juego/materias`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!matRes.ok) throw new Error('materias');
+        const materias = await matRes.json();
+        const materiaIds = materias.map(m => m.id).join(',');
+
+        // Crear sesión
+        const sesRes = await fetch(`${API}/juego/sesiones`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            modo_juego: modo ?? 'aleatorio',
+            materia_ids: materias.map(m => m.id),
+            total_preguntas: 10,
+          })
+        });
+        if (!sesRes.ok) throw new Error('sesion');
+        const sesData = await sesRes.json();
+        sesionId = sesData.sesion_id;
+
+        // Cargar preguntas
+        const pRes = await fetch(
+          `${API}/juego/preguntas?materia_ids=${materiaIds}&cantidad=10`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!pRes.ok) throw new Error('preguntas');
+        preguntas = await pRes.json();
+
+        if (!preguntas.length) {
+          document.getElementById('enunciado').textContent = 'No hay preguntas disponibles.';
+          return;
+        }
+
+        mostrarPregunta();
+      } catch (err) {
+        console.error('[Online] Error init:', err);
+        document.getElementById('enunciado').textContent = 'Error de conexión. Recarga.';
+      }
+    }
+
+    // ── Mostrar pregunta ──────────────────────────────────────
+    function mostrarPregunta() {
+      if (actual >= preguntas.length) {
+        finalizarPartida();
+        return;
+      }
+      respondida = false;
+
+      const p = preguntas[actual];
+      document.getElementById('contador').textContent = `${actual + 1} / ${preguntas.length}`;
+      document.getElementById('enunciado').textContent = p.enunciado;
+      document.getElementById('explicacion').hidden = true;
+      document.getElementById('explicacion').textContent = '';
+      document.getElementById('siguienteBtn').hidden = true;
+
+      const grid = document.getElementById('opcionesGrid');
+      grid.innerHTML = '';
+      p.opciones.forEach(op => {
+        const btn = document.createElement('button');
+        btn.className = 'opcion-btn';
+        btn.dataset.id = op.id;
+        btn.innerHTML = `<span class="opcion-letra">${op.letra}</span><span class="opcion-texto">${op.texto}</span>`;
+        btn.addEventListener('click', () => responder(op.id, p.id));
+        grid.appendChild(btn);
+      });
+    }
+
+    // ── Responder ─────────────────────────────────────────────
+    async function responder(opcionId, preguntaId) {
+      if (respondida || partidaTerminada) return;
+      respondida = true;
+      document.querySelectorAll('.opcion-btn').forEach(b => b.disabled = true);
+
+      try {
+        const res = await fetch(`${API}/juego/sesiones/${sesionId}/responder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId })
+        });
+        const data = await res.json();
+
+        document.querySelectorAll('.opcion-btn').forEach(btn => {
+          const id = Number(btn.dataset.id);
+          if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
+          else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
+        });
+
+        if (data.es_correcta) { correctas++; play('/static/correcta.mp3'); }
+        else { incorrectas++; play('/static/error.mp3'); }
+
+        if (data.explicacion) {
+          const exp = document.getElementById('explicacion');
+          exp.textContent = `💡 ${data.explicacion}`;
+          exp.hidden = false;
+        }
+
+        // Avanzar progreso
+        const siguienteIdx = actual + 1;
+        const pct = Math.round((siguienteIdx / preguntas.length) * 100);
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'progress', value: pct }));
+        }
+        document.getElementById('barYo').style.width = pct + '%';
+
+        if (siguienteIdx >= preguntas.length) {
+          // Terminamos todas las preguntas
+          document.getElementById('siguienteBtn').textContent = 'Ver resultado';
+          document.getElementById('siguienteBtn').hidden = false;
+        } else {
+          if (data.es_correcta) {
+            setTimeout(() => { actual++; mostrarPregunta(); }, 900);
+          } else {
+            document.getElementById('siguienteBtn').hidden = false;
+          }
+        }
+
+      } catch (err) {
+        console.error('[Online] Error responder:', err);
+        document.querySelectorAll('.opcion-btn').forEach(b => b.disabled = false);
+        respondida = false;
+      }
+    }
+
+    // ── Finalizar partida (terminé todas las preguntas) ───────
+    async function finalizarPartida() {
+      if (partidaTerminada) return;
+      partidaTerminada = true;
+
+      enviarFinish();
+
+      try {
+        await fetch(`${API}/juego/sesiones/${sesionId}/finalizar`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (_) {}
+
+      play('/static/arcade_stat.mp3');
+      // El overlay de victoria lo envía el backend via 'you_win'
+      // Si no llega en 2s, mostramos igual
+      setTimeout(() => {
+        if (!document.getElementById('overlayGana').classList.contains('overlay-fin--active')) {
+          mostrarOverlay('overlayGana');
+        }
+      }, 2000);
+    }
+
+    // ── Overlays ──────────────────────────────────────────────
+    function mostrarOverlay(id) {
+      if (partidaTerminada && id !== 'overlayGana') return;
+      partidaTerminada = true;
+      document.getElementById(id).classList.add('overlay-fin--active');
+      if (ws) ws.close();
+    }
+
+    function volverInicio() {
+      sessionStorage.removeItem('online_state');
+      location.replace('dashboard_estudiante.html');
+    }
+
+    document.getElementById('btnGanaOk').addEventListener('click', volverInicio);
+    document.getElementById('btnPierdeOk').addEventListener('click', volverInicio);
+    document.getElementById('btnDescOk').addEventListener('click', volverInicio);
+
+    // ── Botón Siguiente ───────────────────────────────────────
+    document.getElementById('siguienteBtn').addEventListener('click', () => {
+      play('/static/sig_pregun.mp3');
+      actual++;
+      if (actual >= preguntas.length) {
+        finalizarPartida();
+      } else {
+        mostrarPregunta();
+      }
+    });
+
+    // ── Botón Volver ──────────────────────────────────────────
+    document.getElementById('backBtn').addEventListener('click', () => {
+      if (ws) ws.close();
+      sessionStorage.removeItem('online_state');
+      location.replace('dashboard_estudiante.html');
+    });
+
+    // ── Evitar bfcache ────────────────────────────────────────
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) location.replace('dashboard_estudiante.html');
+    });
+
+    init();
+  </script>
+</body>
+</html>

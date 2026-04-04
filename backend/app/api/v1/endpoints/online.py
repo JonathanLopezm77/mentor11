@@ -209,10 +209,8 @@ async def online_ws(websocket: WebSocket):
                                 })
                         _salas.pop(sala_id, None)
                         sala_id = None
-                    else:
-                        # Primero en terminar — guardar y esperar al rival
-                        sala["primer_fin"] = usuario_id
-                break
+                        break  # resultado enviado a ambos — salir
+                    # else: primero en terminar — seguir en el bucle esperando al rival
 
     except WebSocketDisconnect:
         pass

@@ -193,13 +193,20 @@
     document.getElementById('labelRival').textContent = rival ?? 'Rival';
 
     let ws = null;
-    let sesionId = null;
-    let preguntas = [];
-    let actual = 0;
-    let correctas = 0;
-    let incorrectas = 0;
     let respondida = false;
     let partidaTerminada = false;
+
+    // ── Restaurar progreso si hubo recarga ────────────────────
+    const _progreso = JSON.parse(sessionStorage.getItem('online_progreso') ?? 'null');
+    let sesionId    = _progreso?.sesionId    ?? null;
+    let preguntas   = _progreso?.preguntas   ?? [];
+    let actual      = _progreso?.actual      ?? 0;
+    let correctas   = _progreso?.correctas   ?? 0;
+    let incorrectas = _progreso?.incorrectas ?? 0;
+
+    function guardarProgreso() {
+      sessionStorage.setItem('online_progreso', JSON.stringify({ sesionId, preguntas, actual, correctas, incorrectas }));
+    }
 
     // ── WebSocket ─────────────────────────────────────────────
     function conectarWS() {
@@ -253,16 +260,22 @@
     async function init() {
       conectarWS();
 
+      // Si hay progreso guardado (recarga), restaurar directamente
+      if (_progreso && preguntas.length > 0) {
+        const pct = preguntas.length > 0 ? Math.round((correctas / preguntas.length) * 100) : 0;
+        document.getElementById('barYo').style.width = pct + '%';
+        mostrarPregunta();
+        return;
+      }
+
       try {
         let materiaIds;
         let cantidad;
 
         if (modo === 'libre' && onlineState.materia_ids) {
-          // Libre: usar materias y cantidad elegidas por el anfitrión
           materiaIds = onlineState.materia_ids.join(',');
           cantidad = onlineState.cantidad ?? 10;
         } else {
-          // Aleatorio: todas las materias, 10 preguntas
           const matRes = await fetch(`${API}/juego/materias`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -299,6 +312,7 @@
           return;
         }
 
+        guardarProgreso();
         mostrarPregunta();
       } catch (err) {
         console.error('[Online] Error init:', err);
@@ -356,7 +370,6 @@
         if (data.es_correcta) {
           correctas++;
           play('/static/correcta.mp3');
-          // La barra solo avanza con respuestas correctas
           const pct = Math.round((correctas / preguntas.length) * 100);
           document.getElementById('barYo').style.width = pct + '%';
           if (ws && ws.readyState === WebSocket.OPEN) {
@@ -366,6 +379,8 @@
           incorrectas++;
           play('/static/error.mp3');
         }
+
+        guardarProgreso();
 
         if (data.explicacion) {
           const exp = document.getElementById('explicacion');
@@ -379,7 +394,7 @@
           document.getElementById('siguienteBtn').hidden = false;
         } else {
           if (data.es_correcta) {
-            setTimeout(() => { actual++; mostrarPregunta(); }, 900);
+            setTimeout(() => { actual++; guardarProgreso(); mostrarPregunta(); }, 900);
           } else {
             document.getElementById('siguienteBtn').hidden = false;
           }
@@ -426,6 +441,7 @@
 
     function volverInicio() {
       sessionStorage.removeItem('online_state');
+      sessionStorage.removeItem('online_progreso');
       location.replace('dashboard_estudiante.html');
     }
 
@@ -438,6 +454,7 @@
     document.getElementById('siguienteBtn').addEventListener('click', () => {
       play('/static/sig_pregun.mp3');
       actual++;
+      guardarProgreso();
       if (actual >= preguntas.length) {
         finalizarPartida();
       } else {

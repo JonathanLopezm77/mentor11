@@ -15,7 +15,7 @@ from app.db.database import Base
 class ModoJuego(str, enum.Enum):
     libre = "libre"
     arcade = "arcade"
-    contrareloj = "contrareloj"
+    contrarreloj = "contrarreloj"
     aleatorio = "aleatorio"
     online_tradicional = "online_tradicional"
     online_poderes = "online_poderes"

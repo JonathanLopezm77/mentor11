@@ -19,12 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # The init migration had a typo ('contrarreloj' with double-r) and was
-    # missing 'aleatorio'. This migration adds the correct values safely.
-    op.execute("ALTER TYPE modo_juego ADD VALUE IF NOT EXISTS 'aleatorio'")
-    op.execute("ALTER TYPE modo_juego ADD VALUE IF NOT EXISTS 'contrareloj'")
+    pass
 
 
 def downgrade() -> None:
-    # Postgres does not support removing enum values — no downgrade possible.
     pass

@@ -139,7 +139,7 @@ async function init() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        modo_juego: 'contrareloj',
+        modo_juego: 'contrarreloj',
         materia_ids: materiaIds,
         total_preguntas: 999,
       }),

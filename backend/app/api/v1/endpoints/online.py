@@ -161,12 +161,33 @@ async def online_ws(websocket: WebSocket):
             if tipo == "finish" and sala_id:
                 sala = _salas.get(sala_id)
                 if sala:
-                    for p in sala["jugadores"]:
-                        if p["usuario_id"] != usuario_id:
-                            await _enviar(p["ws"], {"type": "rival_finished"})
-                    await _enviar(websocket, {"type": "you_win"})
-                    _salas.pop(sala_id, None)
-                    sala_id = None
+                    mis_correctas = datos.get("correctas", 0)
+                    if "finalizados" not in sala:
+                        sala["finalizados"] = {}
+                    sala["finalizados"][usuario_id] = mis_correctas
+
+                    if len(sala["finalizados"]) == 2:
+                        # Ambos terminaron — comparar aciertos
+                        ids = list(sala["finalizados"].keys())
+                        correctas_a = sala["finalizados"][ids[0]]
+                        correctas_b = sala["finalizados"][ids[1]]
+
+                        if correctas_a != correctas_b:
+                            ganador_id = ids[0] if correctas_a > correctas_b else ids[1]
+                        else:
+                            # Empate: gana el primero en terminar
+                            ganador_id = sala.get("primer_fin", ids[0])
+
+                        for p in sala["jugadores"]:
+                            await _enviar(p["ws"], {
+                                "type": "resultado",
+                                "ganaste": p["usuario_id"] == ganador_id,
+                            })
+                        _salas.pop(sala_id, None)
+                        sala_id = None
+                    else:
+                        # Primero en terminar — guardar y esperar al rival
+                        sala["primer_fin"] = usuario_id
                 break
 
     except WebSocketDisconnect:

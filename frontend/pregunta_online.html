@@ -207,20 +207,17 @@
           document.getElementById('barRival').style.width = (data.value ?? 0) + '%';
         }
 
-        if (data.type === 'rival_finished') {
-          mostrarOverlay('overlayPierde');
-        }
-
-        if (data.type === 'you_win') {
-          mostrarOverlay('overlayGana');
+        if (data.type === 'resultado') {
+          if (data.ganaste) mostrarOverlay('overlayGana');
+          else mostrarOverlay('overlayPierde');
         }
 
         if (data.type === 'rival_disconnected') {
-          mostrarOverlay('overlayDesc');
+          mostrarOverlay('overlayGana'); // si el rival se va, ganas tú
         }
 
         if (data.type === 'room_not_found') {
-          // La sala ya no existe — iniciar igual sin rival
+          // La sala ya no existe — se continúa sin rival
         }
       };
 
@@ -379,8 +376,7 @@
       if (partidaTerminada) return;
       partidaTerminada = true;
 
-      enviarFinish();
-
+      // Guardar sesión en el backend
       try {
         await fetch(`${API}/juego/sesiones/${sesionId}/finalizar`, {
           method: 'POST',
@@ -388,20 +384,21 @@
         });
       } catch (_) {}
 
+      // Enviar aciertos al servidor para que compare con el rival
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'finish', correctas }));
+      }
+
+      // Mostrar pantalla de espera mientras el rival termina
+      document.getElementById('enunciado').textContent = '⏳ Esperando que tu rival termine...';
+      document.getElementById('opcionesGrid').innerHTML = '';
+      document.getElementById('siguienteBtn').hidden = true;
+      document.getElementById('explicacion').hidden = true;
       play('/static/arcade_stat.mp3');
-      // El overlay de victoria lo envía el backend via 'you_win'
-      // Si no llega en 2s, mostramos igual
-      setTimeout(() => {
-        if (!document.getElementById('overlayGana').classList.contains('overlay-fin--active')) {
-          mostrarOverlay('overlayGana');
-        }
-      }, 2000);
     }
 
     // ── Overlays ──────────────────────────────────────────────
     function mostrarOverlay(id) {
-      if (partidaTerminada && id !== 'overlayGana') return;
-      partidaTerminada = true;
       document.getElementById(id).classList.add('overlay-fin--active');
       if (ws) ws.close();
     }

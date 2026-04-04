@@ -128,6 +128,14 @@ async def online_ws(websocket: WebSocket):
                 await _enviar(websocket, {"type": "search_cancelled"})
                 break
 
+            # El anfitrión entra al bucle con sala_id=None porque la sala se
+            # crea en la corrutina del segundo jugador. Buscarla por usuario_id.
+            if not sala_id:
+                for rid, s in _salas.items():
+                    if any(p["usuario_id"] == usuario_id for p in s["jugadores"]):
+                        sala_id = rid
+                        break
+
             if tipo == "select_mode" and sala_id:
                 sala = _salas.get(sala_id)
                 if sala and sala["anfitrion_id"] == usuario_id and not sala.get("modo"):

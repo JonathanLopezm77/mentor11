@@ -254,22 +254,32 @@
       conectarWS();
 
       try {
-        // Obtener todas las materias
-        const matRes = await fetch(`${API}/juego/materias`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!matRes.ok) throw new Error('materias');
-        const materias = await matRes.json();
-        const materiaIds = materias.map(m => m.id).join(',');
+        let materiaIds;
+        let cantidad;
+
+        if (modo === 'libre' && onlineState.materia_ids) {
+          // Libre: usar materias y cantidad elegidas por el anfitrión
+          materiaIds = onlineState.materia_ids.join(',');
+          cantidad = onlineState.cantidad ?? 10;
+        } else {
+          // Aleatorio: todas las materias, 10 preguntas
+          const matRes = await fetch(`${API}/juego/materias`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!matRes.ok) throw new Error('materias');
+          const materias = await matRes.json();
+          materiaIds = materias.map(m => m.id).join(',');
+          cantidad = 10;
+        }
 
         // Crear sesión
         const sesRes = await fetch(`${API}/juego/sesiones`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
-            modo_juego: modo ?? 'aleatorio',
-            materia_ids: materias.map(m => m.id),
-            total_preguntas: 10,
+            modo_juego: modo === 'libre' ? 'libre' : 'aleatorio',
+            materia_ids: materiaIds.split(',').map(Number),
+            total_preguntas: cantidad,
           })
         });
         if (!sesRes.ok) throw new Error('sesion');
@@ -278,7 +288,7 @@
 
         // Cargar preguntas
         const pRes = await fetch(
-          `${API}/juego/preguntas?materia_ids=${materiaIds}&cantidad=10`,
+          `${API}/juego/preguntas?materia_ids=${materiaIds}&cantidad=${cantidad}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!pRes.ok) throw new Error('preguntas');

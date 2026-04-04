@@ -48,6 +48,18 @@
     .modo-card__icon { font-size:2.2rem; }
     .modo-card__label { font-size:.88rem; font-weight:700; color:var(--gray-900); }
 
+    /* ── Pantalla config libre ── */
+    .config-wrap { flex:1; display:flex; flex-direction:column; padding:20px 20px 0; gap:16px; overflow-y:auto; }
+    .config-titulo { font-size:1rem; font-weight:800; color:var(--gray-900); text-align:center; }
+    .config-label { font-size:.85rem; font-weight:700; color:var(--gray-600); margin-bottom:4px; }
+    .config-materias { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+    .config-materias li { display:flex; align-items:center; gap:12px; padding:12px 16px; border:1.5px solid var(--gray-200); border-radius:14px; cursor:pointer; font-size:.9rem; font-weight:600; color:var(--gray-900); transition:border-color .2s,background .2s; }
+    .config-materias li.selected { border-color:var(--orange-500); background:var(--orange-50); }
+    .config-materias li span { font-size:1.2rem; }
+    .config-cantidad { display:flex; align-items:center; gap:12px; }
+    .config-cantidad label { font-size:.85rem; font-weight:700; color:var(--gray-600); flex:1; }
+    .config-cantidad input { width:70px; padding:8px 10px; border:1.5px solid var(--gray-200); border-radius:10px; font-size:.95rem; font-weight:700; text-align:center; font-family:var(--font); }
+
     .screen { display:none; flex-direction:column; flex:1; }
     .screen--active { display:flex; }
     .libre-intro__main { justify-content:center; gap:0; padding:28px 24px 0; }
@@ -83,7 +95,7 @@
         </div>
         <div class="online-rule">
           <span class="online-rule__icon">🏆</span>
-          <div class="online-rule__text">El primero en terminar gana<span>Responde rápido y sin errores</span></div>
+          <div class="online-rule__text">Gana quien más responda bien<span>Responde rápido y sin errores</span></div>
         </div>
       </div>
     </main>
@@ -136,6 +148,34 @@
     </div>
   </div>
 
+  <!-- Pantalla 5 — Config modo Libre (solo anfitrión) -->
+  <div class="screen" id="screenConfigLibre">
+    <div class="config-wrap">
+      <p class="match-found-badge" style="align-self:center;">☁️ Modo Libre</p>
+      <p class="config-titulo">Elige las materias y cantidad</p>
+      <p class="config-label">Materias:</p>
+      <ul class="config-materias" id="configMateriasList">
+        <li><span>⏳</span> Cargando materias...</li>
+      </ul>
+      <div class="config-cantidad">
+        <label for="configCantidad">Preguntas (1–20):</label>
+        <input type="number" id="configCantidad" min="1" max="20" value="10" />
+      </div>
+    </div>
+    <div class="libre-footer">
+      <button class="libre-cta" id="confirmarLibreBtn" disabled>Confirmar</button>
+    </div>
+  </div>
+
+  <!-- Pantalla 6 — Esperando config del anfitrión (no anfitrión) -->
+  <div class="screen" id="screenEsperandoConfig">
+    <div class="searching-wrap">
+      <div class="searching-ring"></div>
+      <p class="searching-title" id="esperandoTitulo">El anfitrión está configurando...</p>
+      <p style="font-size:.85rem;color:var(--gray-400);text-align:center;">Espera un momento</p>
+    </div>
+  </div>
+
   <script>
     const API = '/api/v1';
     const token = localStorage.getItem('access_token');
@@ -147,6 +187,9 @@
     let ws = null;
     let esHost = false;
     let rivalNombre = '';
+
+    // Iconos materias
+    const ICONOS = { LC:'📖', MAT:'🔢', CN:'🔬', SOC:'🌍', ING:'🌐' };
 
     function mostrar(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen--active'));
@@ -168,23 +211,66 @@
       mostrar('screenIntro');
     });
 
+    // Tarjetas de modo
     document.querySelectorAll('.modo-card').forEach(card => {
       card.addEventListener('click', () => {
         if (!esHost || !ws) return;
-        ws.send(JSON.stringify({ type: 'select_mode', mode: card.dataset.modo }));
+        const modo = card.dataset.modo;
+        if (modo === 'libre') {
+          // Avisar al rival y abrir pantalla de configuración
+          ws.send(JSON.stringify({ type: 'configurando_libre' }));
+          mostrar('screenConfigLibre');
+          cargarMateriasConfig();
+        } else {
+          // Aleatorio: enviar directo
+          ws.send(JSON.stringify({ type: 'select_mode', mode: 'aleatorio' }));
+        }
       });
     });
 
+    // ── Configuración modo Libre ──────────────────────────────
+    async function cargarMateriasConfig() {
+      const lista = document.getElementById('configMateriasList');
+      const confirmarBtn = document.getElementById('confirmarLibreBtn');
+      lista.innerHTML = '<li><span>⏳</span> Cargando...</li>';
+      try {
+        const res = await fetch(`${API}/juego/materias`, { headers: { Authorization: `Bearer ${token}` } });
+        const materias = await res.json();
+        lista.innerHTML = '';
+        materias.forEach(m => {
+          const li = document.createElement('li');
+          li.dataset.id = m.id;
+          li.innerHTML = `<span>${ICONOS[m.codigo_icfes] ?? '📚'}</span>${m.nombre}`;
+          li.addEventListener('click', () => {
+            li.classList.toggle('selected');
+            confirmarBtn.disabled = lista.querySelectorAll('.selected').length === 0;
+          });
+          lista.appendChild(li);
+        });
+      } catch (_) {
+        lista.innerHTML = '<li>Error cargando materias</li>';
+      }
+    }
+
+    document.getElementById('confirmarLibreBtn').addEventListener('click', () => {
+      const ids = [...document.querySelectorAll('#configMateriasList .selected')].map(el => Number(el.dataset.id));
+      let cantidad = parseInt(document.getElementById('configCantidad').value, 10);
+      if (isNaN(cantidad) || cantidad < 1) cantidad = 1;
+      if (cantidad > 20) cantidad = 20;
+      ws.send(JSON.stringify({ type: 'select_mode', mode: 'libre', materia_ids: ids, cantidad }));
+    });
+
+    // ── WebSocket ─────────────────────────────────────────────
     function conectarWS() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}/ws/online?token=${token}&username=${encodeURIComponent(miNombre)}`);
 
       ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
+        const datos = JSON.parse(e.data);
 
-        if (data.type === 'match_found') {
-          rivalNombre = data.rival;
-          esHost = data.is_host;
+        if (datos.type === 'match_found') {
+          rivalNombre = datos.rival;
+          esHost = datos.is_host;
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
           mostrar('screenMatch');
@@ -204,20 +290,28 @@
           }, 1500);
         }
 
-        if (data.type === 'mode_selected') {
-          // Guardar estado y navegar a la pantalla de juego
+        if (datos.type === 'modo_configurando') {
+          // El anfitrión eligió Libre y está configurando — mostrar espera al rival
+          if (!esHost) {
+            document.getElementById('esperandoTitulo').textContent = rivalNombre + ' está configurando...';
+            mostrar('screenEsperandoConfig');
+          }
+        }
+
+        if (datos.type === 'mode_selected') {
           sessionStorage.setItem('online_state', JSON.stringify({
-            room_id: data.room_id,
+            room_id: datos.room_id,
             rival: rivalNombre,
-            modo: data.mode,
+            modo: datos.mode,
+            materia_ids: datos.materia_ids ?? null,
+            cantidad: datos.cantidad ?? 10,
             token,
             username: miNombre,
           }));
-          // El WS se cierra al navegar; online.py tiene grace period para reconexión
           location.href = 'pregunta_online.html';
         }
 
-        if (data.type === 'search_cancelled') {
+        if (datos.type === 'search_cancelled') {
           mostrar('screenIntro');
         }
       };

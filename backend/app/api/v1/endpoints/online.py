@@ -149,12 +149,24 @@ async def online_ws(websocket: WebSocket):
                 if sala and sala["anfitrion_id"] == usuario_id and not sala.get("modo"):
                     modo = datos.get("mode", "libre")
                     sala["modo"] = modo
+                    materia_ids = datos.get("materia_ids", None)
+                    cantidad = datos.get("cantidad", 10)
                     for p in sala["jugadores"]:
                         await _enviar(p["ws"], {
                             "type": "mode_selected",
                             "mode": modo,
                             "room_id": sala_id,
+                            "materia_ids": materia_ids,
+                            "cantidad": cantidad,
                         })
+
+            if tipo == "configurando_libre" and sala_id:
+                # El anfitrión abrió la pantalla de config — avisar al rival
+                sala = _salas.get(sala_id)
+                if sala:
+                    for p in sala["jugadores"]:
+                        if p["usuario_id"] != usuario_id:
+                            await _enviar(p["ws"], {"type": "modo_configurando"})
 
             if tipo == "progress" and sala_id:
                 sala = _salas.get(sala_id)

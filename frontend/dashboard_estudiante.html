@@ -437,50 +437,21 @@
   <script src="/static/js/progresion.js?v=9"></script>
   <script src="/static/js/dashboard_estudiante.js?v=10"></script>
   <script>
-    const sfxLibre = new Audio('/static/bop.mp3');
-    sfxLibre.volume = 0.8;
-    document.getElementById('libreBtn').addEventListener('click', () => {
-      sfxLibre.currentTime = 0;
-      sfxLibre.onended = () => location.href = 'libre_intro.html';
-      sfxLibre.play().catch(() => location.href = 'libre_intro.html');
-      setTimeout(() => location.href = 'libre_intro.html', 1200);
-    });
+    function irAModo(sfxSrc, url) {
+      const sfx = new Audio(sfxSrc);
+      sfx.volume = 0.8;
+      return () => {
+        sfx.currentTime = 0;
+        sfx.play().catch(() => {});
+        setTimeout(() => location.href = url, 400);
+      };
+    }
 
-    const sfxArcade = new Audio('/static/bop.mp3');
-    sfxArcade.volume = 0.8;
-    document.getElementById('arcadeBtn').addEventListener('click', () => {
-      sfxArcade.currentTime = 0;
-      sfxArcade.onended = () => location.href = 'arcade_intro.html';
-      sfxArcade.play().catch(() => location.href = 'arcade_intro.html');
-      setTimeout(() => location.href = 'arcade_intro.html', 1200);
-    });
-
-    const sfxAleatorio = new Audio('/static/bloop.mp3');
-    sfxAleatorio.volume = 0.8;
-    document.getElementById('aleatorioBtn').addEventListener('click', () => {
-      sfxAleatorio.currentTime = 0;
-      sfxAleatorio.onended = () => location.href = 'aleatorio_intro.html';
-      sfxAleatorio.play().catch(() => location.href = 'aleatorio_intro.html');
-      setTimeout(() => location.href = 'aleatorio_intro.html', 1200);
-    });
-
-    const sfxContrareloj = new Audio('/static/bop.mp3');
-    sfxContrareloj.volume = 0.8;
-    document.getElementById('contrarelojBtn').addEventListener('click', () => {
-      sfxContrareloj.currentTime = 0;
-      sfxContrareloj.onended = () => location.href = 'contrareloj_intro.html';
-      sfxContrareloj.play().catch(() => location.href = 'contrareloj_intro.html');
-      setTimeout(() => location.href = 'contrareloj_intro.html', 1200);
-    });
-
-    const sfxOnline = new Audio('/static/bop.mp3');
-    sfxOnline.volume = 0.8;
-    document.getElementById('onlineBtn').addEventListener('click', () => {
-      sfxOnline.currentTime = 0;
-      sfxOnline.onended = () => location.href = 'online_intro.html';
-      sfxOnline.play().catch(() => location.href = 'online_intro.html');
-      setTimeout(() => location.href = 'online_intro.html', 1200);
-    });
+    document.getElementById('libreBtn').addEventListener('click', irAModo('/static/bop.mp3', 'libre_intro.html'));
+    document.getElementById('arcadeBtn').addEventListener('click', irAModo('/static/bop.mp3', 'arcade_intro.html'));
+    document.getElementById('aleatorioBtn').addEventListener('click', irAModo('/static/bloop.mp3', 'aleatorio_intro.html'));
+    document.getElementById('contrarelojBtn').addEventListener('click', irAModo('/static/bop.mp3', 'contrareloj_intro.html'));
+    document.getElementById('onlineBtn').addEventListener('click', irAModo('/static/bop.mp3', 'online_intro.html'));
 
     document.getElementById('aulaBtn').addEventListener('click', () => {
       location.href = 'aulas_estudiante.html';

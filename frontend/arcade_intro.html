@@ -211,9 +211,8 @@
     document.getElementById('introBackBtn').addEventListener('click', () => {
       sfxBack.currentTime = 0;
       sfxMusica.pause();
-      sfxBack.onended = () => history.back();
-      sfxBack.play().catch(() => history.back());
-      setTimeout(() => history.back(), 600);
+      sfxBack.play().catch(() => {});
+      setTimeout(() => location.replace('dashboard_estudiante.html'), 500);
     });
 
     // ── Botón jugar ──────────────────────────────────────────

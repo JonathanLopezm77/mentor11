@@ -74,9 +74,8 @@ if (backBtn) {
   backBtn.addEventListener('click', () => {
     const sfx = SFX['/static/back.mp3'];
     sfx.currentTime = 0;
-    sfx.onended = () => history.back();
-    sfx.play().catch(() => history.back());
-    setTimeout(() => history.back(), 1200);
+    sfx.play().catch(() => {});
+    setTimeout(() => location.replace('dashboard_estudiante.html'), 500);
   });
 }
 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Tarea</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <button class="libre-back" id="backBtn" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Tarea</h1>
+    <span class="libre-contador" id="contador">1 / —</span>
+  </header>
+
+  <div class="progreso-barra">
+    <div class="progreso-barra__fill" id="progresoBarra" style="width: 0%"></div>
+  </div>
+
+  <main class="pregunta-main">
+    <div class="pregunta-card">
+      <p class="pregunta-enunciado" id="enunciado">Cargando...</p>
+    </div>
+    <div class="opciones-grid" id="opcionesGrid"></div>
+    <div class="pregunta-explicacion" id="explicacion" hidden></div>
+  </main>
+
+  <div class="libre-footer">
+    <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
+  </div>
+
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('access_token');
+
+  const estado = JSON.parse(sessionStorage.getItem('tarea_estado') ?? 'null');
+  if (!estado || !token) { location.href = 'aulas_estudiante.html'; }
+
+  const { tareaId, sesionId, preguntas, materiaId, materialNombre } = estado;
+
+  if (!preguntas || !preguntas.length) {
+    alert('No hay preguntas en esta tarea.');
+    location.href = 'aulas_estudiante.html';
+  }
+
+  let actual = 0;
+  let correctas = 0;
+  let incorrectas = 0;
+
+  // Sonidos
+  const SFX = {};
+  [['/static/correcta.mp3', 0.8], ['/static/error.mp3', 0.8], ['/static/sig_pregun.mp3', 0.7]].forEach(([src, vol]) => {
+    const a = new Audio(src); a.preload = 'auto'; a.volume = vol; SFX[src] = a;
+  });
+  const play = src => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(() => {}); };
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if (confirm('¿Seguro que quieres salir? Perderás el progreso de esta pregunta.')) {
+      sessionStorage.removeItem('tarea_estado');
+      location.href = 'aulas_estudiante.html';
+    }
+  });
+
+  function mostrarPregunta() {
+    if (actual >= preguntas.length) { finalizarTarea(); return; }
+
+    const p = preguntas[actual];
+    document.getElementById('contador').textContent = `${actual + 1} / ${preguntas.length}`;
+    document.getElementById('progresoBarra').style.width = `${(actual / preguntas.length) * 100}%`;
+    document.getElementById('enunciado').textContent = p.enunciado;
+    document.getElementById('explicacion').hidden = true;
+    document.getElementById('explicacion').textContent = '';
+    document.getElementById('siguienteBtn').hidden = true;
+
+    const grid = document.getElementById('opcionesGrid');
+    grid.innerHTML = '';
+    p.opciones.forEach(op => {
+      const btn = document.createElement('button');
+      btn.className = 'opcion-btn';
+      btn.dataset.id = op.id;
+      btn.innerHTML = `<span class="opcion-letra">${op.letra}</span><span class="opcion-texto">${op.texto}</span>`;
+      btn.addEventListener('click', () => responder(op.id, p.id));
+      grid.appendChild(btn);
+    });
+  }
+
+  async function responder(opcionId, preguntaId) {
+    document.querySelectorAll('.opcion-btn').forEach(b => b.disabled = true);
+    try {
+      const res = await fetch(`${API}/juego/sesiones/${sesionId}/responder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId }),
+      });
+      const data = await res.json();
+
+      document.querySelectorAll('.opcion-btn').forEach(btn => {
+        const id = Number(btn.dataset.id);
+        if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
+        else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
+      });
+
+      if (data.es_correcta) correctas++; else incorrectas++;
+      play(data.es_correcta ? '/static/correcta.mp3' : '/static/error.mp3');
+
+      if (data.explicacion) {
+        const exp = document.getElementById('explicacion');
+        exp.textContent = `💡 ${data.explicacion}`;
+        exp.hidden = false;
+      }
+
+      const sigBtn = document.getElementById('siguienteBtn');
+      sigBtn.textContent = actual + 1 < preguntas.length ? 'Siguiente →' : 'Finalizar tarea';
+      sigBtn.hidden = false;
+    } catch {
+      document.querySelectorAll('.opcion-btn').forEach(b => b.disabled = false);
+    }
+  }
+
+  async function finalizarTarea() {
+    // Finalizar sesión de juego
+    try {
+      await fetch(`${API}/juego/sesiones/${sesionId}/finalizar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {}
+
+    // Marcar tarea como completada
+    try {
+      await fetch(`${API}/estudiante/tareas/${tareaId}/completar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {}
+
+    sessionStorage.removeItem('tarea_estado');
+
+    // Mostrar resultado brevemente
+    const total = correctas + incorrectas;
+    const pct = total ? Math.round((correctas / total) * 100) : 0;
+    alert(`¡Tarea completada!\n${correctas}/${total} correctas (${pct}%)`);
+    location.href = 'aulas_estudiante.html';
+  }
+
+  document.getElementById('siguienteBtn').addEventListener('click', () => {
+    play('/static/sig_pregun.mp3');
+    actual++;
+    mostrarPregunta();
+  });
+
+  mostrarPregunta();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Mis Aulas</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+  <link rel="stylesheet" href="/static/css/dashboard_profesor.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .aulas-page { display:flex; flex-direction:column; min-height:100vh; background:var(--gray-50); }
+    .aulas-topbar { display:flex; align-items:center; gap:12px; padding:20px 20px 0; }
+    .aulas-topbar__back { background:none; border:none; cursor:pointer; color:var(--gray-700); display:flex; align-items:center; padding:6px; border-radius:var(--radius-sm); }
+    .aulas-topbar__back:hover { background:var(--gray-100); }
+    .aulas-topbar__title { font-size:1.25rem; font-weight:800; color:var(--gray-900); flex:1; }
+    .aulas-topbar__add { background:var(--orange-500); border:none; cursor:pointer; color:#fff; width:36px; height:36px; border-radius:50%; font-size:1.4rem; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-btn); }
+
+    /* Modal crear aula */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .modal-overlay.visible { opacity:1; pointer-events:all; }
+    .modal-sheet { background:#fff; border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-width:480px; transform:translateY(100%); transition:transform 0.3s ease; }
+    .modal-overlay.visible .modal-sheet { transform:translateY(0); }
+    .modal-title { font-size:1.1rem; font-weight:800; color:var(--gray-900); margin-bottom:20px; }
+    .modal-field { margin-bottom:16px; }
+    .modal-label { font-size:0.78rem; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; display:block; }
+    .modal-input { width:100%; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:12px 14px; font-size:0.95rem; font-family:var(--font); outline:none; background:#fff; color:var(--gray-900); }
+    .modal-input:focus { border-color:var(--orange-400); }
+    .modal-select { width:100%; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:12px 14px; font-size:0.95rem; font-family:var(--font); outline:none; background:#fff; color:var(--gray-900); appearance:none; }
+    .modal-select:focus { border-color:var(--orange-400); }
+    .modal-btn { width:100%; padding:14px; border:none; border-radius:var(--radius-full); background:var(--orange-500); color:#fff; font-size:1rem; font-weight:700; font-family:var(--font); cursor:pointer; box-shadow:var(--shadow-btn); margin-top:8px; }
+    .modal-btn:disabled { opacity:0.5; }
+    .modal-err { color:var(--error); font-size:0.82rem; margin-top:8px; text-align:center; }
+
+    /* Lista de aulas */
+    .aulas-list { padding:16px 20px; flex:1; display:flex; flex-direction:column; gap:12px; }
+    .aula-card { background:#fff; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:16px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow 0.2s, transform 0.15s; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+    .aula-card:hover { box-shadow:var(--shadow-card); transform:translateY(-2px); }
+    .aula-card__header { display:flex; align-items:center; justify-content:space-between; }
+    .aula-card__name { font-size:1rem; font-weight:700; color:var(--gray-900); }
+    .aula-card__code { background:var(--orange-100); color:var(--orange-600); font-size:0.75rem; font-weight:800; border-radius:var(--radius-sm); padding:4px 10px; letter-spacing:1px; }
+    .aula-card__meta { display:flex; gap:12px; align-items:center; }
+    .aula-card__materia { font-size:0.82rem; font-weight:600; color:var(--gray-500); }
+    .aula-card__students { font-size:0.82rem; color:var(--gray-400); display:flex; align-items:center; gap:4px; }
+    .aula-card__arrow { color:var(--gray-400); }
+
+    .aulas-empty { text-align:center; padding:60px 20px; color:var(--gray-400); font-size:0.9rem; }
+    .aulas-empty__icon { font-size:3rem; margin-bottom:12px; }
+
+    .loading-msg { text-align:center; color:var(--gray-400); padding:40px 0; }
+  </style>
+</head>
+<body>
+<div class="aulas-page">
+
+  <div class="aulas-topbar">
+    <button class="aulas-topbar__back" id="backBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <span class="aulas-topbar__title">Mis Aulas</span>
+    <button class="aulas-topbar__add" id="crearBtn" title="Crear aula">+</button>
+  </div>
+
+  <div class="aulas-list" id="aulasList">
+    <p class="loading-msg">Cargando...</p>
+  </div>
+
+</div>
+
+<!-- Modal crear aula -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-title">Nueva Aula</div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="inputNombre">Nombre del aula</label>
+      <input class="modal-input" id="inputNombre" type="text" placeholder="Ej: Grado 11 A" maxlength="100" />
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label" for="selectMateria">Materia</label>
+      <select class="modal-select" id="selectMateria">
+        <option value="">Cargando materias...</option>
+      </select>
+    </div>
+
+    <div class="modal-err" id="modalErr" hidden></div>
+    <button class="modal-btn" id="guardarBtn">Crear Aula</button>
+  </div>
+</div>
+
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('access_token');
+  const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
+  if (!usuario) location.href = '/';
+
+  // ── Botón volver ───────────────────────────────────────────
+  document.getElementById('backBtn').addEventListener('click', () => history.back());
+
+  // ── Modal ──────────────────────────────────────────────────
+  const overlay = document.getElementById('modalOverlay');
+  const crearBtn = document.getElementById('crearBtn');
+  const guardarBtn = document.getElementById('guardarBtn');
+  const modalErr = document.getElementById('modalErr');
+  const inputNombre = document.getElementById('inputNombre');
+  const selectMateria = document.getElementById('selectMateria');
+
+  function abrirModal() {
+    overlay.classList.add('visible');
+    inputNombre.value = '';
+    modalErr.hidden = true;
+    inputNombre.focus();
+  }
+
+  function cerrarModal() {
+    overlay.classList.remove('visible');
+  }
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
+  crearBtn.addEventListener('click', abrirModal);
+
+  // Abrir directamente si viene con ?crear=1
+  if (new URLSearchParams(location.search).get('crear') === '1') {
+    abrirModal();
+  }
+
+  // Cargar materias en el select
+  async function cargarMaterias() {
+    try {
+      const res = await fetch(`${API}/juego/materias`, { headers: { Authorization: `Bearer ${token}` } });
+      const materias = await res.json();
+      selectMateria.innerHTML = materias.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+    } catch {
+      selectMateria.innerHTML = '<option value="">Error al cargar</option>';
+    }
+  }
+  cargarMaterias();
+
+  // Crear aula
+  guardarBtn.addEventListener('click', async () => {
+    const nombre = inputNombre.value.trim();
+    const materiaId = parseInt(selectMateria.value);
+    if (!nombre) { mostrarErr('Escribe un nombre para el aula'); return; }
+    if (!materiaId) { mostrarErr('Selecciona una materia'); return; }
+
+    guardarBtn.disabled = true;
+    guardarBtn.textContent = 'Creando...';
+    modalErr.hidden = true;
+
+    try {
+      const res = await fetch(`${API}/profesor/aulas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre, materia_id: materiaId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { mostrarErr(data.detail ?? 'Error al crear'); return; }
+      cerrarModal();
+      await cargarAulas();
+    } catch {
+      mostrarErr('Error de conexión');
+    } finally {
+      guardarBtn.disabled = false;
+      guardarBtn.textContent = 'Crear Aula';
+    }
+  });
+
+  function mostrarErr(msg) {
+    modalErr.textContent = msg;
+    modalErr.hidden = false;
+  }
+
+  // ── Lista de aulas ─────────────────────────────────────────
+  async function cargarAulas() {
+    const lista = document.getElementById('aulasList');
+    try {
+      const res = await fetch(`${API}/profesor/aulas`, { headers: { Authorization: `Bearer ${token}` } });
+      const aulas = await res.json();
+
+      if (!aulas.length) {
+        lista.innerHTML = `
+          <div class="aulas-empty">
+            <div class="aulas-empty__icon">🏫</div>
+            <div>Aún no has creado ningún aula.<br>Toca <b>+</b> para crear la primera.</div>
+          </div>`;
+        return;
+      }
+
+      lista.innerHTML = aulas.map(a => `
+        <div class="aula-card" data-id="${a.id}">
+          <div class="aula-card__header">
+            <span class="aula-card__name">${a.nombre}</span>
+            <span class="aula-card__code">${a.codigo_acceso}</span>
+          </div>
+          <div class="aula-card__meta">
+            <span class="aula-card__materia">${a.materia_nombre ?? 'Sin materia'}</span>
+            <span class="aula-card__students">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              ${a.total_estudiantes}
+            </span>
+          </div>
+        </div>
+      `).join('');
+
+      lista.querySelectorAll('.aula-card').forEach(card => {
+        card.addEventListener('click', () => {
+          location.href = `aula_detalle.html?id=${card.dataset.id}`;
+        });
+      });
+
+    } catch {
+      lista.innerHTML = '<p class="loading-msg">Error de conexión</p>';
+    }
+  }
+
+  cargarAulas();
+</script>
+</body>
+</html>

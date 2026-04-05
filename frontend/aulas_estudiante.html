@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Mis Aulas</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .ae-page { display:flex; flex-direction:column; min-height:100vh; background:var(--gray-50); }
+
+    /* Topbar */
+    .ae-topbar { display:flex; align-items:center; gap:12px; padding:20px 20px 0; }
+    .ae-topbar__back { background:none; border:none; cursor:pointer; color:var(--gray-700); display:flex; align-items:center; padding:6px; border-radius:var(--radius-sm); }
+    .ae-topbar__back:hover { background:var(--gray-100); }
+    .ae-topbar__title { font-size:1.25rem; font-weight:800; color:var(--gray-900); flex:1; }
+
+    /* Unirse */
+    .ae-join-bar { margin:14px 20px 0; display:flex; gap:8px; }
+    .ae-join-input { flex:1; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:11px 14px; font-size:0.95rem; font-family:var(--font); outline:none; background:#fff; color:var(--gray-900); text-transform:uppercase; letter-spacing:2px; }
+    .ae-join-input:focus { border-color:var(--orange-400); }
+    .ae-join-btn { background:var(--orange-500); border:none; cursor:pointer; color:#fff; border-radius:var(--radius-md); padding:0 18px; font-size:0.88rem; font-weight:700; font-family:var(--font); box-shadow:var(--shadow-btn); white-space:nowrap; }
+    .ae-join-btn:disabled { opacity:0.5; }
+    .ae-join-msg { margin:6px 20px 0; font-size:0.8rem; min-height:18px; }
+    .ae-join-msg.ok { color:#16A34A; }
+    .ae-join-msg.err { color:var(--error); }
+
+    /* Lista aulas */
+    .ae-list { padding:14px 20px; flex:1; display:flex; flex-direction:column; gap:12px; }
+    .aula-card { background:#fff; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:0; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+    .aula-card__header { padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; }
+    .aula-card__name { font-size:1rem; font-weight:700; color:var(--gray-900); }
+    .aula-card__materia { font-size:0.78rem; color:var(--gray-400); margin-top:2px; }
+    .aula-card__badge { background:var(--orange-100); color:var(--orange-600); border-radius:var(--radius-full); padding:3px 10px; font-size:0.72rem; font-weight:700; }
+
+    /* Tareas dentro de aula */
+    .tareas-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:var(--gray-400); padding:0 16px 8px; }
+    .tarea-row { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--gray-100); cursor:pointer; transition:background 0.15s; }
+    .tarea-row:hover { background:var(--gray-50); }
+    .tarea-row__info { }
+    .tarea-row__title { font-size:0.88rem; font-weight:600; color:var(--gray-900); }
+    .tarea-row__sub { font-size:0.74rem; color:var(--gray-400); margin-top:1px; }
+    .tarea-row__status { font-size:0.78rem; font-weight:700; }
+    .tarea-row__status.done { color:#16A34A; }
+    .tarea-row__status.pending { color:var(--orange-500); }
+    .tarea-row__status.in-progress { color:#3B82F6; }
+
+    .no-tareas { font-size:0.82rem; color:var(--gray-400); padding:8px 16px 14px; }
+
+    .ae-empty { text-align:center; padding:60px 20px; color:var(--gray-400); font-size:0.9rem; }
+    .ae-empty__icon { font-size:3rem; margin-bottom:12px; }
+
+    .loading-msg { text-align:center; color:var(--gray-400); padding:40px 0; }
+  </style>
+</head>
+<body>
+<div class="ae-page">
+
+  <div class="ae-topbar">
+    <button class="ae-topbar__back" id="backBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <span class="ae-topbar__title">Mis Aulas</span>
+  </div>
+
+  <!-- Unirse con código -->
+  <div class="ae-join-bar">
+    <input class="ae-join-input" id="codigoInput" type="text" placeholder="CÓDIGO" maxlength="10" />
+    <button class="ae-join-btn" id="unirseBtn">Unirse</button>
+  </div>
+  <div class="ae-join-msg" id="joinMsg"></div>
+
+  <div class="ae-list" id="aulasList">
+    <p class="loading-msg">Cargando...</p>
+  </div>
+
+</div>
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('access_token');
+  const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
+  if (!usuario) location.href = '/';
+
+  document.getElementById('backBtn').addEventListener('click', () => history.back());
+
+  // ── Unirse a aula ──────────────────────────────────────────
+  const codigoInput = document.getElementById('codigoInput');
+  const joinMsg = document.getElementById('joinMsg');
+
+  codigoInput.addEventListener('input', () => {
+    codigoInput.value = codigoInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  });
+
+  document.getElementById('unirseBtn').addEventListener('click', async () => {
+    const codigo = codigoInput.value.trim();
+    if (!codigo) { setMsg('Ingresa el código', 'err'); return; }
+
+    const btn = document.getElementById('unirseBtn');
+    btn.disabled = true;
+    btn.textContent = '...';
+    joinMsg.className = 'ae-join-msg';
+    joinMsg.textContent = '';
+
+    try {
+      const res = await fetch(`${API}/estudiante/aulas/unirse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ codigo }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMsg(data.detail ?? 'Código inválido', 'err'); return; }
+      setMsg(`¡Te uniste a ${data.nombre}!`, 'ok');
+      codigoInput.value = '';
+      await cargarAulas();
+    } catch {
+      setMsg('Error de conexión', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Unirse';
+    }
+  });
+
+  function setMsg(txt, tipo) {
+    joinMsg.textContent = txt;
+    joinMsg.className = `ae-join-msg ${tipo}`;
+  }
+
+  // ── Cargar aulas ───────────────────────────────────────────
+  async function cargarAulas() {
+    const lista = document.getElementById('aulasList');
+    try {
+      const res = await fetch(`${API}/estudiante/aulas`, { headers: { Authorization: `Bearer ${token}` } });
+      const aulas = await res.json();
+
+      if (!aulas.length) {
+        lista.innerHTML = `
+          <div class="ae-empty">
+            <div class="ae-empty__icon">🎓</div>
+            <div>Aún no estás en ningún aula.<br>Pídele a tu profesor el código de acceso.</div>
+          </div>`;
+        return;
+      }
+
+      lista.innerHTML = aulas.map(a => {
+        const pendientes = (a.tareas ?? []).filter(t => !t.completada).length;
+        const badgeHtml = pendientes > 0
+          ? `<span class="aula-card__badge">${pendientes} pendiente${pendientes > 1 ? 's' : ''}</span>`
+          : '';
+
+        const tareasHtml = (a.tareas ?? []).length === 0
+          ? `<div class="no-tareas">Sin tareas asignadas aún</div>`
+          : (a.tareas ?? []).map(t => {
+              const fecha = new Date(t.creada_en).toLocaleDateString('es-CO', { day:'numeric', month:'short' });
+              let statusClass = 'pending', statusTxt = 'Pendiente';
+              if (t.completada) { statusClass = 'done'; statusTxt = '✓ Completada'; }
+              else if (t.sesion_id) { statusClass = 'in-progress'; statusTxt = 'En progreso'; }
+              return `
+                <div class="tarea-row" data-tarea="${t.id}" data-completada="${t.completada}">
+                  <div class="tarea-row__info">
+                    <div class="tarea-row__title">${t.cantidad_preguntas} preguntas</div>
+                    <div class="tarea-row__sub">${fecha}</div>
+                  </div>
+                  <div class="tarea-row__status ${statusClass}">${statusTxt}</div>
+                </div>
+              `;
+            }).join('');
+
+        return `
+          <div class="aula-card">
+            <div class="aula-card__header">
+              <div>
+                <div class="aula-card__name">${a.nombre}</div>
+                <div class="aula-card__materia">${a.materia_nombre ?? 'Sin materia'}</div>
+              </div>
+              ${badgeHtml}
+            </div>
+            ${(a.tareas ?? []).length > 0 ? `<div class="tareas-title">Tareas</div>` : ''}
+            ${tareasHtml}
+          </div>
+        `;
+      }).join('');
+
+      // Listener para iniciar tarea
+      lista.querySelectorAll('.tarea-row').forEach(row => {
+        row.addEventListener('click', () => {
+          if (row.dataset.completada === 'true') return;
+          iniciarTarea(parseInt(row.dataset.tarea));
+        });
+      });
+
+    } catch {
+      lista.innerHTML = '<p class="loading-msg">Error de conexión</p>';
+    }
+  }
+
+  // ── Iniciar tarea ──────────────────────────────────────────
+  async function iniciarTarea(tareaId) {
+    try {
+      const res = await fetch(`${API}/estudiante/tareas/${tareaId}/iniciar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail ?? 'No se pudo iniciar la tarea'); return; }
+
+      // Guardar estado de la tarea en sessionStorage y navegar a la página de preguntas
+      sessionStorage.setItem('tarea_estado', JSON.stringify({
+        tareaId,
+        sesionId: data.sesion_id,
+        preguntas: data.preguntas,
+        materiaId: data.materia_id,
+        materialNombre: data.materia_nombre,
+        cantidadPreguntas: data.cantidad_preguntas,
+      }));
+      location.href = 'pregunta_tarea.html';
+    } catch {
+      alert('Error de conexión');
+    }
+  }
+
+  cargarAulas();
+</script>
+</body>
+</html>

@@ -70,7 +70,7 @@
       </div>
 
       <!-- Aula ocupa el ancho completo -->
-      <button class="dash-mode-card dash-mode-card--wide" onclick="location.href='#'">
+      <button class="dash-mode-card dash-mode-card--wide" id="aulaBtn">
         <span class="dash-mode-card__icon">🎓</span>
         <span class="dash-mode-card__label">Aula</span>
       </button>
@@ -480,6 +480,10 @@
       sfxOnline.onended = () => location.href = 'online_intro.html';
       sfxOnline.play().catch(() => location.href = 'online_intro.html');
       setTimeout(() => location.href = 'online_intro.html', 1200);
+    });
+
+    document.getElementById('aulaBtn').addEventListener('click', () => {
+      location.href = 'aulas_estudiante.html';
     });
 
   </script>

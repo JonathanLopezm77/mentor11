@@ -44,9 +44,9 @@
     .est-tareas { font-size:0.75rem; color:var(--gray-400); }
     .est-arrow { color:var(--gray-300); }
     .est-empty { text-align:center; color:var(--gray-400); padding:40px 0; font-size:0.88rem; }
-    .est-seg-btn { background:none; border:1.5px solid var(--gray-200); border-radius:var(--radius-sm); padding:5px 10px; font-size:0.72rem; font-weight:700; font-family:var(--font); cursor:pointer; color:var(--gray-400); white-space:nowrap; transition:all 0.15s; }
-    .est-seg-btn.activo { background:var(--orange-100); border-color:var(--orange-400); color:var(--orange-600); }
-    .est-seg-btn:hover { border-color:var(--orange-400); color:var(--orange-500); }
+    .seg-toggle-btn { width:100%; margin-top:14px; padding:12px; border:none; border-radius:var(--radius-full); font-size:0.9rem; font-weight:700; font-family:var(--font); cursor:pointer; transition:all 0.15s; }
+    .seg-toggle-btn--seguir { background:var(--orange-500); color:#fff; box-shadow:var(--shadow-btn); }
+    .seg-toggle-btn--desmarcar { background:var(--gray-100); color:var(--gray-500); border:1.5px solid var(--gray-200); }
 
     /* Ranking */
     .rank-section { margin-bottom:20px; }
@@ -270,7 +270,7 @@
       return;
     }
     panel.innerHTML = lista.map(e => `
-      <div class="est-card" data-est="${e.id}">
+      <div class="est-card" data-est="${e.id}" data-marcado="${e.en_seguimiento}">
         <div class="est-avatar">
           <img src="${e.avatar ?? '/static/img/avatares/buho_n.png'}" alt="${e.username}" />
         </div>
@@ -278,41 +278,22 @@
           <div class="est-name">${e.username}</div>
           <div class="est-tareas">Tareas: ${e.tareas_completadas}/${e.total_tareas}</div>
         </div>
-        <button class="est-seg-btn ${e.en_seguimiento ? 'activo' : ''}"
-          data-est-seg="${e.id}" data-marcado="${e.en_seguimiento}"
-          title="${e.en_seguimiento ? 'Quitar seguimiento' : 'Marcar seguimiento'}">
-          ${e.en_seguimiento ? '📌 Siguiendo' : '📍 Seguir'}
-        </button>
+        <div class="est-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
       </div>
     `).join('');
 
     panel.querySelectorAll('.est-card').forEach(card => {
-      card.addEventListener('click', e => {
-        if (e.target.closest('.est-seg-btn')) return;
-        verStatsEstudiante(parseInt(card.dataset.est));
-      });
-    });
-
-    panel.querySelectorAll('.est-seg-btn').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        e.stopPropagation();
-        const estId = parseInt(btn.dataset.estSeg);
-        const marcado = btn.dataset.marcado === 'true';
-        const nuevaMarca = !marcado;
-        btn.disabled = true;
-        try {
-          const res = await fetch(
-            `${API}/profesor/aulas/${aulaId}/estudiantes/${estId}/seguimiento?marcar=${nuevaMarca}`,
-            { method: 'PUT', headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (res.ok) {
-            btn.dataset.marcado = String(nuevaMarca);
-            btn.classList.toggle('activo', nuevaMarca);
-            btn.textContent = nuevaMarca ? '📌 Siguiendo' : '📍 Seguir';
-            btn.title = nuevaMarca ? 'Quitar seguimiento' : 'Marcar seguimiento';
-          }
-        } catch {}
-        btn.disabled = false;
+      card.addEventListener('click', () => {
+        verStatsEstudiante(
+          parseInt(card.dataset.est),
+          card.dataset.marcado === 'true',
+          card
+        );
       });
     });
   }

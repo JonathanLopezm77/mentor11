@@ -7,6 +7,18 @@
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css" />
   <link rel="stylesheet" href="/static/css/dashboard_profesor.css" />
+  <style>
+    .seg-card { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--gray-100); }
+    .seg-card:last-child { border-bottom:none; }
+    .seg-avatar { width:38px; height:38px; border-radius:50%; background:var(--gray-100); overflow:hidden; border:2px solid var(--orange-100); flex-shrink:0; }
+    .seg-avatar img { width:100%; height:100%; object-fit:cover; }
+    .seg-info { flex:1; min-width:0; }
+    .seg-name { font-size:0.85rem; font-weight:700; color:var(--gray-900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .seg-meta { font-size:0.72rem; color:var(--gray-400); margin-top:1px; }
+    .seg-pct { font-size:0.85rem; font-weight:800; color:var(--orange-500); flex-shrink:0; }
+    .seg-link { background:none; border:none; cursor:pointer; color:var(--gray-300); padding:4px; display:flex; align-items:center; }
+    .seg-link:hover { color:var(--orange-500); }
+  </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body class="dash-body">
@@ -83,6 +95,22 @@
       </button>
     </section>
 
+    <!-- ── Seguimiento personalizado ───────────────────────── -->
+    <section class="prof-preview" id="seguimientoSection" style="display:none">
+      <div class="prof-preview__card">
+        <div class="prof-preview__bookmark">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+            fill="var(--orange-500)" stroke="var(--orange-500)" stroke-width="1">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray-500);margin-bottom:10px;">
+          📌 En seguimiento
+        </div>
+        <div id="seguimientoGrid"></div>
+      </div>
+    </section>
+
     <!-- ── Vista previa de estudiantes ─────────────────────── -->
     <section class="prof-preview">
       <div class="prof-preview__card">
@@ -132,5 +160,44 @@
 
   </div>
   <script src="/static/js/dashboard_profesor.js"></script>
+  <script>
+    // ── Seguimiento personalizado ──────────────────────────
+    async function cargarSeguimiento() {
+      const token = localStorage.getItem('access_token');
+      try {
+        const res = await fetch('/api/v1/profesor/seguimiento', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const lista = await res.json();
+        if (!lista.length) return;
+
+        const section = document.getElementById('seguimientoSection');
+        const grid = document.getElementById('seguimientoGrid');
+        section.style.display = '';
+
+        grid.innerHTML = lista.map(e => `
+          <div class="seg-card">
+            <div class="seg-avatar">
+              <img src="${e.avatar ?? '/static/img/avatares/buho_n.png'}" alt="${e.username}" />
+            </div>
+            <div class="seg-info">
+              <div class="seg-name">${e.username}</div>
+              <div class="seg-meta">${e.aula_nombre} · ${e.materia_nombre ?? ''} · Tareas ${e.tareas_completadas}/${e.total_tareas}</div>
+            </div>
+            <div class="seg-pct">${e.porcentaje_acierto}%</div>
+            <button class="seg-link" onclick="location.href='aula_detalle.html?id=${e.aula_id}'" title="Ver aula">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+        `).join('');
+      } catch {}
+    }
+
+    cargarSeguimiento();
+  </script>
 </body>
 </html>

@@ -120,6 +120,7 @@ async def detalle_aula(db: AsyncSession, aula_id: int, profesor_id: int) -> dict
             "avatar": est.avatar.imagen_src if est.avatar else None,
             "tareas_completadas": tareas_completadas,
             "total_tareas": len(aula.tareas),
+            "en_seguimiento": ae.en_seguimiento,
         })
 
     lista_tareas = []
@@ -309,6 +310,102 @@ async def stats_estudiante(db: AsyncSession, aula_id: int, est_id: int, profesor
         "tareas_completadas": tareas_completadas,
         "total_tareas": total_tareas,
     }
+
+
+# ── Marcar / desmarcar seguimiento ───────────────────────────────────────────
+
+async def marcar_seguimiento(db: AsyncSession, aula_id: int, est_id: int, profesor_id: int, marcar: bool) -> dict:
+    # Verificar que el aula pertenece al profesor
+    res_aula = await db.execute(
+        select(Aula).where(Aula.id == aula_id, Aula.profesor_id == profesor_id)
+    )
+    if not res_aula.scalar_one_or_none():
+        raise AulaError("Aula no encontrada", 404)
+
+    res_ae = await db.execute(
+        select(AulaEstudiante).where(
+            AulaEstudiante.aula_id == aula_id,
+            AulaEstudiante.estudiante_id == est_id,
+            AulaEstudiante.esta_activo == True,
+        )
+    )
+    ae = res_ae.scalar_one_or_none()
+    if not ae:
+        raise AulaError("Estudiante no encontrado en el aula", 404)
+
+    ae.en_seguimiento = marcar
+    await db.commit()
+    return {"en_seguimiento": marcar}
+
+
+async def listar_seguimientos_profesor(db: AsyncSession, profesor_id: int) -> list[dict]:
+    """Devuelve todos los estudiantes marcados en cualquier aula del profesor."""
+    res = await db.execute(
+        select(AulaEstudiante, Aula, Usuario, Avatar, EstadisticaUsuario)
+        .join(Aula, AulaEstudiante.aula_id == Aula.id)
+        .join(Usuario, AulaEstudiante.estudiante_id == Usuario.id)
+        .outerjoin(Avatar, Avatar.usuario_id == Usuario.id)
+        .outerjoin(
+            EstadisticaUsuario,
+            (EstadisticaUsuario.usuario_id == Usuario.id) &
+            (EstadisticaUsuario.materia_id == Aula.materia_id)
+        )
+        .where(
+            Aula.profesor_id == profesor_id,
+            Aula.esta_activa == True,
+            AulaEstudiante.en_seguimiento == True,
+            AulaEstudiante.esta_activo == True,
+        )
+        .order_by(Aula.id, Usuario.username)
+    )
+    filas = res.all()
+
+    # Agrupar tareas completadas por estudiante+aula
+    resultado = []
+    for ae, aula, usuario, avatar, stat in filas:
+        # Contar tareas completadas para este estudiante en esta aula
+        res_tareas = await db.execute(
+            select(func.count()).select_from(TareaProgreso)
+            .join(Tarea, TareaProgreso.tarea_id == Tarea.id)
+            .where(
+                Tarea.aula_id == aula.id,
+                TareaProgreso.estudiante_id == usuario.id,
+                TareaProgreso.completada == True,
+            )
+        )
+        tareas_completadas = res_tareas.scalar() or 0
+
+        res_total_tareas = await db.execute(
+            select(func.count()).select_from(Tarea).where(Tarea.aula_id == aula.id)
+        )
+        total_tareas = res_total_tareas.scalar() or 0
+
+        resultado.append({
+            "aula_id": aula.id,
+            "aula_nombre": aula.nombre,
+            "materia_nombre": None,  # se carga abajo si hay materia
+            "estudiante_id": usuario.id,
+            "username": usuario.username,
+            "avatar": avatar.imagen_src if avatar else None,
+            "porcentaje_acierto": float(stat.porcentaje_acierto) if stat else 0.0,
+            "total_respondidas": stat.total_respondidas if stat else 0,
+            "tareas_completadas": tareas_completadas,
+            "total_tareas": total_tareas,
+        })
+
+    # Cargar nombres de materias
+    materia_ids = list({r["aula_id"] for r in resultado})
+    if materia_ids:
+        res_mat = await db.execute(
+            select(Aula.id, Materia.nombre)
+            .join(Materia, Aula.materia_id == Materia.id)
+            .where(Aula.id.in_(materia_ids))
+        )
+        mapa = {aid: nombre for aid, nombre in res_mat.all()}
+        for r in resultado:
+            r["materia_nombre"] = mapa.get(r["aula_id"])
+
+    return resultado
 
 
 # ── Crear tarea ───────────────────────────────────────────────────────────────

@@ -44,8 +44,9 @@ class AulaEstudiante(Base):
     aula_id:       Mapped[int] = mapped_column(ForeignKey("aulas.id",    ondelete="CASCADE"), primary_key=True)
     estudiante_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True)
 
-    fecha_union: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    esta_activo: Mapped[bool]     = mapped_column(Boolean, default=True, nullable=False)
+    fecha_union:     Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    esta_activo:     Mapped[bool]     = mapped_column(Boolean, default=True, nullable=False)
+    en_seguimiento:  Mapped[bool]     = mapped_column(Boolean, default=False, nullable=False)
 
     # Relaciones
     aula:       Mapped["Aula"]    = relationship("Aula",    back_populates="estudiantes")

@@ -33,6 +33,8 @@ from app.services.aula_service import (
     listar_aulas_estudiante,
     iniciar_tarea,
     completar_tarea,
+    marcar_seguimiento,
+    listar_seguimientos_profesor,
     AulaError,
 )
 
@@ -142,6 +144,30 @@ async def stats_estudiante_endpoint(
         return await stats_estudiante(db, aula_id, est_id, usuario.id)
     except AulaError as e:
         raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+
+
+@router.put("/profesor/aulas/{aula_id}/estudiantes/{est_id}/seguimiento")
+async def toggle_seguimiento(
+    aula_id: int,
+    est_id: int,
+    marcar: bool,
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    _requerir_profesor(usuario)
+    try:
+        return await marcar_seguimiento(db, aula_id, est_id, usuario.id, marcar)
+    except AulaError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+
+
+@router.get("/profesor/seguimiento")
+async def seguimiento_endpoint(
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    _requerir_profesor(usuario)
+    return await listar_seguimientos_profesor(db, usuario.id)
 
 
 @router.get("/profesor/stats")

@@ -180,37 +180,63 @@ async def online_ws(websocket: WebSocket):
 
             if tipo == "finish" and sala_id:
                 sala = _salas.get(sala_id)
-                if sala:
-                    mis_correctas = datos.get("correctas", 0)
-                    if "finalizados" not in sala:
-                        sala["finalizados"] = {}
-                    sala["finalizados"][usuario_id] = mis_correctas
+                if not sala:
+                    break
 
-                    if len(sala["finalizados"]) == 2:
-                        # Ambos terminaron — comparar aciertos
-                        ids = list(sala["finalizados"].keys())
-                        correctas_a = sala["finalizados"][ids[0]]
-                        correctas_b = sala["finalizados"][ids[1]]
+                mis_correctas = datos.get("correctas", 0)
+                if "finalizados" not in sala:
+                    sala["finalizados"] = {}
+                if "evento_fin" not in sala:
+                    sala["evento_fin"] = asyncio.Event()
 
-                        if correctas_a == correctas_b:
-                            for p in sala["jugadores"]:
-                                await _enviar(p["ws"], {
-                                    "type": "resultado",
-                                    "empate": True,
-                                    "ganaste": False,
-                                })
-                        else:
-                            ganador_id = ids[0] if correctas_a > correctas_b else ids[1]
-                            for p in sala["jugadores"]:
-                                await _enviar(p["ws"], {
-                                    "type": "resultado",
-                                    "empate": False,
-                                    "ganaste": p["usuario_id"] == ganador_id,
-                                })
+                sala["finalizados"][usuario_id] = mis_correctas
+
+                if len(sala["finalizados"]) == 2:
+                    # Calcular resultados individuales
+                    ids = list(sala["finalizados"].keys())
+                    c0 = sala["finalizados"][ids[0]]
+                    c1 = sala["finalizados"][ids[1]]
+                    if c0 == c1:
+                        sala["resultados_fin"] = {
+                            p: {"type": "resultado", "empate": True, "ganaste": False}
+                            for p in ids
+                        }
+                    else:
+                        ganador = ids[0] if c0 > c1 else ids[1]
+                        sala["resultados_fin"] = {
+                            p: {"type": "resultado", "empate": False, "ganaste": p == ganador}
+                            for p in ids
+                        }
+                    sala["evento_fin"].set()  # Notificar a ambas corrutinas
+
+                # Ambos jugadores esperan el evento con keep-alive cada 20s
+                evento = sala["evento_fin"]
+                tarea_evento = asyncio.ensure_future(evento.wait())
+                while not tarea_evento.done():
+                    try:
+                        await asyncio.wait_for(asyncio.shield(tarea_evento), timeout=20.0)
+                    except asyncio.TimeoutError:
+                        if evento.is_set():
+                            break
+                        # Mantener conexión viva mientras esperamos al rival
+                        await _enviar(websocket, {"type": "esperando_rival"})
+                        if not _salas.get(sala_id):
+                            tarea_evento.cancel()
+                            break
+
+                # Cada jugador envía el resultado desde su propia corrutina
+                sala_final = _salas.get(sala_id)
+                if sala_final and "resultados_fin" in sala_final:
+                    mi_resultado = sala_final["resultados_fin"].get(usuario_id)
+                    if mi_resultado:
+                        await _enviar(websocket, mi_resultado)
+                    # Limpiar sala cuando ambos han recibido
+                    sala_final.setdefault("fin_confirmados", set()).add(usuario_id)
+                    if len(sala_final["fin_confirmados"]) >= 2:
                         _salas.pop(sala_id, None)
                         sala_id = None
-                        break  # resultado enviado a ambos — salir
-                    # else: primero en terminar — seguir en el bucle esperando al rival
+
+                break  # salir del bucle principal
 
     except WebSocketDisconnect:
         pass

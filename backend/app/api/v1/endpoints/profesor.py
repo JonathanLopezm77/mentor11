@@ -4,6 +4,7 @@ Endpoints para profesores (aulas, tareas, rankings) y para estudiantes (unirse, 
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
@@ -176,13 +177,22 @@ async def dashboard_stats(
     usuario: Usuario = Depends(get_current_user),
 ):
     """Stats rápidas para el dashboard del profesor."""
+    from sqlalchemy import select as _select
+    from app.models.aula import Tarea as _Tarea, Aula as _Aula
     _requerir_profesor(usuario)
     aulas = await listar_aulas_profesor(db, usuario.id)
     total_estudiantes = sum(a["total_estudiantes"] for a in aulas)
+    aula_ids = [a["id"] for a in aulas]
+    total_tareas = 0
+    if aula_ids:
+        res_t = await db.execute(
+            _select(func.count()).select_from(_Tarea).where(_Tarea.aula_id.in_(aula_ids))
+        )
+        total_tareas = res_t.scalar() or 0
     return {
         "aulas": len(aulas),
         "estudiantes": total_estudiantes,
-        "retos": 0,
+        "tareas": total_tareas,
         "estudiantes_lista": [],
     }
 

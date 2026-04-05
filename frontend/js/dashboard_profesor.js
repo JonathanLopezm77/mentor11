@@ -31,7 +31,7 @@ async function cargarStats() {
       const data = await res.json();
       document.getElementById('statAulas').textContent = data.aulas ?? 0;
       document.getElementById('statEstudiantes').textContent = data.estudiantes ?? 0;
-      document.getElementById('statRetos').textContent = data.retos ?? 0;
+      document.getElementById('statTareas').textContent = data.tareas ?? 0;
       renderEstudiantes(data.estudiantes_lista ?? []);
     }
   } catch (err) {

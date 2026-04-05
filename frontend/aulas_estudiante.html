@@ -85,7 +85,7 @@
   const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
   if (!usuario) location.href = '/';
 
-  document.getElementById('backBtn').addEventListener('click', () => history.back());
+  document.getElementById('backBtn').addEventListener('click', () => location.href = 'dashboard_estudiante.html');
 
   // ── Unirse a aula ──────────────────────────────────────────
   const codigoInput = document.getElementById('codigoInput');

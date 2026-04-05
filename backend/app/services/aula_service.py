@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.aula import Aula, AulaEstudiante, Tarea, TareaProgreso
 from app.models.contenido import Materia, Pregunta, Respuesta
 from app.models.juego import SesionJuego, RespuestaUsuario, EstadisticaUsuario, ModoJuego
-from app.models.usuario import Usuario
+from app.models.usuario import Usuario, Avatar
 from app.services.juego_service import preparar_pregunta
 
 
@@ -168,8 +168,9 @@ async def ranking_aula(db: AsyncSession, aula_id: int, profesor_id: int) -> dict
 
     # Estadísticas de todos los estudiantes para la materia del aula
     res_stats = await db.execute(
-        select(EstadisticaUsuario, Usuario)
+        select(EstadisticaUsuario, Usuario, Avatar)
         .join(Usuario, EstadisticaUsuario.usuario_id == Usuario.id)
+        .outerjoin(Avatar, Avatar.usuario_id == Usuario.id)
         .where(
             EstadisticaUsuario.usuario_id.in_(est_ids),
             EstadisticaUsuario.materia_id == materia_id,
@@ -179,10 +180,8 @@ async def ranking_aula(db: AsyncSession, aula_id: int, profesor_id: int) -> dict
     filas = res_stats.all()
 
     entradas = []
-    for i, (stat, usuario) in enumerate(filas):
-        avatar_src = None
-        if hasattr(usuario, 'avatar') and usuario.avatar:
-            avatar_src = usuario.avatar.imagen_src
+    for i, (stat, usuario, avatar) in enumerate(filas):
+        avatar_src = avatar.imagen_src if avatar else None
         entradas.append({
             "posicion": i + 1,
             "usuario_id": usuario.id,

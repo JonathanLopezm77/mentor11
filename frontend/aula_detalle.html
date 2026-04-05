@@ -204,6 +204,7 @@
         <div class="stat-box__label">Tareas completadas</div>
       </div>
     </div>
+    <button class="seg-toggle-btn seg-toggle-btn--seguir" id="segToggleBtn">📍 Marcar seguimiento</button>
   </div>
 </div>
 
@@ -454,10 +455,18 @@
   }
 
   // ── Stats individuales ─────────────────────────────────────
-  async function verStatsEstudiante(estId) {
+  let _estIdActual = null;
+  let _marcadoActual = false;
+
+  async function verStatsEstudiante(estId, marcado, card) {
+    _estIdActual = estId;
+    _marcadoActual = marcado;
+
     const overlay = document.getElementById('statsOverlay');
     overlay.classList.add('visible');
     document.getElementById('statsNombre').textContent = '...';
+    actualizarBotonSeguimiento();
+
     try {
       const res = await fetch(`${API}/profesor/aulas/${aulaId}/estudiantes/${estId}/stats`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -473,6 +482,38 @@
       document.getElementById('statsNombre').textContent = 'Error al cargar';
     }
   }
+
+  function actualizarBotonSeguimiento() {
+    const btn = document.getElementById('segToggleBtn');
+    if (_marcadoActual) {
+      btn.textContent = '📌 Dejar de seguir';
+      btn.className = 'seg-toggle-btn seg-toggle-btn--desmarcar';
+    } else {
+      btn.textContent = '📍 Marcar seguimiento';
+      btn.className = 'seg-toggle-btn seg-toggle-btn--seguir';
+    }
+  }
+
+  document.getElementById('segToggleBtn').addEventListener('click', async () => {
+    if (!_estIdActual) return;
+    const btn = document.getElementById('segToggleBtn');
+    btn.disabled = true;
+    const nuevaMarca = !_marcadoActual;
+    try {
+      const res = await fetch(
+        `${API}/profesor/aulas/${aulaId}/estudiantes/${_estIdActual}/seguimiento?marcar=${nuevaMarca}`,
+        { method: 'PUT', headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.ok) {
+        _marcadoActual = nuevaMarca;
+        actualizarBotonSeguimiento();
+        // Actualizar también el data-marcado en la tarjeta de la lista
+        const card = document.querySelector(`.est-card[data-est="${_estIdActual}"]`);
+        if (card) card.dataset.marcado = String(nuevaMarca);
+      }
+    } catch {}
+    btn.disabled = false;
+  });
 
   document.getElementById('statsClose').addEventListener('click', () => {
     document.getElementById('statsOverlay').classList.remove('visible');

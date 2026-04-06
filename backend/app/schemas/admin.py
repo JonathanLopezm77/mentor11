@@ -12,7 +12,8 @@ from app.models.contenido import TipoPregunta, NivelDificultad
 
 class OpcionCrear(BaseModel):
     letra: str | None = None
-    texto: str
+    texto: str = ""
+    imagen_url: str | None = None
     es_correcta: bool = False
 
 
@@ -20,6 +21,7 @@ class OpcionDetalle(BaseModel):
     id: int
     letra: str
     texto: str
+    imagen_url: str | None = None
     es_correcta: bool
 
 

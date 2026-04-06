@@ -2,7 +2,6 @@
  * Mentor 11 — Pantalla de pregunta (Modo Libre)
  */
 
-// ── Sonidos precargados ───────────────────────────────────
 const SFX_P = {};
 [
   ['/static/correcta.mp3', 0.8],
@@ -29,16 +28,13 @@ const sesionId = sessionStorage.getItem('sesion_id');
 const materiaIds = sessionStorage.getItem('materia_ids');
 const totalPreguntas = new URLSearchParams(window.location.search).get('cantidad') ?? 10;
 
-if (!token || !sesionId) {
-  location.href = '/';
-}
+if (!token || !sesionId) location.href = '/';
 
 let preguntas = [];
 let actual = 0;
 let correctas = 0;
 let incorrectas = 0;
 
-// ── Inicializar: cargar todas las preguntas ───────────────
 async function init() {
   try {
     const res = await fetch(
@@ -47,8 +43,7 @@ async function init() {
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      const detalle = err.detail ?? `HTTP ${res.status}`;
-      alert(`Error al cargar preguntas: ${detalle}`);
+      alert(`Error al cargar preguntas: ${err.detail ?? `HTTP ${res.status}`}`);
       location.href = 'libre_intro.html';
       return;
     }
@@ -68,7 +63,6 @@ async function init() {
   }
 }
 
-// ── Mostrar la pregunta actual ────────────────────────────
 function mostrarPregunta() {
   if (actual >= preguntas.length) {
     finalizarSesion();
@@ -77,23 +71,19 @@ function mostrarPregunta() {
 
   const p = preguntas[actual];
 
-  // Contador y barra de progreso
   document.getElementById('contador').textContent = `${actual + 1} / ${preguntas.length}`;
-  document.getElementById('progresoBarra').style.width =
-    `${(actual / preguntas.length) * 100}%`;
-
-  // Enunciado
+  document.getElementById('progresoBarra').style.width = `${(actual / preguntas.length) * 100}%`;
   document.getElementById('enunciado').textContent = p.enunciado;
 
-  // Imagen
-  const imgContainer = document.getElementById('preguntaImagen');
-  if (imgContainer) {
+  // Imagen de la pregunta
+  const imgPregunta = document.getElementById('preguntaImagen');
+  if (imgPregunta) {
     if (p.imagen_url) {
-      imgContainer.src = p.imagen_url;
-      imgContainer.style.display = 'block';
+      imgPregunta.src = p.imagen_url;
+      imgPregunta.style.display = 'block';
     } else {
-      imgContainer.src = '';
-      imgContainer.style.display = 'none';
+      imgPregunta.src = '';
+      imgPregunta.style.display = 'none';
     }
   }
 
@@ -105,31 +95,37 @@ function mostrarPregunta() {
     const btn = document.createElement('button');
     btn.className = 'opcion-btn';
     btn.dataset.id = op.id;
-    btn.innerHTML = `
-      <span class="opcion-letra">${op.letra}</span>
-      <span class="opcion-texto">${op.texto}</span>
-    `;
+
+    // Si la opción tiene imagen, mostrarla; si no, mostrar texto
+    if (op.imagen_url) {
+      btn.innerHTML = `
+        <span class="opcion-letra">${op.letra}</span>
+        <img src="${op.imagen_url}" alt="Opción ${op.letra}"
+          style="max-width:100%;max-height:120px;object-fit:contain;border-radius:8px;margin-top:6px;" />
+      `;
+    } else {
+      btn.innerHTML = `
+        <span class="opcion-letra">${op.letra}</span>
+        <span class="opcion-texto">${op.texto}</span>
+      `;
+    }
+
     btn.addEventListener('click', () => responder(op.id, p.id));
     grid.appendChild(btn);
   });
 
-  // Ocultar elementos post-respuesta
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
 }
 
-// ── Enviar respuesta al backend ───────────────────────────
 async function responder(opcionId, preguntaId) {
   document.querySelectorAll('.opcion-btn').forEach(b => (b.disabled = true));
 
   try {
     const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/responder`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId }),
     });
 
@@ -137,15 +133,11 @@ async function responder(opcionId, preguntaId) {
 
     document.querySelectorAll('.opcion-btn').forEach(btn => {
       const id = Number(btn.dataset.id);
-      if (id === data.opcion_correcta_id) {
-        btn.classList.add('opcion-btn--correcta');
-      } else if (id === opcionId && !data.es_correcta) {
-        btn.classList.add('opcion-btn--incorrecta');
-      }
+      if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
+      else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
     });
 
     if (data.es_correcta) correctas++; else incorrectas++;
-
     playSfxP(data.es_correcta ? '/static/correcta.mp3' : '/static/error.mp3');
 
     if (data.explicacion) {
@@ -164,7 +156,6 @@ async function responder(opcionId, preguntaId) {
   }
 }
 
-// ── Finalizar sesión e ir a pantalla de resultados ───────
 async function finalizarSesion() {
   const puntosGanados = correctas * 10;
 
@@ -176,10 +167,7 @@ async function finalizarSesion() {
   } catch (_) { }
 
   sessionStorage.setItem('resultado_libre', JSON.stringify({
-    total: correctas + incorrectas,
-    correctas,
-    incorrectas,
-    puntosGanados,
+    total: correctas + incorrectas, correctas, incorrectas, puntosGanados,
   }));
   sessionStorage.removeItem('sesion_id');
   sessionStorage.removeItem('materia_ids');
@@ -190,7 +178,6 @@ async function finalizarSesion() {
   setTimeout(() => location.href = 'resultado_libre.html', 400);
 }
 
-// ── Botón "Siguiente" ─────────────────────────────────────
 document.getElementById('siguienteBtn').addEventListener('click', () => {
   playSfxP('/static/sig_pregun.mp3');
   actual++;

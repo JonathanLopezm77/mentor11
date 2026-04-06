@@ -50,7 +50,12 @@ def preparar_pregunta(pregunta: Pregunta) -> dict:
         "tipo": pregunta.tipo,
         "nivel_dificultad": pregunta.nivel_dificultad,
         "opciones": [
-            {"id": r.id, "letra": letras[i], "texto": r.texto}
+            {
+                "id": r.id,
+                "letra": letras[i],
+                "texto": r.texto,
+                "imagen_url": r.imagen_url,
+            }
             for i, r in enumerate(opciones)
         ],
     }
@@ -201,8 +206,8 @@ async def finalizar_sesion(
     sesion.duracion_segundos = duracion
     sesion.puntaje_obtenido = puntaje
 
-    # ── Cargar usuario ────────────────────────────────────────────────────────
     from app.models.usuario import Usuario
+
     resultado_usuario = await db.execute(
         select(Usuario).where(Usuario.id == usuario_id)
     )
@@ -211,10 +216,7 @@ async def finalizar_sesion(
     if usuario:
         usuario.puntos_totales += puntaje
 
-        # ── Lógica de rachas basada en sesiones completadas ───────────────────
         hoy = ahora.date()
-
-        # Buscar la última sesión completada antes de la actual
         res_ultima = await db.execute(
             select(SesionJuego)
             .where(
@@ -228,31 +230,26 @@ async def finalizar_sesion(
         ultima_sesion = res_ultima.scalar_one_or_none()
 
         if ultima_sesion is None:
-            # Primera sesión completada
             usuario.racha_actual = 1
         else:
             ultimo_dia = ultima_sesion.finalizada_en.date()
-
             if ultimo_dia == hoy:
-                # Ya completó una sesión hoy — racha no cambia
                 pass
             elif ultimo_dia == hoy - timedelta(days=1):
-                # Completó una sesión ayer — racha sube
                 usuario.racha_actual += 1
             else:
-                # Pasaron más de un día sin jugar — racha se rompe
                 usuario.racha_actual = 1
 
-        # Actualizar racha máxima si fue superada
         if usuario.racha_actual > usuario.racha_maxima:
             usuario.racha_maxima = usuario.racha_actual
 
-    # ── Actualizar estadísticas por materia ───────────────────────────────────
     res_stats = await db.execute(
         select(
             Pregunta.materia_id,
             func.count().label("total"),
-            func.sum(case((RespuestaUsuario.es_correcta == True, 1), else_=0)).label("correctas"),
+            func.sum(case((RespuestaUsuario.es_correcta == True, 1), else_=0)).label(
+                "correctas"
+            ),
         )
         .join(Pregunta, RespuestaUsuario.pregunta_id == Pregunta.id)
         .where(RespuestaUsuario.sesion_id == sesion_id)
@@ -281,14 +278,16 @@ async def finalizar_sesion(
             )
             estadistica.ultima_sesion = ahora
         else:
-            db.add(EstadisticaUsuario(
-                usuario_id=usuario_id,
-                materia_id=materia_id,
-                total_respondidas=total_sesion,
-                total_correctas=correctas_sesion,
-                porcentaje_acierto=round(correctas_sesion / total_sesion * 100, 1),
-                ultima_sesion=ahora,
-            ))
+            db.add(
+                EstadisticaUsuario(
+                    usuario_id=usuario_id,
+                    materia_id=materia_id,
+                    total_respondidas=total_sesion,
+                    total_correctas=correctas_sesion,
+                    porcentaje_acierto=round(correctas_sesion / total_sesion * 100, 1),
+                    ultima_sesion=ahora,
+                )
+            )
 
     await db.commit()
     await db.refresh(sesion)

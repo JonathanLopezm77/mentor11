@@ -1,159 +1,1594 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <title>Admin — Mentor 11</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Panel Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-    h1, h2 { border-bottom: 2px solid #333; padding-bottom: 6px; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select, textarea { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
-    .opciones-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px; align-items: center; margin-top: 6px; }
-    .opciones-grid input[type="text"] { width: 100%; }
-    button { margin-top: 14px; padding: 8px 20px; cursor: pointer; }
-    .btn-eliminar { background: #dc2626; color: white; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; margin-top: 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 0.9rem; }
-    th { background: #f3f3f3; }
-    #msg { margin-top: 10px; font-weight: bold; }
-    .ok  { color: green; }
-    .err { color: red; }
+    :root {
+      --orange: #F97316;
+      --orange-dark: #EA580C;
+      --orange-light: #FFF7ED;
+      --gray-50: #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-700: #334155;
+      --gray-900: #0F172A;
+      --white: #FFFFFF;
+      --green: #16A34A;
+      --green-bg: #F0FDF4;
+      --red: #DC2626;
+      --red-bg: #FEF2F2;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--gray-900);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      padding: 24px 16px;
+    }
+
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 16px;
+    }
+
+    .sidebar__logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .sidebar__logo-text {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar__logo-sub {
+      font-size: 0.65rem;
+      color: var(--gray-400);
+      font-weight: 500;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--gray-400);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--white);
+    }
+
+    .nav-item.active {
+      background: var(--orange);
+      color: var(--white);
+    }
+
+    .nav-item svg {
+      flex-shrink: 0;
+    }
+
+    .sidebar__footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar__user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      margin-bottom: 8px;
+    }
+
+    .sidebar__avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--white);
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .sidebar__username {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .sidebar__role {
+      font-size: 0.7rem;
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: none;
+      color: var(--gray-400);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+    }
+
+    .stat-card__label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card__value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-top: 4px;
+      letter-spacing: -1px;
+    }
+
+    .stat-card__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--orange-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      color: var(--orange);
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+
+    .card__title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card__title span {
+      width: 4px;
+      height: 20px;
+      background: var(--orange);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-grid--full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      color: var(--gray-900);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .opciones-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .opcion-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s;
+    }
+
+    .opcion-item:has(.opcion-radio:checked) {
+      border-color: var(--orange);
+      background: var(--orange-light);
+    }
+
+    .opcion-item__top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .opcion-radio {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--orange);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .opcion-letra {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--orange-light);
+      color: var(--orange);
+      font-weight: 800;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .opcion-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .opcion-input:focus {
+      border-color: var(--orange);
+    }
+
+    .opcion-img-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 56px;
+    }
+
+    .opcion-img-row .form-input {
+      flex: 1;
+      font-size: 0.78rem;
+      padding: 6px 10px;
+    }
+
+    .opcion-img-preview {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--gray-200);
+      display: none;
+      flex-shrink: 0;
+    }
+
+    .opcion-img-label {
+      font-size: 0.72rem;
+      color: var(--gray-400);
+      white-space: nowrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn--primary {
+      background: var(--orange);
+      color: var(--white);
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+    }
+
+    .btn--primary:hover {
+      background: var(--orange-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn--primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn--secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .btn--secondary:hover {
+      background: var(--gray-200);
+    }
+
+    .btn--danger {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .btn--danger:hover {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .btn--success {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .btn--success:hover {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .btn--sm {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .msg {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .msg.ok {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid #BBF7D0;
+      display: block;
+    }
+
+    .msg.err {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid #FECACA;
+      display: block;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background: var(--gray-50);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-700);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: var(--gray-50);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge--active {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .badge--inactive {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .badge--facil {
+      background: #F0FDF4;
+      color: #16A34A;
+    }
+
+    .badge--medio {
+      background: #FFF7ED;
+      color: #EA580C;
+    }
+
+    .badge--dificil {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filters .form-select {
+      min-width: 140px;
+      padding: 8px 12px;
+    }
+
+    .upload-area {
+      border: 2px dashed var(--gray-200);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--gray-50);
+    }
+
+    .upload-area:hover {
+      border-color: var(--orange);
+      background: var(--orange-light);
+    }
+
+    .upload-area__icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .upload-area__text {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+    }
+
+    .upload-area__sub {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      margin-top: 4px;
+    }
+
+    .img-preview {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
+      display: none;
+      margin-top: 8px;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: center;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+
+    .pagination button:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .pagination button.active {
+      background: var(--orange);
+      color: var(--white);
+      border-color: var(--orange);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 90%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal__title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal__close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-400);
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .enunciado-cell {
+      max-width: 280px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .loading {
+      color: var(--gray-400);
+      font-size: 0.875rem;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .imagen-url-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .imagen-url-row .form-input {
+      flex: 1;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>Panel Admin</h1>
-<p id="bienvenida"></p>
-<button onclick="cerrarSesion()">Cerrar sesion</button>
+  <aside class="sidebar">
+    <div class="sidebar__logo">
+      <div class="sidebar__logo-icon">🎓</div>
+      <div>
+        <div class="sidebar__logo-text">Mentor 11</div>
+        <div class="sidebar__logo-sub">Panel de Administración</div>
+      </div>
+    </div>
 
-<h2>Crear pregunta</h2>
-<form id="formCrear">
+    <button class="nav-item active" data-section="inicio" onclick="navTo('inicio', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+      Inicio
+    </button>
+    <button class="nav-item" data-section="crear" onclick="navTo('crear', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </svg>
+      Crear pregunta
+    </button>
+    <button class="nav-item" data-section="lista" onclick="navTo('lista', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6" />
+        <line x1="8" y1="12" x2="21" y2="12" />
+        <line x1="8" y1="18" x2="21" y2="18" />
+        <line x1="3" y1="6" x2="3.01" y2="6" />
+        <line x1="3" y1="12" x2="3.01" y2="12" />
+        <line x1="3" y1="18" x2="3.01" y2="18" />
+      </svg>
+      Preguntas
+    </button>
+    <button class="nav-item" data-section="masiva" onclick="navTo('masiva', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="17 8 12 3 7 8" />
+        <line x1="12" y1="3" x2="12" y2="15" />
+      </svg>
+      Carga masiva
+    </button>
+    <button class="nav-item" data-section="imagen" onclick="navTo('imagen', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+      Subir imagen
+    </button>
 
-  <label>Materia</label>
-  <select id="materiaId" required>
-    <option value="">Cargando...</option>
-  </select>
+    <div class="sidebar__footer">
+      <div class="sidebar__user">
+        <div class="sidebar__avatar" id="sidebarAvatar">A</div>
+        <div>
+          <div class="sidebar__username" id="sidebarUsername">Admin</div>
+          <div class="sidebar__role">Administrador</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
 
-  <label>Enunciado</label>
-  <textarea id="enunciado" rows="3" required></textarea>
+  <main class="main">
 
-  <label>Nivel</label>
-  <select id="nivel">
-    <option value="facil">Facil</option>
-    <option value="medio" selected>Medio</option>
-    <option value="dificil">Dificil</option>
-  </select>
+    <!-- INICIO -->
+    <div class="section active" id="section-inicio">
+      <div class="page-header">
+        <h1 class="page-title">Bienvenido, <span id="welcomeName" style="color:var(--orange)">Admin</span> 👋</h1>
+        <p class="page-subtitle">Panel de control — Mentor 11</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg></div>
+          <div class="stat-card__label">Total preguntas</div>
+          <div class="stat-card__value" id="statTotal">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon" style="background:#F0FDF4;color:var(--green)"><svg width="20" height="20"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg></div>
+          <div class="stat-card__label">Activas</div>
+          <div class="stat-card__value" id="statActivas" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon" style="background:#FEF2F2;color:var(--red)"><svg width="20" height="20"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></div>
+          <div class="stat-card__label">Inactivas</div>
+          <div class="stat-card__value" id="statInactivas" style="color:var(--red)">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__title"><span></span>Acciones rápidas</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn--primary" onclick="navTo('crear', document.querySelector('[data-section=crear]'))">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Nueva pregunta
+          </button>
+          <button class="btn btn--secondary" onclick="navTo('masiva', document.querySelector('[data-section=masiva]'))">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Carga masiva
+          </button>
+          <button class="btn btn--secondary" onclick="descargarPlantilla()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Descargar plantilla
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <label>Opciones (marca el circulo de la correcta)</label>
-  <div class="opciones-grid">
-    <input type="radio" name="correcta" value="0" checked /> <input type="text" id="op0" placeholder="Opcion A" required />
-    <input type="radio" name="correcta" value="1" />         <input type="text" id="op1" placeholder="Opcion B" required />
-    <input type="radio" name="correcta" value="2" />         <input type="text" id="op2" placeholder="Opcion C" />
-    <input type="radio" name="correcta" value="3" />         <input type="text" id="op3" placeholder="Opcion D" />
+    <!-- CREAR PREGUNTA -->
+    <div class="section" id="section-crear">
+      <div class="page-header">
+        <h1 class="page-title">Crear pregunta</h1>
+        <p class="page-subtitle">Agrega una nueva pregunta al banco — las opciones pueden tener texto, imagen o ambos
+        </p>
+      </div>
+      <div class="card">
+        <div class="card__title"><span></span>Información de la pregunta</div>
+        <form id="formCrear">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Materia</label>
+              <select class="form-select" id="materiaId" required>
+                <option value="">Cargando...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nivel de dificultad</label>
+              <select class="form-select" id="nivel">
+                <option value="facil">Fácil</option>
+                <option value="medio" selected>Medio</option>
+                <option value="dificil">Difícil</option>
+              </select>
+            </div>
+            <div class="form-group form-grid--full">
+              <label class="form-label">Enunciado</label>
+              <textarea class="form-textarea" id="enunciado" rows="3" placeholder="Escribe la pregunta aquí..."
+                required></textarea>
+            </div>
+            <div class="form-group form-grid--full">
+              <label class="form-label">Imagen de la pregunta (opcional)</label>
+              <div class="imagen-url-row">
+                <input class="form-input" type="url" id="imagenUrl" placeholder="https://res.cloudinary.com/..." />
+                <button type="button" class="btn btn--secondary"
+                  onclick="navTo('imagen', document.querySelector('[data-section=imagen]'))">Subir imagen</button>
+              </div>
+              <img id="previewImgCrear" class="img-preview" alt="Preview" />
+            </div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <div class="form-label" style="margin-bottom:10px;">
+              Opciones de respuesta
+              <span style="color:var(--gray-400);font-weight:400"> — marca el círculo de la correcta — pueden tener
+                texto, imagen o ambos</span>
+            </div>
+            <div class="opciones-list" id="opcionesCrear">
+              <!-- A -->
+              <div class="opcion-item">
+                <div class="opcion-item__top">
+                  <input type="radio" class="opcion-radio" name="correcta" value="0" checked />
+                  <div class="opcion-letra">A</div>
+                  <input type="text" class="opcion-input" id="op0"
+                    placeholder="Texto de la opción A (opcional si tiene imagen)" />
+                </div>
+                <div class="opcion-img-row">
+                  <span class="opcion-img-label">Imagen URL:</span>
+                  <input class="form-input" type="url" id="opImg0" placeholder="https://..."
+                    oninput="previewOpImg(0)" />
+                  <img id="opImgPrev0" class="opcion-img-preview" alt="A" />
+                </div>
+              </div>
+              <!-- B -->
+              <div class="opcion-item">
+                <div class="opcion-item__top">
+                  <input type="radio" class="opcion-radio" name="correcta" value="1" />
+                  <div class="opcion-letra">B</div>
+                  <input type="text" class="opcion-input" id="op1"
+                    placeholder="Texto de la opción B (opcional si tiene imagen)" />
+                </div>
+                <div class="opcion-img-row">
+                  <span class="opcion-img-label">Imagen URL:</span>
+                  <input class="form-input" type="url" id="opImg1" placeholder="https://..."
+                    oninput="previewOpImg(1)" />
+                  <img id="opImgPrev1" class="opcion-img-preview" alt="B" />
+                </div>
+              </div>
+              <!-- C -->
+              <div class="opcion-item">
+                <div class="opcion-item__top">
+                  <input type="radio" class="opcion-radio" name="correcta" value="2" />
+                  <div class="opcion-letra">C</div>
+                  <input type="text" class="opcion-input" id="op2" placeholder="Texto de la opción C (opcional)" />
+                </div>
+                <div class="opcion-img-row">
+                  <span class="opcion-img-label">Imagen URL:</span>
+                  <input class="form-input" type="url" id="opImg2" placeholder="https://..."
+                    oninput="previewOpImg(2)" />
+                  <img id="opImgPrev2" class="opcion-img-preview" alt="C" />
+                </div>
+              </div>
+              <!-- D -->
+              <div class="opcion-item">
+                <div class="opcion-item__top">
+                  <input type="radio" class="opcion-radio" name="correcta" value="3" />
+                  <div class="opcion-letra">D</div>
+                  <input type="text" class="opcion-input" id="op3" placeholder="Texto de la opción D (opcional)" />
+                </div>
+                <div class="opcion-img-row">
+                  <span class="opcion-img-label">Imagen URL:</span>
+                  <input class="form-input" type="url" id="opImg3" placeholder="https://..."
+                    oninput="previewOpImg(3)" />
+                  <img id="opImgPrev3" class="opcion-img-preview" alt="D" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="form-group">
+              <label class="form-label">Explicación (opcional)</label>
+              <input class="form-input" type="text" id="explicacion"
+                placeholder="¿Por qué es correcta esa respuesta?" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pista (opcional)</label>
+              <input class="form-input" type="text" id="pista" placeholder="Una pista para el estudiante..." />
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;">
+            <button type="submit" class="btn btn--primary" id="btnCrear">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+              Crear pregunta
+            </button>
+            <button type="button" class="btn btn--secondary" onclick="limpiarFormulario()">Limpiar</button>
+          </div>
+          <div class="msg" id="msgCrear"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LISTA PREGUNTAS -->
+    <div class="section" id="section-lista">
+      <div class="page-header">
+        <h1 class="page-title">Banco de preguntas</h1>
+        <p class="page-subtitle">Gestiona, activa o desactiva las preguntas del sistema</p>
+      </div>
+      <div class="card">
+        <div class="filters">
+          <select class="form-select" id="filtroMateria" onchange="cargarLista(1)">
+            <option value="">Todas las materias</option>
+          </select>
+          <select class="form-select" id="filtroNivel" onchange="cargarLista(1)">
+            <option value="">Todos los niveles</option>
+            <option value="facil">Fácil</option>
+            <option value="medio">Medio</option>
+            <option value="dificil">Difícil</option>
+          </select>
+          <select class="form-select" id="filtroActiva" onchange="cargarLista(1)">
+            <option value="">Todas</option>
+            <option value="true">Activas</option>
+            <option value="false">Inactivas</option>
+          </select>
+          <button class="btn btn--secondary" onclick="cargarLista(1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+            </svg>
+            Recargar
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Materia</th>
+                <th>Enunciado</th>
+                <th>Nivel</th>
+                <th>Estado</th>
+                <th>Vistas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaBody">
+              <tr>
+                <td colspan="7" class="loading">Cargando preguntas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginacion"></div>
+      </div>
+    </div>
+
+    <!-- CARGA MASIVA -->
+    <div class="section" id="section-masiva">
+      <div class="page-header">
+        <h1 class="page-title">Carga masiva</h1>
+        <p class="page-subtitle">Sube múltiples preguntas desde un archivo CSV o Excel</p>
+      </div>
+      <div class="card">
+        <div class="card__title"><span></span>Subir archivo</div>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('archivoInput').click()">
+          <div class="upload-area__icon">📂</div>
+          <div class="upload-area__text">Haz clic para seleccionar un archivo</div>
+          <div class="upload-area__sub">CSV o Excel (.xlsx) — máx. 10 MB</div>
+        </div>
+        <input type="file" id="archivoInput" accept=".csv,.xlsx,.xls" style="display:none"
+          onchange="archivoSeleccionado(this)" />
+        <div id="archivoNombre" style="margin-top:10px;font-size:0.85rem;color:var(--gray-500);display:none;"></div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn--primary" id="btnSubir" onclick="subirArchivo()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Cargar preguntas
+          </button>
+          <button class="btn btn--secondary" onclick="descargarPlantilla()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Descargar plantilla
+          </button>
+        </div>
+        <div class="msg" id="msgMasiva"></div>
+        <div id="resultadoMasiva" style="display:none;margin-top:16px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+            <div style="background:var(--gray-50);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--gray-900)" id="rTotal">0</div>
+              <div style="font-size:0.75rem;color:var(--gray-500);font-weight:600">PROCESADAS</div>
+            </div>
+            <div style="background:var(--green-bg);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--green)" id="rExitosas">0</div>
+              <div style="font-size:0.75rem;color:var(--green);font-weight:600">EXITOSAS</div>
+            </div>
+            <div style="background:var(--red-bg);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:800;color:var(--red)" id="rFallidas">0</div>
+              <div style="font-size:0.75rem;color:var(--red);font-weight:600">FALLIDAS</div>
+            </div>
+          </div>
+          <div id="rErrores" style="display:none;">
+            <div style="font-size:0.85rem;font-weight:700;color:var(--gray-700);margin-bottom:8px;">Errores:</div>
+            <ul id="listaErrores" style="font-size:0.82rem;color:var(--red);padding-left:18px;"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBIR IMAGEN -->
+    <div class="section" id="section-imagen">
+      <div class="page-header">
+        <h1 class="page-title">Subir imagen</h1>
+        <p class="page-subtitle">Sube una imagen a Cloudinary y copia la URL para usarla en una pregunta o en una opción
+          de respuesta</p>
+      </div>
+      <div class="card">
+        <div class="card__title"><span></span>Seleccionar imagen</div>
+        <div class="upload-area" onclick="document.getElementById('imgInput').click()">
+          <div class="upload-area__icon">🖼️</div>
+          <div class="upload-area__text">Haz clic para seleccionar una imagen</div>
+          <div class="upload-area__sub">PNG, JPG, WebP — máx. 10 MB</div>
+        </div>
+        <input type="file" id="imgInput" accept=".png,.jpg,.jpeg,.webp,.gif" style="display:none"
+          onchange="imagenSeleccionada(this)" />
+        <img id="imgPreviewSubir" class="img-preview" alt="Preview" style="margin-top:12px;" />
+        <div style="margin-top:16px;">
+          <button class="btn btn--primary" id="btnSubirImg" onclick="subirImagen()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Subir a Cloudinary
+          </button>
+        </div>
+        <div class="msg" id="msgImagen"></div>
+        <div id="urlResultado" style="display:none;margin-top:16px;">
+          <div class="form-label" style="margin-bottom:6px;">URL de la imagen:</div>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" type="text" id="urlGenerada" readonly style="flex:1;background:var(--gray-50);" />
+            <button class="btn btn--secondary" onclick="copiarUrl()">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal editar -->
+  <div class="modal-overlay" id="modalEditar">
+    <div class="modal">
+      <div class="modal__title">
+        Editar pregunta
+        <button class="modal__close" onclick="cerrarModal()">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Enunciado</label>
+        <textarea class="form-textarea" id="editEnunciado" rows="3"></textarea>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">Nivel</label>
+          <select class="form-select" id="editNivel">
+            <option value="facil">Fácil</option>
+            <option value="medio">Medio</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="editActiva">
+            <option value="true">Activa</option>
+            <option value="false">Inactiva</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Imagen URL de la pregunta (opcional)</label>
+        <input class="form-input" type="url" id="editImagenUrl" placeholder="https://res.cloudinary.com/..." />
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Explicación</label>
+        <input class="form-input" type="text" id="editExplicacion" />
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Pista</label>
+        <input class="form-input" type="text" id="editPista" />
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn--primary" onclick="guardarEdicion()">Guardar cambios</button>
+        <button class="btn btn--secondary" onclick="cerrarModal()">Cancelar</button>
+      </div>
+      <div class="msg" id="msgEditar"></div>
+    </div>
   </div>
 
-  <label>Explicacion (opcional)</label>
-  <input type="text" id="explicacion" />
+  <script>
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
 
-  <label>Pista (opcional)</label>
-  <input type="text" id="pista" />
+    if (!token || !usuario || usuario.rol !== 'admin_tech') {
+      alert('Acceso solo para administradores.');
+      location.href = '/';
+    }
 
-  <button type="submit">Crear pregunta</button>
-</form>
-<p id="msg"></p>
+    document.getElementById('welcomeName').textContent = usuario.username;
+    document.getElementById('sidebarUsername').textContent = usuario.username;
+    document.getElementById('sidebarAvatar').textContent = usuario.username.charAt(0).toUpperCase();
 
-<h2>Preguntas existentes</h2>
-<button onclick="cargarLista()">Recargar lista</button>
-<table>
-  <thead>
-    <tr><th>ID</th><th>Materia</th><th>Enunciado</th><th>Nivel</th><th></th></tr>
-  </thead>
-  <tbody id="tablaBody"></tbody>
-</table>
+    const authH = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + token });
 
-<script>
-const API     = 'http://localhost:8000/api/v1';
-const token   = localStorage.getItem('access_token');
-const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
+    function navTo(section, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById('section-' + section).classList.add('active');
+      btn.classList.add('active');
+      if (section === 'lista') cargarLista(1);
+      if (section === 'inicio') cargarStats();
+    }
 
-if (!token || !usuario || usuario.rol !== 'admin_tech') {
-  alert('Acceso solo para administradores.');
-  location.href = '/';
-}
+    async function cargarStats() {
+      const [todos, activos, inactivos] = await Promise.all([
+        fetch(API + '/admin/preguntas?por_pagina=1', { headers: authH() }).then(r => r.json()),
+        fetch(API + '/admin/preguntas?por_pagina=1&activa=true', { headers: authH() }).then(r => r.json()),
+        fetch(API + '/admin/preguntas?por_pagina=1&activa=false', { headers: authH() }).then(r => r.json()),
+      ]);
+      document.getElementById('statTotal').textContent = todos.total ?? '—';
+      document.getElementById('statActivas').textContent = activos.total ?? '—';
+      document.getElementById('statInactivas').textContent = inactivos.total ?? '—';
+    }
 
-document.getElementById('bienvenida').textContent = 'Bienvenido, ' + (usuario?.username ?? '');
+    async function cargarMaterias() {
+      const res = await fetch(API + '/juego/materias', { headers: authH() });
+      const materias = await res.json();
+      const sel = document.getElementById('materiaId');
+      const filtro = document.getElementById('filtroMateria');
+      sel.innerHTML = materias.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+      filtro.innerHTML = '<option value="">Todas las materias</option>' +
+        materias.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+    }
 
-const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + token });
+    // Preview imagen pregunta
+    document.getElementById('imagenUrl').addEventListener('input', function () {
+      const prev = document.getElementById('previewImgCrear');
+      if (this.value) { prev.src = this.value; prev.style.display = 'block'; }
+      else prev.style.display = 'none';
+    });
 
-async function cargarMaterias() {
-  const res = await fetch(API + '/juego/materias', { headers: authHeaders() });
-  const materias = await res.json();
-  const sel = document.getElementById('materiaId');
-  sel.innerHTML = materias.map(m => '<option value="' + m.id + '">' + m.nombre + '</option>').join('');
-}
+    // Preview imagen por opción
+    function previewOpImg(idx) {
+      const url = document.getElementById('opImg' + idx).value;
+      const prev = document.getElementById('opImgPrev' + idx);
+      if (url) { prev.src = url; prev.style.display = 'block'; }
+      else prev.style.display = 'none';
+    }
 
-document.getElementById('formCrear').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const msg = document.getElementById('msg');
-  const correctaIdx = Number(document.querySelector('input[name="correcta"]:checked').value);
-  const textos = [0, 1, 2, 3].map(i => document.getElementById('op' + i).value.trim());
-  const opciones = textos.filter(t => t !== '').map((texto, i) => ({ texto, es_correcta: i === correctaIdx }));
+    function limpiarFormulario() {
+      document.getElementById('formCrear').reset();
+      document.getElementById('previewImgCrear').style.display = 'none';
+      [0, 1, 2, 3].forEach(i => {
+        document.getElementById('opImgPrev' + i).style.display = 'none';
+      });
+    }
 
-  if (opciones.length < 2) {
-    msg.textContent = 'Debes escribir al menos 2 opciones.';
-    msg.className = 'err';
-    return;
-  }
+    // Crear pregunta
+    document.getElementById('formCrear').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnCrear');
+      const msg = document.getElementById('msgCrear');
+      msg.className = 'msg';
 
-  const body = {
-    materia_id:        Number(document.getElementById('materiaId').value),
-    enunciado:         document.getElementById('enunciado').value.trim(),
-    nivel_dificultad:  document.getElementById('nivel').value,
-    opciones,
-    explicacion_texto: document.getElementById('explicacion').value.trim() || null,
-    pista:             document.getElementById('pista').value.trim() || null,
-  };
+      const correctaIdx = Number(document.querySelector('input[name="correcta"]:checked').value);
+      const opciones = [0, 1, 2, 3].map((i) => {
+        const texto = document.getElementById('op' + i).value.trim();
+        const imgUrl = document.getElementById('opImg' + i).value.trim();
+        return { texto, imagen_url: imgUrl || null, es_correcta: i === correctaIdx };
+      }).filter(o => o.texto !== '' || o.imagen_url !== null);
 
-  const res = await fetch(API + '/admin/preguntas', {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
+      if (opciones.length < 2) {
+        msg.textContent = 'Debes agregar al menos 2 opciones (texto o imagen).';
+        msg.className = 'msg err';
+        return;
+      }
 
-  if (res.ok) {
-    const data = await res.json();
-    msg.textContent = 'Pregunta #' + data.id + ' creada correctamente.';
-    msg.className = 'ok';
-    document.getElementById('formCrear').reset();
-    cargarLista();
-  } else {
-    const err = await res.json().catch(() => ({}));
-    msg.textContent = 'Error: ' + (err.detail ?? res.status);
-    msg.className = 'err';
-  }
-});
+      btn.disabled = true;
+      btn.textContent = 'Creando...';
 
-async function cargarLista() {
-  const res = await fetch(API + '/admin/preguntas?por_pagina=50', { headers: authHeaders() });
-  const data = await res.json();
-  const tbody = document.getElementById('tablaBody');
-  tbody.innerHTML = data.preguntas.map(p =>
-    '<tr><td>' + p.id + '</td><td>' + p.materia_nombre + '</td><td>' + p.enunciado +
-    '</td><td>' + p.nivel_dificultad + '</td><td><button class="btn-eliminar" onclick="eliminar(' +
-    p.id + ')">Eliminar</button></td></tr>'
-  ).join('');
-}
+      const body = {
+        materia_id: Number(document.getElementById('materiaId').value),
+        enunciado: document.getElementById('enunciado').value.trim(),
+        nivel_dificultad: document.getElementById('nivel').value,
+        imagen_url: document.getElementById('imagenUrl').value.trim() || null,
+        opciones,
+        explicacion_texto: document.getElementById('explicacion').value.trim() || null,
+        pista: document.getElementById('pista').value.trim() || null,
+      };
 
-async function eliminar(id) {
-  if (!confirm('Eliminar pregunta #' + id + '?')) return;
-  const res = await fetch(API + '/admin/preguntas/' + id, { method: 'DELETE', headers: authHeaders() });
-  if (res.ok) { cargarLista(); } else { alert('Error al eliminar.'); }
-}
+      const res = await fetch(API + '/admin/preguntas', {
+        method: 'POST', headers: authH(), body: JSON.stringify(body),
+      });
 
-function cerrarSesion() { localStorage.clear(); location.href = '/'; }
+      if (res.ok) {
+        const data = await res.json();
+        msg.textContent = `✓ Pregunta #${data.id} creada correctamente.`;
+        msg.className = 'msg ok';
+        limpiarFormulario();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        msg.textContent = 'Error: ' + (err.detail ?? res.status);
+        msg.className = 'msg err';
+      }
 
-cargarMaterias();
-cargarLista();
-</script>
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Crear pregunta';
+    });
+
+    // Lista
+    let paginaActual = 1;
+
+    async function cargarLista(pagina = 1) {
+      paginaActual = pagina;
+      const materia = document.getElementById('filtroMateria').value;
+      const nivel = document.getElementById('filtroNivel').value;
+      const activa = document.getElementById('filtroActiva').value;
+
+      let url = `${API}/admin/preguntas?pagina=${pagina}&por_pagina=15`;
+      if (materia) url += `&materia_id=${materia}`;
+      if (nivel) url += `&nivel=${nivel}`;
+      if (activa !== '') url += `&activa=${activa}`;
+
+      const tbody = document.getElementById('tablaBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando...</td></tr>';
+
+      const res = await fetch(url, { headers: authH() });
+      const data = await res.json();
+
+      tbody.innerHTML = data.preguntas.map(p => `
+    <tr>
+      <td><strong>#${p.id}</strong></td>
+      <td>${p.materia_nombre}</td>
+      <td class="enunciado-cell" title="${p.enunciado}">${p.imagen_url ? '🖼️ ' : ''}${p.enunciado}</td>
+      <td><span class="badge badge--${p.nivel_dificultad}">${p.nivel_dificultad}</span></td>
+      <td><span class="badge ${p.esta_activa ? 'badge--active' : 'badge--inactive'}">${p.esta_activa ? 'Activa' : 'Inactiva'}</span></td>
+      <td>${p.veces_respondida}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn--secondary btn--sm" onclick="abrirEditar(${p.id})">Editar</button>
+        <button class="btn ${p.esta_activa ? 'btn--danger' : 'btn--success'} btn--sm" onclick="toggleActiva(${p.id}, ${p.esta_activa})">
+          ${p.esta_activa ? 'Desactivar' : 'Activar'}
+        </button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" class="loading">No hay preguntas.</td></tr>';
+
+      const totalPags = Math.ceil(data.total / 15);
+      const pag = document.getElementById('paginacion');
+      pag.innerHTML = '';
+      if (totalPags > 1) {
+        const btnPrev = document.createElement('button');
+        btnPrev.textContent = '← Anterior';
+        btnPrev.disabled = pagina === 1;
+        btnPrev.onclick = () => cargarLista(pagina - 1);
+        pag.appendChild(btnPrev);
+
+        for (let i = 1; i <= Math.min(totalPags, 7); i++) {
+          const btn = document.createElement('button');
+          btn.textContent = i;
+          if (i === pagina) btn.classList.add('active');
+          btn.onclick = () => cargarLista(i);
+          pag.appendChild(btn);
+        }
+
+        const btnNext = document.createElement('button');
+        btnNext.textContent = 'Siguiente →';
+        btnNext.disabled = pagina === totalPags;
+        btnNext.onclick = () => cargarLista(pagina + 1);
+        pag.appendChild(btnNext);
+      }
+    }
+
+    async function toggleActiva(id, estaActiva) {
+      const res = await fetch(`${API}/admin/preguntas/${id}`, {
+        method: 'PUT', headers: authH(), body: JSON.stringify({ esta_activa: !estaActiva }),
+      });
+      if (res.ok) cargarLista(paginaActual);
+      else alert('Error al cambiar estado.');
+    }
+
+    let editandoId = null;
+
+    async function abrirEditar(id) {
+      editandoId = id;
+      const res = await fetch(`${API}/admin/preguntas/${id}`, { headers: authH() });
+      const p = await res.json();
+      document.getElementById('editEnunciado').value = p.enunciado;
+      document.getElementById('editNivel').value = p.nivel_dificultad;
+      document.getElementById('editActiva').value = String(p.esta_activa);
+      document.getElementById('editImagenUrl').value = p.imagen_url ?? '';
+      document.getElementById('editExplicacion').value = p.explicacion_texto ?? '';
+      document.getElementById('editPista').value = p.pista ?? '';
+      document.getElementById('msgEditar').className = 'msg';
+      document.getElementById('modalEditar').classList.add('open');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalEditar').classList.remove('open');
+      editandoId = null;
+    }
+
+    async function guardarEdicion() {
+      const msg = document.getElementById('msgEditar');
+      const body = {
+        enunciado: document.getElementById('editEnunciado').value.trim(),
+        nivel_dificultad: document.getElementById('editNivel').value,
+        esta_activa: document.getElementById('editActiva').value === 'true',
+        imagen_url: document.getElementById('editImagenUrl').value.trim() || null,
+        explicacion_texto: document.getElementById('editExplicacion').value.trim() || null,
+        pista: document.getElementById('editPista').value.trim() || null,
+      };
+
+      const res = await fetch(`${API}/admin/preguntas/${editandoId}`, {
+        method: 'PUT', headers: authH(), body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        msg.textContent = '✓ Cambios guardados.';
+        msg.className = 'msg ok';
+        setTimeout(() => { cerrarModal(); cargarLista(paginaActual); }, 1000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        msg.textContent = 'Error: ' + (err.detail ?? 'No se pudo guardar.');
+        msg.className = 'msg err';
+      }
+    }
+
+    // Carga masiva
+    let archivoSelec = null;
+
+    function archivoSeleccionado(input) {
+      archivoSelec = input.files[0];
+      const nom = document.getElementById('archivoNombre');
+      if (archivoSelec) {
+        nom.textContent = '📄 ' + archivoSelec.name;
+        nom.style.display = 'block';
+        document.getElementById('btnSubir').disabled = false;
+      }
+    }
+
+    async function subirArchivo() {
+      if (!archivoSelec) return;
+      const btn = document.getElementById('btnSubir');
+      const msg = document.getElementById('msgMasiva');
+      btn.disabled = true;
+      btn.textContent = 'Cargando...';
+      msg.className = 'msg';
+
+      const formData = new FormData();
+      formData.append('archivo', archivoSelec);
+
+      const res = await fetch(API + '/admin/preguntas/carga-masiva', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('rTotal').textContent = data.total_procesadas;
+        document.getElementById('rExitosas').textContent = data.total_exitosas;
+        document.getElementById('rFallidas').textContent = data.total_fallidas;
+        const errDiv = document.getElementById('rErrores');
+        const errList = document.getElementById('listaErrores');
+        if (data.errores.length > 0) {
+          errList.innerHTML = data.errores.map(e => `<li>${e}</li>`).join('');
+          errDiv.style.display = 'block';
+        } else {
+          errDiv.style.display = 'none';
+        }
+        document.getElementById('resultadoMasiva').style.display = 'block';
+        msg.textContent = `✓ Proceso completado: ${data.total_exitosas} preguntas cargadas.`;
+        msg.className = 'msg ok';
+      } else {
+        msg.textContent = 'Error: ' + (data.detail ?? 'No se pudo procesar el archivo.');
+        msg.className = 'msg err';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Cargar preguntas';
+    }
+
+    async function descargarPlantilla() {
+      const res = await fetch(API + '/admin/preguntas/plantilla', { headers: authH() });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'plantilla_preguntas.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Subir imagen
+    let imgSeleccionada = null;
+
+    function imagenSeleccionada(input) {
+      imgSeleccionada = input.files[0];
+      if (imgSeleccionada) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const prev = document.getElementById('imgPreviewSubir');
+          prev.src = e.target.result; prev.style.display = 'block';
+        };
+        reader.readAsDataURL(imgSeleccionada);
+        document.getElementById('btnSubirImg').disabled = false;
+      }
+    }
+
+    async function subirImagen() {
+      if (!imgSeleccionada) return;
+      const btn = document.getElementById('btnSubirImg');
+      const msg = document.getElementById('msgImagen');
+      btn.disabled = true; btn.textContent = 'Subiendo...';
+      msg.className = 'msg';
+
+      const formData = new FormData();
+      formData.append('imagen', imgSeleccionada);
+
+      const res = await fetch(API + '/admin/imagenes/subir', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('urlGenerada').value = data.imagen_url;
+        document.getElementById('urlResultado').style.display = 'block';
+        msg.textContent = '✓ Imagen subida correctamente. Copia la URL y úsala en una pregunta o en una opción.';
+        msg.className = 'msg ok';
+      } else {
+        msg.textContent = 'Error: ' + (data.detail ?? 'No se pudo subir la imagen.');
+        msg.className = 'msg err';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir a Cloudinary';
+    }
+
+    function copiarUrl() {
+      const input = document.getElementById('urlGenerada');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        const btn = event.target.closest('button');
+        btn.textContent = '¡Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar', 1500);
+      });
+    }
+
+    function cerrarSesion() { localStorage.clear(); location.href = '/'; }
+
+    cargarMaterias();
+    cargarStats();
+  </script>
 </body>
+
 </html>

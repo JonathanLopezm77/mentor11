@@ -50,6 +50,7 @@ def _formatear_pregunta(p: Pregunta) -> dict:
                 "id": o.id,
                 "letra": letras[i],
                 "texto": o.texto,
+                "imagen_url": o.imagen_url,
                 "es_correcta": o.es_correcta,
             }
             for i, o in enumerate(p.respuestas)
@@ -74,11 +75,7 @@ async def _cargar_pregunta_completa(db: AsyncSession, pregunta_id: int) -> Pregu
 # ─── Crear pregunta individual ────────────────────────────────────────────────
 
 
-async def crear_pregunta(
-    db: AsyncSession,
-    admin_id: int,
-    datos: PreguntaCrear,
-) -> dict:
+async def crear_pregunta(db: AsyncSession, admin_id: int, datos: PreguntaCrear) -> dict:
     resultado = await db.execute(select(Materia).where(Materia.id == datos.materia_id))
     if not resultado.scalar_one_or_none():
         raise AdminError("Materia no encontrada", 404)
@@ -87,7 +84,7 @@ async def crear_pregunta(
         materia_id=datos.materia_id,
         creada_por=admin_id,
         enunciado=datos.enunciado,
-        imagen_url=getattr(datos, "imagen_url", None),
+        imagen_url=datos.imagen_url,
         tipo=datos.tipo,
         nivel_dificultad=datos.nivel_dificultad,
         competencia=datos.competencia,
@@ -100,7 +97,8 @@ async def crear_pregunta(
         db.add(
             Respuesta(
                 pregunta_id=pregunta.id,
-                texto=opcion_datos.texto,
+                texto=opcion_datos.texto or "",
+                imagen_url=opcion_datos.imagen_url,
                 es_correcta=opcion_datos.es_correcta,
             )
         )
@@ -189,7 +187,7 @@ async def editar_pregunta(
 
     if datos.enunciado is not None:
         p.enunciado = datos.enunciado
-    if hasattr(datos, "imagen_url") and datos.imagen_url is not None:
+    if datos.imagen_url is not None:
         p.imagen_url = datos.imagen_url
     if datos.tipo is not None:
         p.tipo = datos.tipo
@@ -210,7 +208,8 @@ async def editar_pregunta(
             db.add(
                 Respuesta(
                     pregunta_id=p.id,
-                    texto=opcion_datos.texto,
+                    texto=opcion_datos.texto or "",
+                    imagen_url=opcion_datos.imagen_url,
                     es_correcta=opcion_datos.es_correcta,
                 )
             )
@@ -248,12 +247,6 @@ async def cargar_preguntas_csv(
     contenido: bytes,
     nombre_archivo: str,
 ) -> dict:
-    """
-    Procesa un archivo CSV o Excel con preguntas y las inserta en la BD.
-    Omite preguntas duplicadas (mismo enunciado + misma materia).
-    Soporta CSV con separador coma o punto y coma, y múltiples encodings.
-    Soporta columna imagen_url opcional.
-    """
     errores = []
     exitosas = 0
 
@@ -311,7 +304,6 @@ async def cargar_preguntas_csv(
 
         muestra = texto[:2048]
         delimitador = ";" if muestra.count(";") > muestra.count(",") else ","
-
         reader = csv.DictReader(io.StringIO(texto), delimiter=delimitador)
         filas = [
             {k.strip().lower(): v.strip() for k, v in fila.items()} for fila in reader
@@ -324,9 +316,7 @@ async def cargar_preguntas_csv(
             "total_procesadas": 0,
             "total_exitosas": 0,
             "total_fallidas": 0,
-            "errores": [
-                "El archivo no contiene filas de datos. Verifica que tenga encabezados y preguntas."
-            ],
+            "errores": ["El archivo no contiene filas de datos."],
         }
 
     for i, fila in enumerate(filas, start=2):
@@ -348,22 +338,16 @@ async def cargar_preguntas_csv(
                 errores.append(f"{fila_num}: enunciado vacío")
                 continue
             if codigo not in materias:
-                errores.append(
-                    f"{fila_num}: materia_codigo '{codigo}' no válido. Usar: {list(materias.keys())}"
-                )
+                errores.append(f"{fila_num}: materia_codigo '{codigo}' no válido.")
                 continue
             if nivel_str not in ("facil", "medio", "dificil"):
-                errores.append(
-                    f"{fila_num}: nivel '{nivel_str}' no válido. Usar: facil, medio, dificil"
-                )
+                errores.append(f"{fila_num}: nivel '{nivel_str}' no válido.")
                 continue
             if not opcion_a or not opcion_b:
                 errores.append(f"{fila_num}: se requieren al menos opcion_a y opcion_b")
                 continue
             if correcta not in ("A", "B", "C", "D"):
-                errores.append(
-                    f"{fila_num}: correcta '{correcta}' no válido. Usar: A, B, C o D"
-                )
+                errores.append(f"{fila_num}: correcta '{correcta}' no válido.")
                 continue
 
             existente = await db.execute(
@@ -373,31 +357,27 @@ async def cargar_preguntas_csv(
                 )
             )
             if existente.scalar_one_or_none():
-                errores.append(
-                    f"{fila_num}: omitida — ya existe una pregunta con ese enunciado en esa materia"
-                )
+                errores.append(f"{fila_num}: omitida — ya existe con ese enunciado.")
                 continue
 
-            nivel_enum = NivelDificultad(nivel_str)
             pregunta = Pregunta(
                 materia_id=materias[codigo],
                 creada_por=admin_id,
                 enunciado=enunciado,
                 imagen_url=imagen_url,
                 tipo=TipoPregunta.opcion_multiple,
-                nivel_dificultad=nivel_enum,
+                nivel_dificultad=NivelDificultad(nivel_str),
                 explicacion_texto=explicacion,
             )
             db.add(pregunta)
             await db.flush()
 
-            opciones_texto = {
+            for letra, texto_op in {
                 "A": opcion_a,
                 "B": opcion_b,
                 "C": opcion_c,
                 "D": opcion_d,
-            }
-            for letra, texto_op in opciones_texto.items():
+            }.items():
                 if texto_op:
                     db.add(
                         Respuesta(

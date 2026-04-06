@@ -28,7 +28,7 @@ class SimulacroSesion(Base):
     )
 
     estado: Mapped[EstadoSimulacro] = mapped_column(
-        Enum(EstadoSimulacro, name="estado_simulacro"),
+        Enum(EstadoSimulacro, name="estado_simulacro", create_type=False),
         nullable=False,
         default=EstadoSimulacro.activo,
     )

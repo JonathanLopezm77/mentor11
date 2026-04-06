@@ -19,9 +19,20 @@ async def main():
         try:
             usuarios = [
                 Usuario(
-                    username="admin",
+                    username="AdminJonny",
                     email="admin@mentor11.co",
-                    password_hash=hash_password("Admin123!"),
+                    password_hash=hash_password("admin12345678"),
+                    rol=RolUsuario.admin_tech,
+                    es_premium=True,
+                    esta_activo=True,
+                    puntos_totales=0,
+                    racha_actual=0,
+                    racha_maxima=0,
+                ),
+                Usuario(
+                    username="AdminCris",
+                    email="admin@mentor11.co",
+                    password_hash=hash_password("admin12345678"),
                     rol=RolUsuario.admin_tech,
                     es_premium=True,
                     esta_activo=True,
@@ -47,7 +58,7 @@ async def main():
                     rol=RolUsuario.estudiante,
                     es_premium=False,
                     esta_activo=True,
-                    puntos_totales=1200,
+                    puntos_totales=5000,
                     racha_actual=3,
                     racha_maxima=7,
                 ),
@@ -57,7 +68,8 @@ async def main():
 
             print("✅ Usuarios creados exitosamente\n")
             print("─" * 40)
-            print("  admin            /  Admin123!")
+            print("  AdminJonny            /  admin12345678")
+            print("  AdminCris            /   admin12345678")
             print("  profesor_demo    /  Profesor123!")
             print("  estudiante_demo  /  Estudiante123!")
             print("─" * 40)

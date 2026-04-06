@@ -29,7 +29,6 @@ const sesionId = sessionStorage.getItem('sesion_id');
 const materiaIds = sessionStorage.getItem('materia_ids');
 const totalPreguntas = new URLSearchParams(window.location.search).get('cantidad') ?? 10;
 
-// Redirigir si no hay sesión activa
 if (!token || !sesionId) {
   location.href = '/';
 }
@@ -86,6 +85,18 @@ function mostrarPregunta() {
   // Enunciado
   document.getElementById('enunciado').textContent = p.enunciado;
 
+  // Imagen
+  const imgContainer = document.getElementById('preguntaImagen');
+  if (imgContainer) {
+    if (p.imagen_url) {
+      imgContainer.src = p.imagen_url;
+      imgContainer.style.display = 'block';
+    } else {
+      imgContainer.src = '';
+      imgContainer.style.display = 'none';
+    }
+  }
+
   // Opciones
   const grid = document.getElementById('opcionesGrid');
   grid.innerHTML = '';
@@ -110,7 +121,6 @@ function mostrarPregunta() {
 
 // ── Enviar respuesta al backend ───────────────────────────
 async function responder(opcionId, preguntaId) {
-  // Deshabilitar todos los botones mientras espera
   document.querySelectorAll('.opcion-btn').forEach(b => (b.disabled = true));
 
   try {
@@ -125,7 +135,6 @@ async function responder(opcionId, preguntaId) {
 
     const data = await res.json();
 
-    // Colorear botones: verde = correcto, rojo = elegida incorrecta
     document.querySelectorAll('.opcion-btn').forEach(btn => {
       const id = Number(btn.dataset.id);
       if (id === data.opcion_correcta_id) {
@@ -135,20 +144,16 @@ async function responder(opcionId, preguntaId) {
       }
     });
 
-    // Contadores
     if (data.es_correcta) correctas++; else incorrectas++;
 
-    // Sonido según resultado
     playSfxP(data.es_correcta ? '/static/correcta.mp3' : '/static/error.mp3');
 
-    // Mostrar explicación si existe
     if (data.explicacion) {
       const exp = document.getElementById('explicacion');
       exp.textContent = `💡 ${data.explicacion}`;
       exp.hidden = false;
     }
 
-    // Botón siguiente
     const sigBtn = document.getElementById('siguienteBtn');
     sigBtn.textContent = actual + 1 < preguntas.length ? 'Siguiente →' : 'Ver resultado';
     sigBtn.hidden = false;
@@ -161,7 +166,6 @@ async function responder(opcionId, preguntaId) {
 
 // ── Finalizar sesión e ir a pantalla de resultados ───────
 async function finalizarSesion() {
-  // Calcular puntos ganados antes de finalizar (misma fórmula que el backend)
   const puntosGanados = correctas * 10;
 
   try {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,14 +9,15 @@
   <link rel="stylesheet" href="/static/css/libre.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
+
 <body class="libre-body">
 
   <!-- ── Header ──────────────────────────────────────────── -->
   <header class="libre-header">
     <button class="libre-back" aria-label="Volver">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6" />
       </svg>
     </button>
     <h1 class="libre-header__title">Libre</h1>
@@ -33,6 +35,8 @@
     <!-- Tarjeta con el enunciado -->
     <div class="pregunta-card">
       <p class="pregunta-enunciado" id="enunciado">Cargando pregunta...</p>
+      <img id="preguntaImagen" src="" alt="Imagen de la pregunta"
+        style="display:none;width:100%;border-radius:12px;margin-top:12px;max-height:300px;object-fit:contain;" />
     </div>
 
     <!-- Grid de opciones de respuesta -->
@@ -50,6 +54,7 @@
     <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
   </div>
 
-  <script src="/static/js/pregunta_libre.js?v=2"></script>
+  <script src="/static/js/pregunta_libre.js?v=3"></script>
 </body>
+
 </html>

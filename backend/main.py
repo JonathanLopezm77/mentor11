@@ -11,7 +11,7 @@ import os
 import uvicorn
 
 from app.core.config import settings
-from app.api.v1.endpoints import auth, juego, admin, perfil, online, profesor
+from app.api.v1.endpoints import auth, juego, admin, perfil, online, profesor, simulacro
 
 # ─── Crear la aplicación ──────────────────────────────────────────────────────
 app = FastAPI(
@@ -61,6 +61,11 @@ app.include_router(
     profesor.router,
     prefix=f"{settings.API_V1_PREFIX}",
     tags=["Profesor / Aulas"],
+)
+app.include_router(
+    simulacro.router,
+    prefix=f"{settings.API_V1_PREFIX}",
+    tags=["Simulacro ICFES"],
 )
 
 

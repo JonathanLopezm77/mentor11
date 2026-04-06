@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Simulacro ICFES</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .sim-hero { text-align: center; padding: 28px 24px 8px; }
+    .sim-icon { font-size: 4rem; display: block; margin-bottom: 8px; }
+    .sim-title { font-size: 1.8rem; font-weight: 800; color: var(--gray-900); margin: 0 0 6px; }
+    .sim-sub { font-size: .93rem; color: var(--gray-500); margin: 0; }
+
+    .sim-bloques { display: flex; gap: 10px; padding: 16px 20px; }
+    .sim-bloque { flex: 1; background: #fff; border: 1.5px solid var(--gray-200);
+      border-radius: 14px; padding: 14px 12px; text-align: center; }
+    .sim-bloque__num { font-size: .7rem; font-weight: 700; color: var(--orange-500);
+      text-transform: uppercase; letter-spacing: .6px; }
+    .sim-bloque__title { font-size: .82rem; font-weight: 700; color: var(--gray-900); margin: 4px 0 2px; }
+    .sim-bloque__det { font-size: .75rem; color: var(--gray-500); }
+
+    .sim-materias { padding: 0 20px 8px; }
+    .sim-materias__title { font-size: .75rem; font-weight: 700; color: var(--gray-500);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+    .sim-materia-row { display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--gray-100); font-size: .88rem; }
+    .sim-materia-row:last-child { border-bottom: none; }
+    .sim-materia-row__nombre { font-weight: 600; color: var(--gray-800); }
+    .sim-materia-row__cant { font-weight: 700; color: var(--orange-500); }
+
+    .sim-estado { margin: 12px 20px; background: var(--orange-50);
+      border: 1.5px solid var(--orange-200); border-radius: 16px; padding: 16px 18px; }
+    .sim-estado__label { font-size: .75rem; font-weight: 700; color: var(--orange-500);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+    .sim-estado__info { font-size: .9rem; font-weight: 600; color: var(--gray-900); }
+    .sim-estado__sub { font-size: .8rem; color: var(--gray-500); margin-top: 2px; }
+
+    .sim-aviso { margin: 0 20px 12px; background: #fff3cd;
+      border: 1.5px solid #ffc107; border-radius: 12px;
+      padding: 12px 14px; font-size: .83rem; color: #856404; font-weight: 500; }
+  </style>
+</head>
+<body class="libre-body">
+
+  <header class="libre-header">
+    <button class="libre-back" id="backBtn" aria-label="Volver">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="libre-header__title">Simulacro ICFES</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main style="overflow-y:auto;flex:1;padding-bottom:20px;">
+
+    <!-- Sin simulacro activo -->
+    <div id="vistaInfo">
+      <div class="sim-hero">
+        <span class="sim-icon">📋</span>
+        <h2 class="sim-title">Simula el examen real</h2>
+        <p class="sim-sub">254 preguntas · 6 horas · igual que el ICFES Saber 11</p>
+      </div>
+
+      <div class="sim-bloques">
+        <div class="sim-bloque">
+          <div class="sim-bloque__num">Bloque 1</div>
+          <div class="sim-bloque__title">3 horas</div>
+          <div class="sim-bloque__det">LC + Matemáticas<br>91 preguntas</div>
+        </div>
+        <div class="sim-bloque" style="align-self:center;border-style:dashed;padding:10px;">
+          <div style="font-size:1.4rem;">☕</div>
+          <div class="sim-bloque__det" style="font-size:.72rem;">Descanso</div>
+        </div>
+        <div class="sim-bloque">
+          <div class="sim-bloque__num">Bloque 2</div>
+          <div class="sim-bloque__title">3 horas</div>
+          <div class="sim-bloque__det">CN + Soc + ING<br>163 preguntas</div>
+        </div>
+      </div>
+
+      <div class="sim-materias">
+        <div class="sim-materias__title">Distribución de preguntas</div>
+        <div class="sim-materia-row"><span class="sim-materia-row__nombre">📖 Lectura Crítica</span><span class="sim-materia-row__cant">41</span></div>
+        <div class="sim-materia-row"><span class="sim-materia-row__nombre">🔢 Matemáticas</span><span class="sim-materia-row__cant">50</span></div>
+        <div class="sim-materia-row"><span class="sim-materia-row__nombre">🔬 Ciencias Naturales</span><span class="sim-materia-row__cant">58</span></div>
+        <div class="sim-materia-row"><span class="sim-materia-row__nombre">🌍 Sociales y Ciudadanas</span><span class="sim-materia-row__cant">50</span></div>
+        <div class="sim-materia-row"><span class="sim-materia-row__nombre">🌐 Inglés</span><span class="sim-materia-row__cant">55</span></div>
+      </div>
+
+      <div class="sim-aviso">
+        ⚠️ Puedes pausar el examen, pero el tiempo seguirá corriendo en tu bloque actual. Planifica bien tus descansos.
+      </div>
+    </div>
+
+    <!-- Simulacro activo / pausado -->
+    <div id="vistaActivo" hidden>
+      <div class="sim-hero">
+        <span class="sim-icon" id="estadoIcon">⏸️</span>
+        <h2 class="sim-title" id="estadoTitulo">Simulacro en curso</h2>
+        <p class="sim-sub" id="estadoSub"></p>
+      </div>
+      <div class="sim-estado">
+        <div class="sim-estado__label">Estado actual</div>
+        <div class="sim-estado__info" id="estadoInfo">—</div>
+        <div class="sim-estado__sub" id="estadoSubInfo"></div>
+      </div>
+    </div>
+
+    <!-- Entre bloques (descanso) -->
+    <div id="vistaDescanso" hidden>
+      <div class="sim-hero">
+        <span class="sim-icon">☕</span>
+        <h2 class="sim-title">¡Descanso!</h2>
+        <p class="sim-sub">Bloque 1 completado. Tómate un momento antes de continuar.</p>
+      </div>
+      <div class="sim-estado">
+        <div class="sim-estado__label">Bloque 2 — cuando estés listo</div>
+        <div class="sim-estado__info">Ciencias Naturales · Sociales · Inglés</div>
+        <div class="sim-estado__sub" id="tiempoB2Info"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="libre-footer">
+    <button class="libre-cta" id="accionBtn" disabled>Cargando...</button>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    if (!token) location.replace('/');
+
+    let estadoActual = null;
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+      location.replace('dashboard_estudiante.html');
+    });
+
+    function formatTime(seg) {
+      const h = Math.floor(seg / 3600);
+      const m = Math.floor((seg % 3600) / 60);
+      return h > 0 ? `${h}h ${m}min` : `${m} min`;
+    }
+
+    async function cargarEstado() {
+      try {
+        const res = await fetch(`${API}/simulacro/estado`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        const btnAccion = document.getElementById('accionBtn');
+
+        if (!data.tiene_simulacro) {
+          document.getElementById('vistaInfo').hidden = false;
+          document.getElementById('vistaActivo').hidden = true;
+          document.getElementById('vistaDescanso').hidden = true;
+          btnAccion.textContent = 'Iniciar simulacro';
+          btnAccion.disabled = false;
+          btnAccion.onclick = iniciarSimulacro;
+          return;
+        }
+
+        estadoActual = data;
+
+        if (data.estado === 'entre_bloques') {
+          document.getElementById('vistaInfo').hidden = true;
+          document.getElementById('vistaActivo').hidden = true;
+          document.getElementById('vistaDescanso').hidden = false;
+          document.getElementById('tiempoB2Info').textContent =
+            `Tiempo disponible para el bloque 2: ${formatTime(data.tiempo_restante_b2_seg)}`;
+          btnAccion.textContent = 'Iniciar bloque 2';
+          btnAccion.disabled = false;
+          btnAccion.onclick = iniciarBloque2;
+          return;
+        }
+
+        document.getElementById('vistaInfo').hidden = true;
+        document.getElementById('vistaDescanso').hidden = true;
+        document.getElementById('vistaActivo').hidden = false;
+
+        const esPausado = data.estado === 'pausado';
+        document.getElementById('estadoIcon').textContent = esPausado ? '⏸️' : '📋';
+        document.getElementById('estadoTitulo').textContent = esPausado ? 'Simulacro pausado' : 'Simulacro en curso';
+
+        const bloque = data.bloque_actual === 1 ? 'Bloque 1' : 'Bloque 2';
+        const tiempoRest = data.bloque_actual === 1
+          ? data.tiempo_restante_b1_seg
+          : data.tiempo_restante_b2_seg;
+        const pregActual = data.indice_actual + 1;
+        const limB = data.bloque_actual === 1 ? data.limite_bloque1 : data.total_preguntas;
+
+        document.getElementById('estadoSub').textContent =
+          `${bloque} · Pregunta ${pregActual} de ${limB} · ${formatTime(tiempoRest)} restantes`;
+        document.getElementById('estadoInfo').textContent =
+          `${bloque} — ${esPausado ? 'Pausado' : 'Activo'}`;
+        document.getElementById('estadoSubInfo').textContent =
+          `${formatTime(tiempoRest)} de tiempo restante en este bloque`;
+
+        btnAccion.textContent = esPausado ? 'Reanudar simulacro' : 'Continuar simulacro';
+        btnAccion.disabled = false;
+        btnAccion.onclick = continuarSimulacro;
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('accionBtn').textContent = 'Error de conexión';
+      }
+    }
+
+    async function iniciarSimulacro() {
+      const btn = document.getElementById('accionBtn');
+      btn.disabled = true;
+      btn.textContent = 'Preparando examen...';
+      try {
+        const res = await fetch(`${API}/simulacro/iniciar`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        sessionStorage.setItem('simulacro_estado', JSON.stringify(data));
+        location.href = 'simulacro.html';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar simulacro';
+      }
+    }
+
+    async function continuarSimulacro() {
+      if (estadoActual && estadoActual.estado === 'pausado') {
+        try {
+          await fetch(`${API}/simulacro/${estadoActual.sesion_id}/reanudar`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (_) {}
+      }
+      sessionStorage.setItem('simulacro_estado', JSON.stringify(estadoActual));
+      location.href = 'simulacro.html';
+    }
+
+    async function iniciarBloque2() {
+      const btn = document.getElementById('accionBtn');
+      btn.disabled = true;
+      btn.textContent = 'Iniciando bloque 2...';
+      try {
+        const res = await fetch(`${API}/simulacro/${estadoActual.sesion_id}/iniciar-bloque2`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        sessionStorage.setItem('simulacro_estado', JSON.stringify(data));
+        location.href = 'simulacro.html';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar bloque 2';
+      }
+    }
+
+    cargarEstado();
+  </script>
+</body>
+</html>

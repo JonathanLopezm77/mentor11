@@ -69,6 +69,12 @@
 
       </div>
 
+      <!-- Simulacro ocupa el ancho completo -->
+      <button class="dash-mode-card dash-mode-card--wide" id="simulacroBtn">
+        <span class="dash-mode-card__icon">📋</span>
+        <span class="dash-mode-card__label">Simulacro ICFES</span>
+      </button>
+
       <!-- Aula ocupa el ancho completo -->
       <button class="dash-mode-card dash-mode-card--wide" id="aulaBtn">
         <span class="dash-mode-card__icon">🎓</span>
@@ -559,6 +565,10 @@
     document.getElementById('aleatorioBtn').addEventListener('click', irAModo('/static/bloop.mp3', 'aleatorio_intro.html'));
     document.getElementById('contrarelojBtn').addEventListener('click', irAModo('/static/bop.mp3', 'contrareloj_intro.html'));
     document.getElementById('onlineBtn').addEventListener('click', irAModo('/static/bop.mp3', 'online_intro.html'));
+
+    document.getElementById('simulacroBtn').addEventListener('click', () => {
+      location.href = 'simulacro_intro.html';
+    });
 
     document.getElementById('aulaBtn').addEventListener('click', () => {
       location.href = 'aulas_estudiante.html';

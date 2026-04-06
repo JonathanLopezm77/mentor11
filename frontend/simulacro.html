@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Simulacro</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Barra superior del simulacro ── */
+    .sim-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 8px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
+      gap: 10px;
+    }
+    .sim-bloque-badge {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--orange-500);
+      background: var(--orange-50);
+      border: 1.5px solid var(--orange-200);
+      border-radius: 99px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+    .sim-timer {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: .5px;
+      flex: 1;
+      text-align: center;
+    }
+    .sim-timer--urgente { color: #dc2626; animation: parpadeo .8s infinite; }
+    @keyframes parpadeo { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .sim-pause-btn {
+      background: none;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 5px 10px;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      cursor: pointer;
+      font-family: var(--font);
+      white-space: nowrap;
+      transition: border-color .15s, color .15s;
+    }
+    .sim-pause-btn:hover { border-color: var(--orange-400); color: var(--orange-500); }
+
+    /* ── Barra de progreso + contador ── */
+    .sim-progress-wrap {
+      padding: 8px 16px 4px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+    .sim-progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: .75rem;
+      color: var(--gray-500);
+      margin-bottom: 5px;
+    }
+    .sim-progress-bar {
+      height: 5px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .sim-progress-fill {
+      height: 100%;
+      background: var(--orange-500);
+      border-radius: 99px;
+      transition: width .3s ease;
+    }
+
+    /* ── Materia tag ── */
+    .sim-materia-tag {
+      margin: 10px 16px 4px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    /* ── Pregunta ── */
+    .sim-pregunta-card {
+      margin: 0 12px;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 18px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      font-size: .93rem;
+      font-weight: 500;
+      color: var(--gray-900);
+      line-height: 1.5;
+    }
+
+    /* ── Opciones ── */
+    .sim-opciones { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+    .sim-opcion {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 500;
+      color: var(--gray-800);
+      transition: border-color .15s, background .15s;
+      text-align: left;
+      font-family: var(--font);
+      width: 100%;
+    }
+    .sim-opcion:hover { border-color: var(--orange-300); background: var(--orange-50); }
+    .sim-opcion--seleccionada {
+      border-color: var(--orange-500);
+      background: var(--orange-50);
+      font-weight: 600;
+    }
+    .sim-opcion__letra {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      color: var(--gray-600);
+    }
+    .sim-opcion--seleccionada .sim-opcion__letra {
+      background: var(--orange-500);
+      color: #fff;
+    }
+
+    /* ── Navegación ── */
+    .sim-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 4px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sim-nav-btn {
+      padding: 10px 20px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-full);
+      background: var(--white);
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--gray-700);
+      cursor: pointer;
+      font-family: var(--font);
+      transition: border-color .15s, color .15s;
+    }
+    .sim-nav-btn:hover:not(:disabled) { border-color: var(--orange-400); color: var(--orange-500); }
+    .sim-nav-btn:disabled { opacity: .35; cursor: default; }
+    .sim-nav-btn--primary {
+      background: var(--orange-500);
+      border-color: var(--orange-500);
+      color: #fff;
+      flex: 1;
+    }
+    .sim-nav-btn--primary:hover:not(:disabled) { background: var(--orange-600); border-color: var(--orange-600); }
+
+    /* ── Overlay fin de bloque / descanso ── */
+    .sim-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .sim-overlay--visible { display: flex; }
+    .sim-overlay-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 24px;
+      text-align: center;
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .sim-overlay-icon { font-size: 3.5rem; line-height: 1; }
+    .sim-overlay-title { font-size: 1.5rem; font-weight: 800; color: var(--gray-900); }
+    .sim-overlay-sub { font-size: .9rem; color: var(--gray-500); }
+    .sim-overlay-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--orange-500);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+      margin-top: 4px;
+    }
+
+    .libre-body { display: flex; flex-direction: column; min-height: 100vh; }
+    main.sim-main { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+  </style>
+</head>
+<body class="libre-body">
+
+  <!-- Barra superior -->
+  <div class="sim-topbar">
+    <span class="sim-bloque-badge" id="bloqueBadge">Bloque 1</span>
+    <span class="sim-timer" id="timer">3:00:00</span>
+    <button class="sim-pause-btn" id="pauseBtn">⏸ Pausar</button>
+  </div>
+
+  <!-- Progreso -->
+  <div class="sim-progress-wrap">
+    <div class="sim-progress-info">
+      <span id="pregContador">1 / 91</span>
+      <span id="respuestasContador">0 respondidas</span>
+    </div>
+    <div class="sim-progress-bar">
+      <div class="sim-progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <main class="sim-main">
+    <div class="sim-materia-tag" id="materiaTag">Lectura Crítica</div>
+    <div class="sim-pregunta-card">
+      <p id="enunciado" style="margin:0;">Cargando preguntas...</p>
+    </div>
+    <div class="sim-opciones" id="opcionesContainer"></div>
+  </main>
+
+  <!-- Navegación -->
+  <div class="sim-nav">
+    <button class="sim-nav-btn" id="prevBtn" disabled>← Anterior</button>
+    <button class="sim-nav-btn sim-nav-btn--primary" id="nextBtn">Siguiente →</button>
+  </div>
+
+  <!-- Overlay: fin de bloque 1 -->
+  <div class="sim-overlay" id="overlayFinB1">
+    <div class="sim-overlay-card">
+      <span class="sim-overlay-icon">☕</span>
+      <p class="sim-overlay-title">¡Bloque 1 terminado!</p>
+      <p class="sim-overlay-sub">Tómate un descanso. Cuando estés listo, continúa con el bloque 2.</p>
+      <button class="sim-overlay-btn" id="btnFinB1">Tomar descanso</button>
+    </div>
+  </div>
+
+  <!-- Overlay: tiempo agotado -->
+  <div class="sim-overlay" id="overlayTiempoAgotado">
+    <div class="sim-overlay-card">
+      <span class="sim-overlay-icon">⏰</span>
+      <p class="sim-overlay-title">¡Tiempo agotado!</p>
+      <p class="sim-overlay-sub" id="tiempoAgotadoSub">El tiempo del bloque terminó.</p>
+      <button class="sim-overlay-btn" id="btnTiempoAgotado">Continuar</button>
+    </div>
+  </div>
+
+  <!-- Overlay: confirmar fin de simulacro -->
+  <div class="sim-overlay" id="overlayFinSimulacro">
+    <div class="sim-overlay-card">
+      <span class="sim-overlay-icon">🎉</span>
+      <p class="sim-overlay-title">¡Examen completado!</p>
+      <p class="sim-overlay-sub" id="finSimSub">Ver tus resultados.</p>
+      <button class="sim-overlay-btn" id="btnVerResultado">Ver resultados</button>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    if (!token) location.replace('/');
+
+    // ── Estado del simulacro ─────────────────────────────────────
+    const estadoInicial = JSON.parse(sessionStorage.getItem('simulacro_estado') ?? 'null');
+    if (!estadoInicial) { location.replace('simulacro_intro.html'); }
+
+    const sesionId = estadoInicial.sesion_id;
+    let bloque = estadoInicial.bloque_actual;
+    let limiteBloque1 = estadoInicial.limite_bloque1;
+    let indiceActual = estadoInicial.indice_actual;
+    let tiempoRestanteSeg = bloque === 1
+      ? estadoInicial.tiempo_restante_b1_seg
+      : estadoInicial.tiempo_restante_b2_seg;
+
+    let preguntas = [];          // array completo de {id, materia, enunciado, opciones}
+    let respuestas = {};         // {pregunta_id: opcion_id}
+    let timerInterval = null;
+    let guardadoInterval = null;
+    let cargando = true;
+
+    // ── Cargar preguntas ─────────────────────────────────────────
+    async function cargarPreguntas() {
+      try {
+        const res = await fetch(`${API}/simulacro/${sesionId}/preguntas`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        preguntas = data.preguntas;
+
+        // Restaurar respuestas guardadas desde sessionStorage
+        const guardadas = JSON.parse(sessionStorage.getItem('simulacro_respuestas') ?? 'null');
+        if (guardadas) respuestas = guardadas;
+
+        cargando = false;
+        mostrarPregunta();
+        iniciarTimer();
+        iniciarAutoguardado();
+      } catch (err) {
+        document.getElementById('enunciado').textContent = 'Error cargando preguntas. Recarga la página.';
+      }
+    }
+
+    // ── Mostrar pregunta ─────────────────────────────────────────
+    function mostrarPregunta() {
+      if (cargando || preguntas.length === 0) return;
+
+      const p = preguntas[indiceActual];
+      if (!p) return;
+
+      // Actualizar badge y materia
+      const esBloque2 = indiceActual >= limiteBloque1;
+      document.getElementById('bloqueBadge').textContent = esBloque2 ? 'Bloque 2' : 'Bloque 1';
+      document.getElementById('materiaTag').textContent = p.materia;
+      document.getElementById('enunciado').textContent = p.enunciado;
+
+      // Contador
+      const limActual = esBloque2 ? preguntas.length : limiteBloque1;
+      const numEnBloque = esBloque2 ? (indiceActual - limiteBloque1 + 1) : (indiceActual + 1);
+      const totalBloque = esBloque2 ? (preguntas.length - limiteBloque1) : limiteBloque1;
+      document.getElementById('pregContador').textContent = `${numEnBloque} / ${totalBloque}`;
+
+      // Respuestas del bloque
+      const respEnBloque = Object.keys(respuestas).filter(pid => {
+        const idx = preguntas.findIndex(q => q.id == pid);
+        return esBloque2 ? idx >= limiteBloque1 : idx < limiteBloque1;
+      }).length;
+      document.getElementById('respuestasContador').textContent = `${respEnBloque} respondidas`;
+
+      // Barra progreso
+      const pct = Math.round(numEnBloque / totalBloque * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+
+      // Opciones
+      const contenedor = document.getElementById('opcionesContainer');
+      contenedor.innerHTML = '';
+      const opcionElegida = respuestas[p.id];
+
+      p.opciones.forEach(op => {
+        const btn = document.createElement('button');
+        btn.className = 'sim-opcion' + (opcionElegida === op.id ? ' sim-opcion--seleccionada' : '');
+        btn.innerHTML = `<span class="sim-opcion__letra">${op.letra}</span><span>${op.texto}</span>`;
+        btn.addEventListener('click', () => seleccionarOpcion(p.id, op.id));
+        contenedor.appendChild(btn);
+      });
+
+      // Navegación
+      document.getElementById('prevBtn').disabled = indiceActual === 0;
+      actualizarBtnSiguiente();
+    }
+
+    function actualizarBtnSiguiente() {
+      const esBloque2 = indiceActual >= limiteBloque1;
+      const esUltimoBloq1 = !esBloque2 && indiceActual === limiteBloque1 - 1;
+      const esUltimoBloq2 = esBloque2 && indiceActual === preguntas.length - 1;
+      const btn = document.getElementById('nextBtn');
+
+      if (esUltimoBloq1) {
+        btn.textContent = 'Finalizar bloque 1';
+        btn.style.background = '#16a34a';
+        btn.style.borderColor = '#16a34a';
+      } else if (esUltimoBloq2) {
+        btn.textContent = 'Finalizar simulacro';
+        btn.style.background = '#16a34a';
+        btn.style.borderColor = '#16a34a';
+      } else {
+        btn.textContent = 'Siguiente →';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+      }
+    }
+
+    function seleccionarOpcion(preguntaId, opcionId) {
+      respuestas[preguntaId] = opcionId;
+      sessionStorage.setItem('simulacro_respuestas', JSON.stringify(respuestas));
+      mostrarPregunta();
+    }
+
+    // ── Navegación prev/next ─────────────────────────────────────
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (indiceActual > 0) { indiceActual--; mostrarPregunta(); }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      const esBloque2 = indiceActual >= limiteBloque1;
+      const esUltimoBloq1 = !esBloque2 && indiceActual === limiteBloque1 - 1;
+      const esUltimoBloq2 = esBloque2 && indiceActual === preguntas.length - 1;
+
+      if (esUltimoBloq1) {
+        finalizarBloque1(false);
+      } else if (esUltimoBloq2) {
+        finalizarSimulacro(false);
+      } else {
+        indiceActual++;
+        mostrarPregunta();
+      }
+    });
+
+    // ── Timer ────────────────────────────────────────────────────
+    function formatTimer(seg) {
+      const h = Math.floor(seg / 3600);
+      const m = Math.floor((seg % 3600) / 60);
+      const s = seg % 60;
+      return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function iniciarTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        tiempoRestanteSeg--;
+        const el = document.getElementById('timer');
+        el.textContent = formatTimer(Math.max(0, tiempoRestanteSeg));
+        el.className = 'sim-timer' + (tiempoRestanteSeg <= 300 ? ' sim-timer--urgente' : '');
+
+        if (tiempoRestanteSeg <= 0) {
+          clearInterval(timerInterval);
+          tiempoAgotado();
+        }
+      }, 1000);
+    }
+
+    function tiempoAgotado() {
+      const esBloque1 = bloque === 1;
+      document.getElementById('tiempoAgotadoSub').textContent = esBloque1
+        ? 'El bloque 1 terminó. Pasarás al descanso.'
+        : 'El bloque 2 terminó. Se enviarán tus respuestas.';
+      mostrarOverlay('overlayTiempoAgotado');
+      document.getElementById('btnTiempoAgotado').onclick = () => {
+        if (esBloque1) finalizarBloque1(true);
+        else finalizarSimulacro(true);
+      };
+    }
+
+    // ── Autoguardado ─────────────────────────────────────────────
+    function iniciarAutoguardado() {
+      clearInterval(guardadoInterval);
+      guardadoInterval = setInterval(guardarProgreso, 30000);
+    }
+
+    async function guardarProgreso() {
+      try {
+        await fetch(`${API}/simulacro/${sesionId}/guardar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            indice_actual: indiceActual,
+            respuestas: respuestas,
+            tiempo_restante_seg: tiempoRestanteSeg,
+          })
+        });
+      } catch (_) {}
+    }
+
+    // ── Pausar ───────────────────────────────────────────────────
+    document.getElementById('pauseBtn').addEventListener('click', async () => {
+      clearInterval(timerInterval);
+      clearInterval(guardadoInterval);
+      document.getElementById('pauseBtn').disabled = true;
+      document.getElementById('pauseBtn').textContent = 'Guardando...';
+      try {
+        await fetch(`${API}/simulacro/${sesionId}/pausar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            indice_actual: indiceActual,
+            respuestas: respuestas,
+            tiempo_restante_seg: tiempoRestanteSeg,
+          })
+        });
+      } catch (_) {}
+      sessionStorage.removeItem('simulacro_respuestas');
+      location.replace('simulacro_intro.html');
+    });
+
+    // ── Finalizar bloque 1 ───────────────────────────────────────
+    async function finalizarBloque1(porTiempo) {
+      clearInterval(timerInterval);
+      clearInterval(guardadoInterval);
+      try {
+        await fetch(`${API}/simulacro/${sesionId}/finalizar-bloque1`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            respuestas: respuestas,
+            tiempo_restante_seg: Math.max(0, tiempoRestanteSeg),
+          })
+        });
+      } catch (_) {}
+      if (!porTiempo) mostrarOverlay('overlayFinB1');
+    }
+
+    document.getElementById('btnFinB1').addEventListener('click', () => {
+      sessionStorage.removeItem('simulacro_respuestas');
+      location.replace('simulacro_intro.html');
+    });
+
+    // ── Finalizar simulacro ──────────────────────────────────────
+    async function finalizarSimulacro(porTiempo) {
+      clearInterval(timerInterval);
+      clearInterval(guardadoInterval);
+      try {
+        await fetch(`${API}/simulacro/${sesionId}/finalizar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            respuestas: respuestas,
+            tiempo_restante_seg: Math.max(0, tiempoRestanteSeg),
+          })
+        });
+      } catch (_) {}
+      const respondidas = Object.keys(respuestas).length;
+      document.getElementById('finSimSub').textContent =
+        `Respondiste ${respondidas} de ${preguntas.length} preguntas.`;
+      mostrarOverlay('overlayFinSimulacro');
+    }
+
+    document.getElementById('btnVerResultado').addEventListener('click', () => {
+      sessionStorage.removeItem('simulacro_respuestas');
+      sessionStorage.setItem('simulacro_resultado_id', sesionId);
+      location.href = 'simulacro_resultado.html';
+    });
+
+    // ── Overlay helper ───────────────────────────────────────────
+    function mostrarOverlay(id) {
+      document.querySelectorAll('.sim-overlay').forEach(el => el.classList.remove('sim-overlay--visible'));
+      document.getElementById(id).classList.add('sim-overlay--visible');
+    }
+
+    // ── Evitar bfcache ───────────────────────────────────────────
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) location.replace('simulacro_intro.html');
+    });
+
+    // Iniciar
+    document.getElementById('timer').textContent = formatTimer(tiempoRestanteSeg);
+    cargarPreguntas();
+  </script>
+</body>
+</html>

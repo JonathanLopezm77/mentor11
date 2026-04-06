@@ -10,6 +10,7 @@ from app.models.contenido import Materia, Texto, Pregunta, Respuesta, Pista, Tip
 from app.models.juego import SesionJuego, RespuestaUsuario, EstadisticaUsuario, PartidaOnline, PoderPartida, ModoJuego, ModoPartida, EstadoPartida
 from app.models.aula import Aula, AulaEstudiante, RankingAula, Reto, PeriodoRanking, EstadoReto
 from app.models.sistema import Reporte, Notificacion, LogActividad, Logro, UsuarioLogro
+from app.models.simulacro import SimulacroSesion, EstadoSimulacro
 
 __all__ = [
     # Usuario
@@ -23,4 +24,6 @@ __all__ = [
     "Aula", "AulaEstudiante", "RankingAula", "Reto", "PeriodoRanking", "EstadoReto",
     # Sistema
     "Reporte", "Notificacion", "LogActividad", "Logro", "UsuarioLogro",
+    # Simulacro
+    "SimulacroSesion", "EstadoSimulacro",
 ]

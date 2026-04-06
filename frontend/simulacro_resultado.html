@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Resultado Simulacro</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/libre.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .res-hero { text-align: center; padding: 24px 20px 12px; }
+    .res-score { font-size: 3rem; font-weight: 800; color: var(--orange-500); line-height: 1; }
+    .res-score-label { font-size: .9rem; color: var(--gray-500); margin-top: 4px; }
+    .res-pct { font-size: 1.1rem; font-weight: 700; color: var(--gray-700); margin-top: 6px; }
+
+    .res-section { padding: 16px 20px 8px; }
+    .res-section__title { font-size: .75rem; font-weight: 700; color: var(--orange-500);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+
+    .res-materia-card {
+      background: #fff;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .res-materia-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .res-materia-card__nombre { font-size: .9rem; font-weight: 700; color: var(--gray-900); }
+    .res-materia-card__score { font-size: .9rem; font-weight: 800; color: var(--orange-500); }
+    .res-bar { height: 7px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+    .res-bar-fill { height: 100%; border-radius: 99px; background: var(--orange-500); transition: width .6s ease; }
+
+    .res-tiempo-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: .88rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .res-tiempo-row:last-child { border-bottom: none; }
+    .res-tiempo-row__label { color: var(--gray-600); font-weight: 500; }
+    .res-tiempo-row__val { font-weight: 700; color: var(--gray-900); }
+  </style>
+</head>
+<body class="libre-body">
+  <header class="libre-header">
+    <div class="libre-header__spacer"></div>
+    <h1 class="libre-header__title">Resultado Simulacro</h1>
+    <div class="libre-header__spacer"></div>
+  </header>
+
+  <main style="flex:1;overflow-y:auto;padding-bottom:80px;">
+    <div class="res-hero">
+      <div class="res-score" id="scoreTotal">—</div>
+      <div class="res-score-label">preguntas correctas</div>
+      <div class="res-pct" id="scorePct">—</div>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section__title">Por materia</div>
+      <div id="materiasContainer"></div>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section__title">Tiempo utilizado</div>
+      <div class="res-tiempo-row">
+        <span class="res-tiempo-row__label">Bloque 1 (LC + MAT)</span>
+        <span class="res-tiempo-row__val" id="tiempoB1">—</span>
+      </div>
+      <div class="res-tiempo-row">
+        <span class="res-tiempo-row__label">Bloque 2 (CN + SOC + ING)</span>
+        <span class="res-tiempo-row__val" id="tiempoB2">—</span>
+      </div>
+      <div class="res-tiempo-row">
+        <span class="res-tiempo-row__label">Preguntas respondidas</span>
+        <span class="res-tiempo-row__val" id="respondidas">—</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="libre-footer">
+    <button class="libre-cta" id="volverBtn">Volver al inicio</button>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    if (!token) location.replace('/');
+
+    const ICONOS = { LC: '📖', MAT: '🔢', CN: '🔬', SOC: '🌍', ING: '🌐' };
+
+    function formatTiempo(seg) {
+      const h = Math.floor(seg / 3600);
+      const m = Math.floor((seg % 3600) / 60);
+      return h > 0 ? `${h}h ${m}min` : `${m} min`;
+    }
+
+    async function cargarResultado() {
+      const sesionId = sessionStorage.getItem('simulacro_resultado_id');
+      if (!sesionId) { location.replace('simulacro_intro.html'); return; }
+
+      try {
+        const res = await fetch(`${API}/simulacro/${sesionId}/resultado`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        document.getElementById('scoreTotal').textContent = `${data.correctas} / ${data.total}`;
+        document.getElementById('scorePct').textContent = `${data.porcentaje}% de acierto`;
+        document.getElementById('tiempoB1').textContent = formatTiempo(data.tiempo_usado_b1_seg);
+        document.getElementById('tiempoB2').textContent = formatTiempo(data.tiempo_usado_b2_seg);
+        document.getElementById('respondidas').textContent = `${data.respondidas} / ${data.total}`;
+
+        const contenedor = document.getElementById('materiasContainer');
+        data.por_materia.forEach(m => {
+          const icono = ICONOS[m.codigo] ?? '📚';
+          const div = document.createElement('div');
+          div.className = 'res-materia-card';
+          div.innerHTML = `
+            <div class="res-materia-card__header">
+              <span class="res-materia-card__nombre">${icono} ${m.materia}</span>
+              <span class="res-materia-card__score">${m.correctas}/${m.total} (${m.porcentaje}%)</span>
+            </div>
+            <div class="res-bar">
+              <div class="res-bar-fill" style="width:${m.porcentaje}%"></div>
+            </div>`;
+          contenedor.appendChild(div);
+        });
+      } catch (err) {
+        document.getElementById('scoreTotal').textContent = 'Error';
+      }
+    }
+
+    document.getElementById('volverBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('simulacro_resultado_id');
+      location.replace('dashboard_estudiante.html');
+    });
+
+    cargarResultado();
+  </script>
+</body>
+</html>

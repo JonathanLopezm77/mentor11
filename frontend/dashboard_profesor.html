@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css" />
   <link rel="stylesheet" href="/static/css/dashboard_profesor.css" />
+  <link rel="stylesheet" href="/static/css/perfil.css" />
   <style>
     .seg-card { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--gray-100); }
     .seg-card:last-child { border-bottom:none; }
@@ -112,10 +113,10 @@
     </section>
 
 
-    <!-- ── Logout ────────────────────────────────────────────── -->
+    <!-- ── Perfil ─────────────────────────────────────────────── -->
     <div style="padding:16px 20px 32px;text-align:center;">
       <button id="profileBtn" style="background:none;border:1.5px solid var(--gray-200);border-radius:var(--radius-full);padding:10px 28px;font-size:0.85rem;font-weight:600;color:var(--gray-500);cursor:pointer;font-family:var(--font);">
-        Cerrar sesión
+        Mi Perfil
       </button>
     </div>
 
@@ -157,7 +158,207 @@
     </div>
   </div>
 
+  <!-- ── Overlay de Perfil ──────────────────────────────────── -->
+  <div class="perfil-overlay" id="perfilOverlay">
+    <div class="perfil-modal">
+
+      <div class="perfil-modal__header">
+        <button class="perfil-modal__back" id="perfilClose" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <span class="perfil-modal__title">Mi Perfil</span>
+        <button class="perfil-logout-btn" id="perfilLogoutBtn" title="Cerrar sesión">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Avatar + nombre -->
+      <div class="perfil-hero">
+        <div class="perfil-avatar-wrap">
+          <img id="perfilAvatarImg" src="/static/img/avatares/buho_n.png" alt="Avatar" />
+        </div>
+        <div class="perfil-hero__info">
+          <div class="perfil-hero__username" id="perfilUsername">—</div>
+          <div class="perfil-hero__rango" id="perfilRango">Profesor</div>
+        </div>
+      </div>
+
+      <!-- IDs requeridos por perfil.js (ocultos para profesores) -->
+      <span id="perfilRachaActual" style="display:none"></span>
+      <span id="perfilRachaMax" style="display:none"></span>
+      <span id="perfilPuntos" style="display:none"></span>
+
+      <!-- Editar perfil -->
+      <div class="perfil-section">
+        <div class="perfil-section__title">Información personal</div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Usuario</label>
+          <input type="text" class="perfil-field__input" id="perfilInputUsername" placeholder="Tu username" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Correo</label>
+          <input type="email" class="perfil-field__input" id="perfilInputEmail" placeholder="Tu correo" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Fecha de nacimiento</label>
+          <input type="date" class="perfil-field__input" id="perfilInputFecha" />
+        </div>
+
+        <div class="perfil-msg" id="perfilMsg" hidden></div>
+
+        <button class="perfil-save-btn" id="perfilSaveBtn">
+          <span id="perfilSaveBtnText">Guardar cambios</span>
+        </button>
+      </div>
+
+      <!-- Cambiar contraseña -->
+      <div class="perfil-section">
+        <div class="perfil-section__title">Cambiar contraseña</div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Contraseña actual</label>
+          <input type="password" class="perfil-field__input" id="perfilPassActual" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Nueva contraseña</label>
+          <input type="password" class="perfil-field__input" id="perfilPassNueva" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-field">
+          <label class="perfil-field__label">Confirmar nueva contraseña</label>
+          <input type="password" class="perfil-field__input" id="perfilPassConfirm" placeholder="••••••••" />
+        </div>
+
+        <div class="perfil-msg" id="perfilPassMsg" hidden></div>
+
+        <button class="perfil-save-btn perfil-save-btn--secondary" id="perfilPassBtn">
+          <span id="perfilPassBtnText">Cambiar contraseña</span>
+        </button>
+      </div>
+
+      <!-- Política de datos -->
+      <div class="perfil-section">
+        <button class="perfil-datos-btn" id="abrirPoliticaBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Política de tratamiento de datos
+        </button>
+      </div>
+
+      <div style="height: 32px;"></div>
+
+    </div>
+  </div>
+
+  <!-- ── Modal Política de Datos ───────────────────────────── -->
+  <div class="tyc-overlay" id="politicaOverlay" hidden>
+    <div class="tyc-modal">
+      <div class="tyc-modal__header">
+        <h2 class="tyc-modal__title">Política de Tratamiento de Datos</h2>
+        <button type="button" class="tyc-modal__close" id="cerrarPolitica" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="tyc-modal__body" id="politicaBody">
+        <p class="tyc-fecha">Aplicación Mentor 11 — Vigencia: 04/04/2026<br>
+        Responsable: Mentor 11 — <strong>soportementor11@gmail.com</strong> — Colombia</p>
+        <h3>1. Introducción</h3>
+        <p>La presente Política de Tratamiento de Datos Personales establece los términos en que la aplicación Mentor 11 recopila, almacena, usa, circula y protege la información personal de sus usuarios, en cumplimiento de la Ley 1581 de 2012 y el Decreto 1377 de 2013 sobre protección de datos personales en Colombia.</p>
+        <h3>2. Definiciones</h3>
+        <ul>
+          <li><strong>Dato personal:</strong> Cualquier información que permita identificar o hacer identificable a una persona.</li>
+          <li><strong>Titular:</strong> Persona natural cuyos datos personales son objeto de tratamiento.</li>
+          <li><strong>Tratamiento:</strong> Cualquier operación realizada sobre datos personales como recolección, almacenamiento, uso, circulación o supresión.</li>
+          <li><strong>Responsable del tratamiento:</strong> Persona o entidad que decide sobre el tratamiento de los datos personales (Mentor 11).</li>
+          <li><strong>Encargado del tratamiento:</strong> Persona o entidad que realiza el tratamiento de datos por cuenta del responsable.</li>
+        </ul>
+        <h3>3. Datos personales que se recolectan</h3>
+        <ul>
+          <li>Nombre completo</li>
+          <li>Correo electrónico</li>
+          <li>Tipo de usuario</li>
+          <li>Resultados de modos de juego y simulacros</li>
+          <li>Estadísticas de desempeño</li>
+          <li>Información de uso de la aplicación</li>
+          <li>Dirección IP y datos de inicio de sesión</li>
+        </ul>
+        <p>En el caso de docentes también: nombre, profesión, área de enseñanza y número de contacto.</p>
+        <h3>4. Finalidad del tratamiento</h3>
+        <ul>
+          <li>Permitir el registro y acceso a la aplicación.</li>
+          <li>Personalizar la experiencia de aprendizaje.</li>
+          <li>Realizar seguimiento académico del usuario.</li>
+          <li>Generar estadísticas de desempeño.</li>
+          <li>Permitir la interacción entre estudiantes y docentes.</li>
+          <li>Enviar notificaciones sobre simulacros, resultados o actividades.</li>
+          <li>Mejorar el funcionamiento de la aplicación.</li>
+          <li>Garantizar la seguridad de la plataforma.</li>
+          <li>Cumplir obligaciones legales.</li>
+        </ul>
+        <h3>5. Derechos del titular</h3>
+        <ul>
+          <li>Conocer, actualizar y rectificar sus datos personales.</li>
+          <li>Solicitar prueba de la autorización otorgada.</li>
+          <li>Ser informado sobre el uso dado a sus datos.</li>
+          <li>Presentar quejas ante la Superintendencia de Industria y Comercio.</li>
+          <li>Revocar la autorización y/o solicitar la eliminación de sus datos.</li>
+          <li>Acceder de forma gratuita a sus datos personales.</li>
+        </ul>
+        <h3>6. Autorización del titular</h3>
+        <p>Al registrarse en la aplicación Mentor 11, el usuario autoriza de manera libre, previa, expresa e informada el tratamiento de sus datos personales conforme a esta política. En el caso de menores de edad, la autorización deberá ser otorgada por el padre, madre o acudiente.</p>
+        <h3>7. Medidas de seguridad</h3>
+        <p>Mentor 11 adoptará medidas como protección con contraseñas, bases de datos seguras, acceso restringido, cifrado de información sensible, copias de seguridad y protocolos de seguridad informática.</p>
+        <h3>8. Vigencia de la información</h3>
+        <p>Los datos personales serán almacenados durante el tiempo en que el usuario tenga una cuenta activa o mientras sea necesario para cumplir con las finalidades del tratamiento.</p>
+        <h3>9. Consultas y reclamos</h3>
+        <p>A través del correo <strong>soportementor11@gmail.com</strong></p>
+        <ul>
+          <li><strong>Consultas:</strong> atendidas en máximo 10 días hábiles.</li>
+          <li><strong>Reclamos:</strong> atendidos en máximo 15 días hábiles.</li>
+        </ul>
+        <h3>10. Modificación de la política</h3>
+        <p>Mentor 11 podrá modificar esta política en cualquier momento. Los cambios serán informados a los usuarios a través de la aplicación o correo electrónico.</p>
+        <h3>11. Aceptación</h3>
+        <p>El usuario declara que ha leído y acepta la presente Política de Tratamiento de Datos Personales al registrarse en la aplicación Mentor 11.</p>
+      </div>
+      <div class="tyc-modal__footer">
+        <button type="button" class="btn btn--primary" id="cerrarPoliticaBtn">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/js/dashboard_profesor.js"></script>
+  <script src="/static/js/perfil.js"></script>
+  <script>
+    (function () {
+      const overlay = document.getElementById('politicaOverlay');
+      const cerrar = () => { overlay.hidden = true; };
+      document.getElementById('abrirPoliticaBtn').addEventListener('click', () => {
+        overlay.hidden = false;
+        document.getElementById('politicaBody').scrollTop = 0;
+      });
+      document.getElementById('cerrarPolitica').addEventListener('click', cerrar);
+      document.getElementById('cerrarPoliticaBtn').addEventListener('click', cerrar);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+    })();
+  </script>
   <script>
     const API = '/api/v1';
     const _tok = localStorage.getItem('access_token');

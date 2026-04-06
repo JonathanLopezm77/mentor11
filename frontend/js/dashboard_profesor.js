@@ -3,6 +3,7 @@
  */
 
 const API_BASE = '/api/v1';
+const token = localStorage.getItem('access_token');
 
 const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
 
@@ -11,10 +12,9 @@ if (!usuario) {
   window.location.href = '/';
 }
 
-// ── Perfil → logout ───────────────────────────────────────
+// ── Perfil → abrir overlay ────────────────────────────────
 document.getElementById('profileBtn').addEventListener('click', () => {
-  localStorage.clear();
-  window.location.href = '/';
+  abrirPerfil();
 });
 
 // ── Cargar estadísticas del profesor ─────────────────────

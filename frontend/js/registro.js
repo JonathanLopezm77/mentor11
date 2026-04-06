@@ -18,6 +18,33 @@ const btnText = submitBtn.querySelector('.btn__text');
 const btnSpinner = submitBtn.querySelector('.btn__spinner');
 const registroAlert = document.getElementById('registroAlert');
 const registroAlertMsg = document.getElementById('registroAlertMsg');
+const tycCheck = document.getElementById('tycCheck');
+const tycError = document.getElementById('tycError');
+const tycOverlay = document.getElementById('tycOverlay');
+
+// ── Modal Términos y Condiciones ─────────────────────────────
+document.getElementById('abrirTyc').addEventListener('click', () => {
+  tycOverlay.hidden = false;
+  document.getElementById('tycBody').scrollTop = 0;
+});
+
+document.getElementById('cerrarTyc').addEventListener('click', () => {
+  tycOverlay.hidden = true;
+});
+
+document.getElementById('aceptarTyc').addEventListener('click', () => {
+  tycCheck.checked = true;
+  tycError.textContent = '';
+  tycOverlay.hidden = true;
+});
+
+tycOverlay.addEventListener('click', (e) => {
+  if (e.target === tycOverlay) tycOverlay.hidden = true;
+});
+
+tycCheck.addEventListener('change', () => {
+  if (tycCheck.checked) tycError.textContent = '';
+});
 
 // ── Mostrar / ocultar contraseña ─────────────────────────────
 toggleBtn.addEventListener('click', () => {
@@ -81,6 +108,11 @@ function validate() {
     ok = false;
   } else if (passwordEl.value.length < 8) {
     showFieldError('password', 'Mínimo 8 caracteres.');
+    ok = false;
+  }
+
+  if (!tycCheck.checked) {
+    tycError.textContent = 'Debes aceptar los Términos y Condiciones para continuar.';
     ok = false;
   }
 

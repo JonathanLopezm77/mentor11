@@ -129,6 +129,17 @@
           </div>
         </div>
 
+        <!-- Términos y condiciones -->
+        <div class="form__group">
+          <label class="tyc-check-label" id="tycLabel">
+            <input type="checkbox" id="tycCheck" />
+            <span>He leído y acepto los
+              <button type="button" class="link-btn" id="abrirTyc">Términos y Condiciones</button>
+            </span>
+          </label>
+          <span class="form__error" id="tycError"></span>
+        </div>
+
         <!-- Alerta de error global -->
         <div class="alert alert--error" id="registroAlert" role="alert" hidden>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -159,6 +170,232 @@
 
     </main>
   </div>
+
+  <!-- ── Modal Términos y Condiciones ─────────────────────── -->
+  <div class="tyc-overlay" id="tycOverlay" role="dialog" aria-modal="true" aria-labelledby="tycTitulo" hidden>
+    <div class="tyc-modal">
+      <div class="tyc-modal__header">
+        <h2 class="tyc-modal__title" id="tycTitulo">Términos y Condiciones de Uso</h2>
+        <button type="button" class="tyc-modal__close" id="cerrarTyc" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="tyc-modal__body" id="tycBody">
+
+        <p class="tyc-fecha">Aplicación Mentor 11 — Fecha de entrada en vigencia: 4/04/2026</p>
+        <p>Bienvenido a <strong>Mentor 11</strong>, una aplicación diseñada para apoyar a estudiantes y usuarios en general en la preparación para las pruebas de Estado ICFES en Colombia, mediante herramientas de aprendizaje interactivas, contenido educativo, simulacros, seguimiento de progreso y acompañamiento académico por parte de docentes.</p>
+        <p>Al registrarse, acceder o utilizar la aplicación Mentor 11, el usuario acepta los presentes Términos y Condiciones de Uso. Si el usuario no está de acuerdo con estos términos, deberá abstenerse de utilizar la aplicación.</p>
+
+        <h3>1. Identificación de la aplicación</h3>
+        <p>La aplicación Mentor 11 es una plataforma educativa digital que tiene como finalidad apoyar la preparación académica para las pruebas ICFES en Colombia, mediante recursos educativos, ejercicios prácticos, simulacros, análisis de resultados, seguimiento del progreso académico y acompañamiento por parte de docentes o mentores.</p>
+        <p>La aplicación está dirigida a:</p>
+        <ul>
+          <li>Estudiantes de educación media.</li>
+          <li>Personas que deseen presentar las pruebas ICFES.</li>
+          <li>Docentes o mentores que deseen apoyar procesos de aprendizaje.</li>
+          <li>Usuarios en general interesados en fortalecer competencias académicas.</li>
+        </ul>
+
+        <h3>2. Aceptación de los términos</h3>
+        <p>El uso de la aplicación implica que el usuario:</p>
+        <ul>
+          <li>Ha leído los presentes Términos y Condiciones.</li>
+          <li>Entiende su contenido.</li>
+          <li>Acepta cumplir con todas las disposiciones aquí establecidas.</li>
+        </ul>
+        <p>Estos términos aplican para todos los usuarios de la plataforma, incluyendo estudiantes, docentes, mentores y visitantes.</p>
+
+        <h3>3. Registro de usuario</h3>
+        <p>Para utilizar algunas funcionalidades de la aplicación, el usuario deberá registrarse proporcionando información veraz, completa y actualizada.</p>
+        <p>El usuario se compromete a:</p>
+        <ul>
+          <li>Proporcionar información real.</li>
+          <li>Mantener la confidencialidad de su contraseña.</li>
+          <li>No compartir su cuenta con terceros.</li>
+          <li>Notificar a la plataforma en caso de uso no autorizado de su cuenta.</li>
+        </ul>
+        <p>La aplicación no se hace responsable por el uso indebido de cuentas personales.</p>
+
+        <h3>4. Uso adecuado de la aplicación</h3>
+        <p>El usuario se compromete a utilizar la aplicación de manera adecuada, respetuosa y conforme a la ley. Queda prohibido:</p>
+        <ul>
+          <li>Usar la aplicación para actividades ilegales.</li>
+          <li>Publicar contenido ofensivo, discriminatorio o inapropiado.</li>
+          <li>Intentar acceder sin autorización a cuentas de otros usuarios.</li>
+          <li>Copiar, distribuir o comercializar el contenido de la aplicación sin autorización.</li>
+          <li>Alterar, dañar o afectar el funcionamiento de la plataforma.</li>
+        </ul>
+        <p>La aplicación podrá suspender o cancelar cuentas que incumplan estas normas.</p>
+
+        <h3>5. Contenido educativo</h3>
+        <p>El contenido disponible en Mentor 11 (preguntas, simulacros, material educativo, videos, explicaciones, estadísticas, entre otros) es de carácter educativo y tiene como finalidad apoyar el aprendizaje.</p>
+        <p>La aplicación no garantiza resultados específicos en las pruebas ICFES, ya que el desempeño depende del compromiso, estudio y habilidades de cada usuario.</p>
+
+        <h3>6. Roles de usuario</h3>
+        <h4>6.1 Estudiantes</h4>
+        <p>Podrán: resolver preguntas, presentar simulacros, ver su progreso, recibir retroalimentación y participar en actividades educativas.</p>
+        <h4>6.2 Docentes o Mentores</h4>
+        <p>Podrán: poner retos diarios a sus estudiantes, hacer seguimiento al progreso de estudiantes en sus respectivas aulas, proporcionar retroalimentación académica y apoyar procesos de aprendizaje.</p>
+
+        <h3>7. Propiedad intelectual</h3>
+        <p>Todo el contenido de la aplicación, incluyendo el nombre, logotipo, diseño y software, está protegido por derechos de propiedad intelectual y no puede ser copiado, reproducido o distribuido sin autorización previa.</p>
+
+        <h3>8. Protección de datos personales</h3>
+        <p>La aplicación recopila datos personales como nombre, correo electrónico, información académica, resultados de pruebas y estadísticas de desempeño. Estos datos serán utilizados únicamente con fines educativos, estadísticos y de mejora de la plataforma, conforme a la normativa de protección de datos personales vigente en Colombia.</p>
+        <p>El usuario acepta el tratamiento de sus datos personales al registrarse en la aplicación.</p>
+
+        <h3>9. Disponibilidad del servicio</h3>
+        <p>La aplicación Mentor 11 no garantiza que la plataforma esté disponible en todo momento, ya que pueden presentarse mantenimientos, fallos técnicos, problemas de internet o actualizaciones del sistema. La plataforma no será responsable por pérdidas de información causadas por fallos técnicos o externos.</p>
+
+        <h3>10. Cancelación de cuentas</h3>
+        <p>La aplicación podrá suspender o cancelar cuentas cuando el usuario incumpla estos términos, se detecte uso fraudulento, se utilice la plataforma para fines indebidos, se suplante la identidad de otra persona, o por un tiempo prolongado de inactividad. El usuario también podrá solicitar la eliminación de su cuenta.</p>
+
+        <h3>11. Modificación de los términos</h3>
+        <p>Mentor 11 podrá modificar estos Términos y Condiciones en cualquier momento. Los cambios serán informados a los usuarios a través de la aplicación o correo electrónico. El uso continuo de la aplicación después de los cambios implica la aceptación de los nuevos términos.</p>
+
+        <h3>12. Legislación aplicable</h3>
+        <p>Estos Términos y Condiciones se rigen por las leyes de la República de Colombia. Cualquier conflicto que se presente en relación con el uso de la aplicación será resuelto conforme a la legislación colombiana.</p>
+
+        <h3>13. Contacto</h3>
+        <p>Correo electrónico: <strong>soportementor11@gmail.com</strong><br>
+        Proyecto: Mentor 11 — Colombia</p>
+
+        <h3>14. Aceptación</h3>
+        <p>Al registrarse y utilizar la aplicación, el usuario declara que ha leído, entendido y aceptado los presentes Términos y Condiciones de Uso de la aplicación Mentor 11.</p>
+
+      </div>
+      <div class="tyc-modal__footer">
+        <button type="button" class="btn btn--primary" id="aceptarTyc">Aceptar y continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* ── Checkbox T&C ────────────────────────────────────────── */
+    .tyc-check-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: .88rem;
+      color: var(--gray-600);
+      line-height: 1.4;
+    }
+    .tyc-check-label input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      accent-color: var(--orange-500);
+      cursor: pointer;
+    }
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--orange-500);
+      font-weight: 600;
+      font-size: inherit;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .link-btn:hover { color: var(--orange-600); }
+
+    /* ── Modal overlay ───────────────────────────────────────── */
+    .tyc-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .tyc-overlay[hidden] { display: none; }
+    .tyc-modal {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+      overflow: hidden;
+      animation: tyc-entra .25s cubic-bezier(.34,1.36,.64,1);
+    }
+    @keyframes tyc-entra {
+      from { opacity: 0; transform: scale(.92) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .tyc-modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+    .tyc-modal__title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 0;
+    }
+    .tyc-modal__close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-400);
+      padding: 4px;
+      display: flex;
+      border-radius: 8px;
+      transition: color .15s, background .15s;
+    }
+    .tyc-modal__close:hover { color: var(--gray-700); background: var(--gray-100); }
+    .tyc-modal__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      font-size: .87rem;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+    .tyc-modal__body h3 {
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 16px 0 6px;
+    }
+    .tyc-modal__body h4 {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin: 12px 0 4px;
+    }
+    .tyc-modal__body p { margin: 0 0 8px; }
+    .tyc-modal__body ul {
+      margin: 4px 0 10px;
+      padding-left: 20px;
+    }
+    .tyc-modal__body ul li { margin-bottom: 4px; }
+    .tyc-fecha {
+      font-size: .8rem;
+      color: var(--gray-400);
+      margin-bottom: 12px !important;
+    }
+    .tyc-modal__footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+    .tyc-modal__footer .btn { width: 100%; }
+  </style>
 
   <script src="/static/js/registro.js"></script>
 </body>

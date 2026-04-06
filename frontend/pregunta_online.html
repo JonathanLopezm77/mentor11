@@ -136,7 +136,7 @@
     <div class="overlay-fin__card">
       <span class="overlay-fin__icon">🏆</span>
       <p class="overlay-fin__title">¡Ganaste!</p>
-      <p class="overlay-fin__sub">Terminaste primero. ¡Excelente!</p>
+      <p class="overlay-fin__sub" id="ganaSubtitle">¡Excelente!</p>
       <button class="overlay-fin__btn" id="btnGanaOk">Volver al inicio</button>
     </div>
   </div>
@@ -146,7 +146,7 @@
     <div class="overlay-fin__card">
       <span class="overlay-fin__icon">😔</span>
       <p class="overlay-fin__title">¡Tu rival ganó!</p>
-      <p class="overlay-fin__sub" id="pieردeSub">Sigue practicando, ¡la próxima es tuya!</p>
+      <p class="overlay-fin__sub" id="pierdeSubtitle">Sigue practicando, ¡la próxima es tuya!</p>
       <button class="overlay-fin__btn" id="btnPierdeOk">Volver al inicio</button>
     </div>
   </div>
@@ -156,7 +156,7 @@
     <div class="overlay-fin__card">
       <span class="overlay-fin__icon">🤝</span>
       <p class="overlay-fin__title">¡Empate!</p>
-      <p class="overlay-fin__sub">Los dos respondieron igual de bien.</p>
+      <p class="overlay-fin__sub" id="empateSubtitle">Los dos respondieron igual de bien.</p>
       <button class="overlay-fin__btn" id="btnEmpateOk">Volver al inicio</button>
     </div>
   </div>
@@ -225,9 +225,20 @@
         }
 
         if (data.type === 'resultado') {
-          if (data.empate) mostrarOverlay('overlayEmpate');
-          else if (data.ganaste) mostrarOverlay('overlayGana');
-          else mostrarOverlay('overlayPierde');
+          const total = preguntas.length || '?';
+          if (data.empate) {
+            document.getElementById('empateSubtitle').textContent =
+              `Ambos con ${data.mis_correctas} / ${total} correctas.`;
+            mostrarOverlay('overlayEmpate');
+          } else if (data.ganaste) {
+            document.getElementById('ganaSubtitle').textContent =
+              `Tú: ${data.mis_correctas} correctas · Rival: ${data.rival_correctas} correctas`;
+            mostrarOverlay('overlayGana');
+          } else {
+            document.getElementById('pierdeSubtitle').textContent =
+              `Rival: ${data.rival_correctas} correctas · Tú: ${data.mis_correctas} correctas`;
+            mostrarOverlay('overlayPierde');
+          }
         }
 
         if (data.type === 'rival_disconnected') {
@@ -370,14 +381,16 @@
         if (data.es_correcta) {
           correctas++;
           play('/static/correcta.mp3');
-          const pct = Math.round((correctas / preguntas.length) * 100);
-          document.getElementById('barYo').style.width = pct + '%';
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'progress', value: pct }));
-          }
         } else {
           incorrectas++;
           play('/static/error.mp3');
+        }
+
+        // Barra llena según preguntas respondidas (no correctas)
+        const pct = Math.round(((actual + 1) / preguntas.length) * 100);
+        document.getElementById('barYo').style.width = pct + '%';
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'progress', value: pct }));
         }
 
         guardarProgreso();

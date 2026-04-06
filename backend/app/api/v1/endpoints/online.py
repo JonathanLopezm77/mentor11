@@ -198,14 +198,14 @@ async def online_ws(websocket: WebSocket):
                     c1 = sala["finalizados"][ids[1]]
                     if c0 == c1:
                         sala["resultados_fin"] = {
-                            p: {"type": "resultado", "empate": True, "ganaste": False}
-                            for p in ids
+                            ids[0]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c0, "rival_correctas": c1},
+                            ids[1]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c1, "rival_correctas": c0},
                         }
                     else:
                         ganador = ids[0] if c0 > c1 else ids[1]
                         sala["resultados_fin"] = {
-                            p: {"type": "resultado", "empate": False, "ganaste": p == ganador}
-                            for p in ids
+                            ids[0]: {"type": "resultado", "empate": False, "ganaste": ids[0] == ganador, "mis_correctas": c0, "rival_correctas": c1},
+                            ids[1]: {"type": "resultado", "empate": False, "ganaste": ids[1] == ganador, "mis_correctas": c1, "rival_correctas": c0},
                         }
                     sala["evento_fin"].set()  # Notificar a ambas corrutinas
 

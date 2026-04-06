@@ -37,6 +37,7 @@ def _formatear_pregunta(p: Pregunta) -> dict:
         "materia_id": p.materia_id,
         "materia_nombre": p.materia.nombre if p.materia else "—",
         "enunciado": p.enunciado,
+        "imagen_url": p.imagen_url,
         "tipo": p.tipo,
         "nivel_dificultad": p.nivel_dificultad,
         "competencia": p.competencia,
@@ -86,6 +87,7 @@ async def crear_pregunta(
         materia_id=datos.materia_id,
         creada_por=admin_id,
         enunciado=datos.enunciado,
+        imagen_url=getattr(datos, "imagen_url", None),
         tipo=datos.tipo,
         nivel_dificultad=datos.nivel_dificultad,
         competencia=datos.competencia,
@@ -154,6 +156,7 @@ async def listar_preguntas(
                 "enunciado": (
                     p.enunciado[:100] + "..." if len(p.enunciado) > 100 else p.enunciado
                 ),
+                "imagen_url": p.imagen_url,
                 "nivel_dificultad": p.nivel_dificultad,
                 "tipo": p.tipo,
                 "esta_activa": p.esta_activa,
@@ -186,6 +189,8 @@ async def editar_pregunta(
 
     if datos.enunciado is not None:
         p.enunciado = datos.enunciado
+    if hasattr(datos, "imagen_url") and datos.imagen_url is not None:
+        p.imagen_url = datos.imagen_url
     if datos.tipo is not None:
         p.tipo = datos.tipo
     if datos.nivel_dificultad is not None:
@@ -247,6 +252,7 @@ async def cargar_preguntas_csv(
     Procesa un archivo CSV o Excel con preguntas y las inserta en la BD.
     Omite preguntas duplicadas (mismo enunciado + misma materia).
     Soporta CSV con separador coma o punto y coma, y múltiples encodings.
+    Soporta columna imagen_url opcional.
     """
     errores = []
     exitosas = 0
@@ -290,7 +296,6 @@ async def cargar_preguntas_csv(
                 ],
             }
     else:
-        # Intentar múltiples encodings
         texto = None
         for encoding in ("utf-8-sig", "utf-8", "latin-1", "cp1252"):
             try:
@@ -304,7 +309,6 @@ async def cargar_preguntas_csv(
                 "No se pudo leer el archivo. Guárdalo como CSV UTF-8 desde Excel."
             )
 
-        # Detectar delimitador automáticamente (coma o punto y coma)
         muestra = texto[:2048]
         delimitador = ";" if muestra.count(";") > muestra.count(",") else ","
 
@@ -338,6 +342,7 @@ async def cargar_preguntas_csv(
             correcta = fila.get("correcta", "").strip().upper()
             explicacion = fila.get("explicacion", "").strip() or None
             pista = fila.get("pista", "").strip() or None
+            imagen_url = fila.get("imagen_url", "").strip() or None
 
             if not enunciado:
                 errores.append(f"{fila_num}: enunciado vacío")
@@ -378,6 +383,7 @@ async def cargar_preguntas_csv(
                 materia_id=materias[codigo],
                 creada_por=admin_id,
                 enunciado=enunciado,
+                imagen_url=imagen_url,
                 tipo=TipoPregunta.opcion_multiple,
                 nivel_dificultad=nivel_enum,
                 explicacion_texto=explicacion,

@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     GMAIL_PASSWORD: str = ""
     EMAIL_FROM: str = "elmentor11@gmail.com"
 
+    # ── Cloudinary ─────────────────────────────────────────────
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+
     # ── IA (Premium) ──────────────────────────────────
     OPENAI_API_KEY: str = ""
 

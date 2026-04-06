@@ -4,7 +4,8 @@ Endpoints del panel de administración.
 Solo accesibles con rol admin_tech.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin, get_db
@@ -25,6 +26,7 @@ from app.services.admin_service import (
     cargar_preguntas_csv,
     AdminError,
 )
+from app.services.imagen_service import subir_imagen
 
 router = APIRouter()
 
@@ -34,15 +36,14 @@ router = APIRouter()
 
 @router.get("/preguntas", response_model=PaginacionRespuesta)
 async def listar(
-    materia_id: int | None = Query(None, description="Filtrar por materia"),
-    nivel: str | None = Query(None, description="facil, medio, dificil"),
-    activa: bool | None = Query(None, description="True=activas, False=inactivas"),
+    materia_id: int | None = Query(None),
+    nivel: str | None = Query(None),
+    activa: bool | None = Query(None),
     pagina: int = Query(1, ge=1),
     por_pagina: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """Lista todas las preguntas con filtros opcionales y paginación."""
     return await listar_preguntas(db, materia_id, nivel, activa, pagina, por_pagina)
 
 
@@ -50,21 +51,16 @@ async def listar(
 
 
 @router.get("/preguntas/plantilla")
-async def descargar_plantilla(
-    admin: Usuario = Depends(get_admin),
-):
-    """
-    Descarga una plantilla CSV de ejemplo para la carga masiva de preguntas.
-    """
+async def descargar_plantilla(admin: Usuario = Depends(get_admin)):
     from fastapi.responses import Response
 
     plantilla = (
-        "materia_codigo;enunciado;nivel;opcion_a;opcion_b;opcion_c;opcion_d;correcta;explicacion;pista\n"
-        "MAT;¿Cuánto es 2 + 2?;facil;3;4;5;6;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos\n"
+        "materia_codigo;enunciado;nivel;opcion_a;opcion_b;opcion_c;opcion_d;correcta;explicacion;pista;imagen_url\n"
+        "MAT;¿Cuánto es 2 + 2?;facil;3;4;5;6;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos;\n"
         "LC;¿Qué figura retórica es 'el tiempo es oro'?;medio;Metáfora;Hipérbole;Símil;Paradoja;A;"
-        "Una metáfora compara sin usar 'como';Piensa en comparaciones directas\n"
+        "Una metáfora compara sin usar 'como';Piensa en comparaciones directas;\n"
         "ING;Choose the correct verb: She ___ to school;facil;go;goes;going;gone;B;"
-        "Third person singular uses -s;Think about he/she/it\n"
+        "Third person singular uses -s;Think about he/she/it;\n"
     )
 
     return Response(
@@ -72,6 +68,37 @@ async def descargar_plantilla(
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=plantilla_preguntas.csv"},
     )
+
+
+# ─── Subir imagen ─────────────────────────────────────────────────────────────
+
+
+@router.post("/imagenes/subir")
+async def subir_imagen_pregunta(
+    imagen: UploadFile = File(..., description="Imagen PNG, JPG o WebP"),
+    admin: Usuario = Depends(get_admin),
+):
+    """
+    Sube una imagen a Cloudinary y retorna la URL pública.
+    Usar esta URL en el campo imagen_url al crear una pregunta.
+    """
+    extensiones_validas = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+    if not imagen.filename.lower().endswith(extensiones_validas):
+        raise HTTPException(
+            status_code=400,
+            detail="Solo se aceptan imágenes PNG, JPG, JPEG, WebP o GIF",
+        )
+
+    contenido = await imagen.read()
+    if len(contenido) == 0:
+        raise HTTPException(status_code=400, detail="La imagen está vacía")
+
+    try:
+        nombre = f"pregunta_{uuid.uuid4().hex[:8]}"
+        url = await subir_imagen(contenido, nombre)
+        return {"imagen_url": url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al subir imagen: {str(e)}")
 
 
 # ─── Ver detalle de una pregunta ──────────────────────────────────────────────
@@ -83,7 +110,6 @@ async def ver_pregunta(
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """Devuelve el detalle completo de una pregunta con opciones y pista."""
     try:
         return await obtener_pregunta(db, pregunta_id)
     except AdminError as e:
@@ -99,10 +125,6 @@ async def crear(
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """
-    Crea una nueva pregunta con sus opciones y pista opcional.
-    Exactamente 1 opción debe tener es_correcta=true.
-    """
     try:
         return await crear_pregunta(db, admin.id, datos)
     except AdminError as e:
@@ -119,10 +141,6 @@ async def editar(
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """
-    Edita una pregunta. Solo se actualizan los campos enviados.
-    Si envías opciones, reemplaza todas las anteriores.
-    """
     try:
         return await editar_pregunta(db, pregunta_id, datos)
     except AdminError as e:
@@ -138,7 +156,6 @@ async def eliminar(
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """Elimina permanentemente una pregunta con todas sus opciones y pistas."""
     try:
         return await eliminar_pregunta(db, pregunta_id)
     except AdminError as e:
@@ -150,28 +167,14 @@ async def eliminar(
 
 @router.post("/preguntas/carga-masiva", response_model=ResultadoCargaMasiva)
 async def carga_masiva(
-    archivo: UploadFile = File(..., description="Archivo CSV o Excel (.xlsx)"),
+    archivo: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     admin: Usuario = Depends(get_admin),
 ):
-    """
-    Carga múltiples preguntas desde un archivo CSV o Excel.
-
-    Formato de columnas requerido:
-    | materia_codigo | enunciado | nivel | opcion_a | opcion_b | opcion_c | opcion_d | correcta | explicacion | pista |
-
-    - materia_codigo: LC, MAT, SOC, CN, ING
-    - nivel: facil, medio, dificil
-    - correcta: A, B, C o D
-    - explicacion y pista: opcionales
-
-    Descarga la plantilla de ejemplo desde GET /admin/preguntas/plantilla
-    """
     extensiones_validas = (".csv", ".xlsx", ".xls")
     if not archivo.filename.lower().endswith(extensiones_validas):
         raise HTTPException(
-            status_code=400,
-            detail="Solo se aceptan archivos CSV o Excel (.xlsx, .xls)",
+            status_code=400, detail="Solo se aceptan archivos CSV o Excel (.xlsx, .xls)"
         )
 
     contenido = await archivo.read()

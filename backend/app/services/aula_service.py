@@ -422,6 +422,21 @@ async def crear_tarea(db: AsyncSession, aula_id: int, profesor_id: int, cantidad
     if cantidad_preguntas < 1 or cantidad_preguntas > 30:
         raise AulaError("La cantidad debe estar entre 1 y 30", 400)
 
+    # Verificar que haya suficientes preguntas disponibles en la materia del aula
+    if aula.materia_id:
+        res_count = await db.execute(
+            select(func.count()).where(
+                Pregunta.materia_id == aula.materia_id,
+                Pregunta.esta_activa == True,
+            )
+        )
+        total_disponibles = res_count.scalar_one()
+        if total_disponibles < cantidad_preguntas:
+            raise AulaError(
+                f"No hay suficientes preguntas disponibles. Solo hay {total_disponibles} en esta materia.",
+                400,
+            )
+
     tarea = Tarea(aula_id=aula_id, cantidad_preguntas=cantidad_preguntas)
     db.add(tarea)
     await db.commit()
@@ -586,24 +601,27 @@ async def iniciar_tarea(db: AsyncSession, tarea_id: int, estudiante_id: int) -> 
 
     # Seleccionar preguntas nuevas
     from sqlalchemy.orm import selectinload as sil
-    query = (
-        select(Pregunta)
-        .options(sil(Pregunta.respuestas))
-        .where(
-            Pregunta.materia_id == materia_id,
-            Pregunta.esta_activa == True,
-        )
-        .order_by(func.random())
-        .limit(tarea.cantidad_preguntas)
-    )
-    if preguntas_usadas:
-        query = query.where(Pregunta.id.notin_(preguntas_usadas))
 
-    res_p = await db.execute(query)
+    def _query_tarea(excluir: list[int]):
+        q = (
+            select(Pregunta)
+            .options(sil(Pregunta.respuestas))
+            .where(
+                Pregunta.materia_id == materia_id,
+                Pregunta.esta_activa == True,
+            )
+            .order_by(func.random())
+            .limit(tarea.cantidad_preguntas)
+        )
+        if excluir:
+            q = q.where(Pregunta.id.notin_(excluir))
+        return q
+
+    res_p = await db.execute(_query_tarea(preguntas_usadas))
     preguntas_objs = res_p.scalars().all()
 
     if not preguntas_objs:
-        raise AulaError("No hay preguntas disponibles para esta tarea", 404)
+        raise AulaError("No hay más preguntas nuevas disponibles para esta tarea", 404)
 
     # Crear sesión de juego
     sesion = SesionJuego(

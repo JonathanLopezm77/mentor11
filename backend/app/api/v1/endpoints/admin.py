@@ -55,12 +55,13 @@ async def descargar_plantilla(admin: Usuario = Depends(get_admin)):
     from fastapi.responses import Response
 
     plantilla = (
-        "materia_codigo;enunciado;nivel;opcion_a;opcion_b;opcion_c;opcion_d;correcta;explicacion;pista;imagen_url\n"
-        "MAT;¿Cuánto es 2 + 2?;facil;3;4;5;6;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos;\n"
-        "LC;¿Qué figura retórica es 'el tiempo es oro'?;medio;Metáfora;Hipérbole;Símil;Paradoja;A;"
+        "materia_codigo;enunciado;nivel;opcion_a;imagen_a;opcion_b;imagen_b;opcion_c;imagen_c;opcion_d;imagen_d;correcta;explicacion;pista;imagen_url\n"
+        "MAT;¿Cuánto es 2 + 2?;facil;3;;4;;5;;6;;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos;\n"
+        "LC;¿Qué figura retórica es 'el tiempo es oro'?;medio;Metáfora;;Hipérbole;;Símil;;Paradoja;;A;"
         "Una metáfora compara sin usar 'como';Piensa en comparaciones directas;\n"
-        "ING;Choose the correct verb: She ___ to school;facil;go;goes;going;gone;B;"
+        "ING;Choose the correct verb: She ___ to school;facil;go;;goes;;going;;gone;;B;"
         "Third person singular uses -s;Think about he/she/it;\n"
+        "CN;¿Cuál figura corresponde a un triángulo?;medio;;;https://cloudinary.com/triangulo.png;;https://cloudinary.com/cuadrado.png;;https://cloudinary.com/circulo.png;;https://cloudinary.com/rombo.png;A;El triángulo tiene 3 lados;;\n"
     )
 
     return Response(

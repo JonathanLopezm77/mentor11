@@ -9,7 +9,7 @@ import asyncio
 
 from app.core.security import hash_password
 from app.db.database import AsyncSessionLocal
-from app.models.usuario import Usuario, Avatar, RolUsuario
+from app.models.usuario import Usuario, RolUsuario
 
 
 async def main():
@@ -40,28 +40,6 @@ async def main():
                     racha_actual=0,
                     racha_maxima=0,
                 ),
-                Usuario(
-                    username="profesor_demo",
-                    email="profesor@mentor11.co",
-                    password_hash=hash_password("Profesor123!"),
-                    rol=RolUsuario.profesor,
-                    es_premium=True,
-                    esta_activo=True,
-                    puntos_totales=500,
-                    racha_actual=0,
-                    racha_maxima=0,
-                ),
-                Usuario(
-                    username="estudiante_demo",
-                    email="estudiante@mentor11.co",
-                    password_hash=hash_password("Estudiante123!"),
-                    rol=RolUsuario.estudiante,
-                    es_premium=False,
-                    esta_activo=True,
-                    puntos_totales=5000,
-                    racha_actual=3,
-                    racha_maxima=7,
-                ),
             ]
             session.add_all(usuarios)
             await session.commit()
@@ -70,8 +48,6 @@ async def main():
             print("─" * 40)
             print("  AdminJonny            /  admin12345678")
             print("  AdminCris            /   admin12345678")
-            print("  profesor_demo    /  Profesor123!")
-            print("  estudiante_demo  /  Estudiante123!")
             print("─" * 40)
 
         except Exception as e:

@@ -96,12 +96,15 @@ function mostrarPregunta() {
     btn.className = 'opcion-btn';
     btn.dataset.id = op.id;
 
-    // Si la opción tiene imagen, mostrarla; si no, mostrar texto
     if (op.imagen_url) {
+      // Opción con imagen: la imagen va en un div que NO tiene overflow:hidden
+      // El color de fondo se aplica al botón directamente (sin ::before)
+      // así la imagen nunca queda tapada
+      btn.dataset.tieneImagen = '1';
       btn.innerHTML = `
         <span class="opcion-letra">${op.letra}</span>
         <img src="${op.imagen_url}" alt="Opción ${op.letra}"
-          style="max-width:100%;max-height:120px;object-fit:contain;border-radius:8px;margin-top:6px;" />
+          style="max-width:100%;max-height:120px;object-fit:contain;border-radius:8px;margin-top:6px;position:relative;z-index:2;" />
       `;
     } else {
       btn.innerHTML = `
@@ -133,8 +136,30 @@ async function responder(opcionId, preguntaId) {
 
     document.querySelectorAll('.opcion-btn').forEach(btn => {
       const id = Number(btn.dataset.id);
-      if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
-      else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
+      const tieneImagen = btn.dataset.tieneImagen === '1';
+
+      if (id === data.opcion_correcta_id) {
+        if (tieneImagen) {
+          // Con imagen: aplicar color de fondo directo sin animación ::before
+          btn.style.background = '#D1FAE5';
+          btn.style.borderColor = '#059669';
+          btn.style.transition = 'background 0.45s ease, border-color 0.45s ease';
+          const letra = btn.querySelector('.opcion-letra');
+          if (letra) { letra.style.background = '#059669'; letra.style.color = '#fff'; }
+        } else {
+          btn.classList.add('opcion-btn--correcta');
+        }
+      } else if (id === opcionId && !data.es_correcta) {
+        if (tieneImagen) {
+          btn.style.background = '#FEE2E2';
+          btn.style.borderColor = '#DC2626';
+          btn.style.transition = 'background 0.45s ease, border-color 0.45s ease';
+          const letra = btn.querySelector('.opcion-letra');
+          if (letra) { letra.style.background = '#DC2626'; letra.style.color = '#fff'; }
+        } else {
+          btn.classList.add('opcion-btn--incorrecta');
+        }
+      }
     });
 
     if (data.es_correcta) correctas++; else incorrectas++;

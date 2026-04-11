@@ -27,10 +27,11 @@ class MateriaRespuesta(BaseModel):
 
 class OpcionSchema(BaseModel):
     """Opción con letra asignada dinámicamente. No incluye es_correcta."""
+
     id: int
     letra: str
     texto: str
-
+    imagen_url: str | None = None
     model_config = {"from_attributes": True}
 
 
@@ -49,7 +50,7 @@ class RetroalimentacionRespuesta(BaseModel):
     """Respuesta devuelta después de que el usuario elige una opción."""
 
     es_correcta: bool
-    opcion_correcta_id: int   # Frontend colorea en verde la opción con este id
+    opcion_correcta_id: int  # Frontend colorea en verde la opción con este id
     explicacion: str | None
     pista_disponible: bool
 

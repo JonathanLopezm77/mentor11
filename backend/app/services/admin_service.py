@@ -247,6 +247,17 @@ async def cargar_preguntas_csv(
     contenido: bytes,
     nombre_archivo: str,
 ) -> dict:
+    """
+    Columnas soportadas:
+    materia_codigo; enunciado; nivel;
+    opcion_a; imagen_a; opcion_b; imagen_b; opcion_c; imagen_c; opcion_d; imagen_d;
+    correcta; explicacion; pista; imagen_url
+
+    - imagen_a/b/c/d: URL de imagen para cada opción (opcional)
+    - imagen_url: URL de imagen para el enunciado (opcional)
+    - Si una opción tiene imagen pero no texto, se guarda con texto vacío
+    - Se requiere al menos que opcion_a O imagen_a existan, y opcion_b O imagen_b
+    """
     errores = []
     exitosas = 0
 
@@ -329,6 +340,10 @@ async def cargar_preguntas_csv(
             opcion_b = fila.get("opcion_b", "").strip()
             opcion_c = fila.get("opcion_c", "").strip()
             opcion_d = fila.get("opcion_d", "").strip()
+            imagen_a = fila.get("imagen_a", "").strip() or None
+            imagen_b = fila.get("imagen_b", "").strip() or None
+            imagen_c = fila.get("imagen_c", "").strip() or None
+            imagen_d = fila.get("imagen_d", "").strip() or None
             correcta = fila.get("correcta", "").strip().upper()
             explicacion = fila.get("explicacion", "").strip() or None
             pista = fila.get("pista", "").strip() or None
@@ -343,9 +358,16 @@ async def cargar_preguntas_csv(
             if nivel_str not in ("facil", "medio", "dificil"):
                 errores.append(f"{fila_num}: nivel '{nivel_str}' no válido.")
                 continue
-            if not opcion_a or not opcion_b:
-                errores.append(f"{fila_num}: se requieren al menos opcion_a y opcion_b")
+
+            # Validar que A y B tienen al menos texto o imagen
+            tiene_a = bool(opcion_a or imagen_a)
+            tiene_b = bool(opcion_b or imagen_b)
+            if not tiene_a or not tiene_b:
+                errores.append(
+                    f"{fila_num}: se requieren al menos las opciones A y B (texto o imagen)"
+                )
                 continue
+
             if correcta not in ("A", "B", "C", "D"):
                 errores.append(f"{fila_num}: correcta '{correcta}' no válido.")
                 continue
@@ -372,17 +394,21 @@ async def cargar_preguntas_csv(
             db.add(pregunta)
             await db.flush()
 
-            for letra, texto_op in {
-                "A": opcion_a,
-                "B": opcion_b,
-                "C": opcion_c,
-                "D": opcion_d,
-            }.items():
-                if texto_op:
+            # Crear opciones — solo si tienen texto o imagen
+            opciones_data = [
+                ("A", opcion_a, imagen_a),
+                ("B", opcion_b, imagen_b),
+                ("C", opcion_c, imagen_c),
+                ("D", opcion_d, imagen_d),
+            ]
+
+            for letra, texto_op, img_op in opciones_data:
+                if texto_op or img_op:
                     db.add(
                         Respuesta(
                             pregunta_id=pregunta.id,
-                            texto=texto_op,
+                            texto=texto_op or "",
+                            imagen_url=img_op,
                             es_correcta=(letra == correcta),
                         )
                     )

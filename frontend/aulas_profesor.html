@@ -266,28 +266,6 @@
     <p class="loading-msg">Cargando...</p>
   </div>
 
-  <!-- Modal crear aula -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Nueva Aula</div>
-
-      <div class="modal-field">
-        <label class="modal-label" for="inputNombre">Nombre del aula</label>
-        <input class="modal-input" id="inputNombre" type="text" placeholder="Ej: Grado 11 A" maxlength="100" />
-      </div>
-
-      <div class="modal-field">
-        <label class="modal-label" for="selectMateria">Materia</label>
-        <select class="modal-select" id="selectMateria">
-          <option value="">Cargando materias...</option>
-        </select>
-      </div>
-
-      <div class="modal-err" id="modalErr" hidden></div>
-      <button class="modal-btn" id="guardarBtn">Crear Aula</button>
-    </div>
-  </div>
 
 <script>
   const API = '/api/v1';
@@ -298,63 +276,6 @@
   const COLORES = ['orange', 'blue'];
 
   document.getElementById('backBtn').addEventListener('click', () => history.back());
-
-  // ── Modal ──────────────────────────────────────────────────
-  const overlay    = document.getElementById('modalOverlay');
-  const crearBtn   = document.getElementById('crearBtn');
-  const guardarBtn = document.getElementById('guardarBtn');
-  const modalErr   = document.getElementById('modalErr');
-  const inputNombre  = document.getElementById('inputNombre');
-  const selectMateria = document.getElementById('selectMateria');
-
-  function abrirModal() {
-    overlay.classList.add('visible');
-    inputNombre.value = '';
-    modalErr.hidden = true;
-    setTimeout(() => inputNombre.focus(), 300);
-  }
-  function cerrarModal() { overlay.classList.remove('visible'); }
-  overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
-  crearBtn.addEventListener('click', abrirModal);
-  if (new URLSearchParams(location.search).get('crear') === '1') abrirModal();
-
-  async function cargarMaterias() {
-    try {
-      const res = await fetch(`${API}/juego/materias`, { headers: { Authorization: `Bearer ${token}` } });
-      const mat = await res.json();
-      selectMateria.innerHTML = mat.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-    } catch {
-      selectMateria.innerHTML = '<option value="">Error al cargar</option>';
-    }
-  }
-  cargarMaterias();
-
-  guardarBtn.addEventListener('click', async () => {
-    const nombre = inputNombre.value.trim();
-    const materiaId = parseInt(selectMateria.value);
-    if (!nombre) { mostrarErr('Escribe un nombre para el aula'); return; }
-    if (!materiaId) { mostrarErr('Selecciona una materia'); return; }
-    guardarBtn.disabled = true;
-    guardarBtn.textContent = 'Creando...';
-    modalErr.hidden = true;
-    try {
-      const res = await fetch(`${API}/profesor/aulas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ nombre, materia_id: materiaId }),
-      });
-      const data = await res.json();
-      if (!res.ok) { mostrarErr(data.detail ?? 'Error al crear'); return; }
-      cerrarModal();
-      await cargarAulas();
-    } catch { mostrarErr('Error de conexión'); }
-    finally {
-      guardarBtn.disabled = false;
-      guardarBtn.textContent = 'Crear Aula';
-    }
-  });
-
-  function mostrarErr(msg) { modalErr.textContent = msg; modalErr.hidden = false; }
 
   // ── Lista de aulas ─────────────────────────────────────────
   async function cargarAulas() {

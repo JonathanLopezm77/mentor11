@@ -2,17 +2,18 @@
 app/api/v1/endpoints/perfil.py
 Endpoints de perfil del usuario: avatar, estadísticas, edición y contraseña.
 """
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, Integer, cast
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 from app.db.database import get_db
 from app.core.deps import get_current_user
 from app.models.usuario import Usuario, Avatar
-from app.models.juego import EstadisticaUsuario
-from app.models.contenido import Materia
+from app.models.juego import EstadisticaUsuario, RespuestaUsuario, SesionJuego
+from app.models.contenido import Materia, Pregunta
 from app.services.usuario_service import (
     obtener_perfil, editar_perfil, cambiar_password, UsuarioError
 )
@@ -127,10 +128,50 @@ async def guardar_avatar(
 
 @router.get("/estadisticas", response_model=list[EstadisticaMateria])
 async def obtener_estadisticas(
+    periodo: Optional[str] = Query(None, regex="^(dia|semana|mes)$"),
     usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retorna el porcentaje de acierto por materia del usuario."""
+    """Retorna el porcentaje de acierto por materia del usuario.
+    Si se pasa ?periodo=dia|semana|mes filtra por respuestas recientes.
+    Sin periodo devuelve el acumulado histórico.
+    """
+    if periodo:
+        ahora = datetime.now(timezone.utc)
+        if periodo == "dia":
+            desde = ahora - timedelta(days=1)
+        elif periodo == "semana":
+            desde = ahora - timedelta(weeks=1)
+        else:  # mes
+            desde = ahora - timedelta(days=30)
+
+        resultado = await db.execute(
+            select(
+                Materia.nombre,
+                func.count(RespuestaUsuario.id).label("total"),
+                func.sum(cast(RespuestaUsuario.es_correcta, Integer)).label("correctas"),
+            )
+            .join(SesionJuego, RespuestaUsuario.sesion_id == SesionJuego.id)
+            .join(Pregunta, RespuestaUsuario.pregunta_id == Pregunta.id)
+            .join(Materia, Pregunta.materia_id == Materia.id)
+            .where(
+                SesionJuego.usuario_id == usuario.id,
+                RespuestaUsuario.respondida_en >= desde,
+            )
+            .group_by(Materia.nombre)
+            .order_by(Materia.nombre)
+        )
+        filas = resultado.all()
+        return [
+            {
+                "materia": nombre,
+                "porcentaje": round((correctas / total) * 100) if total else 0,
+            }
+            for nombre, total, correctas in filas
+            if total > 0
+        ]
+
+    # Sin filtro: acumulado histórico
     resultado = await db.execute(
         select(EstadisticaUsuario, Materia.nombre)
         .join(Materia, EstadisticaUsuario.materia_id == Materia.id)

@@ -47,6 +47,7 @@
       font-size: 1.5rem;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 3px 10px rgba(249,115,22,0.4);
+      text-decoration: none;
     }
 
     /* ── Lista ────────────────────────────────────────────── */
@@ -258,7 +259,7 @@
       </svg>
     </button>
     <span class="topbar__title">Mis Aulas</span>
-    <button class="topbar__add" id="crearBtn" title="Crear aula">+</button>
+    <a class="topbar__add" href="crear_aula.html" title="Crear aula">+</a>
   </div>
 
   <div class="aulas-list" id="aulasList">
@@ -372,7 +373,10 @@
       }
 
       lista.innerHTML = aulas.map((a, i) => {
-        const color = COLORES[i % COLORES.length];
+        const hex = a.color_hex || COLORES[i % COLORES.length];
+        const iconBg = hex + '22';
+        const color = i % 2 === 0 ? 'orange' : 'blue';
+        const btnColor = a.color_hex || (color === 'orange' ? '#F97316' : '#3B82F6');
         const promedio = a.promedio ?? '—';
         const pruebaDiaria = a.prueba_diaria ?? 0;
         const enLinea = a.en_linea ?? 0;
@@ -380,13 +384,13 @@
         return `
           <div class="aula-card" data-id="${a.id}">
             <div class="aula-card__top">
-              <div class="aula-card__icon aula-card__icon--${color}">📚</div>
+              <div class="aula-card__icon" style="background:${iconBg};">📚</div>
               <div class="aula-card__info">
                 <div class="aula-card__name">${a.nombre}</div>
                 <div class="aula-card__codigo-label">Código:</div>
                 <div class="aula-card__codigo-val">${a.codigo_acceso}</div>
               </div>
-              <button class="aula-card__btn aula-card__btn--${color}" data-id="${a.id}">Ingresar</button>
+              <button class="aula-card__btn" style="background:${btnColor};box-shadow:0 3px 10px ${btnColor}55;" data-id="${a.id}">Ingresar</button>
             </div>
 
             <div class="aula-card__online">

@@ -59,7 +59,7 @@ async def crear_aula_endpoint(
 ):
     _requerir_profesor(usuario)
     try:
-        aula = await crear_aula(db, usuario.id, datos.nombre, datos.materia_id)
+        aula = await crear_aula(db, usuario.id, datos.nombre, datos.materia_id, datos.color_hex)
     except AulaError as e:
         raise HTTPException(status_code=e.status_code, detail=e.mensaje)
     return {

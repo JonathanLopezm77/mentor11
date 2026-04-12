@@ -41,7 +41,7 @@ async def _codigo_unico(db: AsyncSession) -> str:
 
 # ── Crear aula ────────────────────────────────────────────────────────────────
 
-async def crear_aula(db: AsyncSession, profesor_id: int, nombre: str, materia_id: int) -> Aula:
+async def crear_aula(db: AsyncSession, profesor_id: int, nombre: str, materia_id: int, color_hex: str | None = None) -> Aula:
     res_mat = await db.execute(select(Materia).where(Materia.id == materia_id))
     if not res_mat.scalar_one_or_none():
         raise AulaError("Materia no encontrada", 404)
@@ -52,6 +52,7 @@ async def crear_aula(db: AsyncSession, profesor_id: int, nombre: str, materia_id
         nombre=nombre,
         materia_id=materia_id,
         codigo_acceso=codigo,
+        color_hex=color_hex,
         esta_activa=True,
     )
     db.add(aula)
@@ -83,6 +84,7 @@ async def listar_aulas_profesor(db: AsyncSession, profesor_id: int) -> list[dict
             "esta_activa": a.esta_activa,
             "creada_en": a.creada_en,
             "total_estudiantes": len([e for e in a.estudiantes if e.esta_activo]),
+            "color_hex": a.color_hex,
         })
     return resultado
 

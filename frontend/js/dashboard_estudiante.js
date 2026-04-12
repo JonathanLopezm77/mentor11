@@ -862,6 +862,48 @@ async function abrirEstadisticas() {
   }
 }
 
+// ── Filtro de periodo en stats overlay ───────────────────────
+async function cargarStatsPeriodo(periodo = '') {
+  const card = document.getElementById('statsBars');
+  const promedioEl = document.getElementById('promedioGeneral');
+  card.innerHTML = '<p class="stats-loading-msg">Cargando...</p>';
+  promedioEl.textContent = '— %';
+
+  const url = periodo
+    ? `/api/v1/perfil/estadisticas?periodo=${periodo}`
+    : '/api/v1/perfil/estadisticas';
+
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    const datos = await res.json();
+    if (!datos.length) {
+      card.innerHTML = '<p class="stats-loading-msg">Sin datos en este periodo.</p>';
+      promedioEl.textContent = '0 %';
+      return;
+    }
+    datosStats = datos;
+    const promedio = Math.round(datos.reduce((s, d) => s + d.porcentaje, 0) / datos.length);
+    animarContador(promedioEl, promedio, 900);
+    renderVista(datos);
+  } catch (_) {
+    card.innerHTML = '<p class="stats-loading-msg">Error al cargar.</p>';
+  }
+}
+
+document.querySelectorAll('.stats-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stats-filter-btn').forEach(b => {
+      b.style.background = '#fff';
+      b.style.borderColor = '#E2E8F0';
+      b.style.color = '#64748B';
+    });
+    btn.style.background = '#F97316';
+    btn.style.borderColor = '#F97316';
+    btn.style.color = '#fff';
+    cargarStatsPeriodo(btn.dataset.periodo);
+  });
+});
+
 statsBtn.addEventListener('click', abrirEstadisticas);
 const backSfx = new Audio('/static/back.mp3');
 backSfx.volume = 0.7;

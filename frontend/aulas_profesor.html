@@ -273,7 +273,9 @@
   const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
   if (!usuario) location.href = '/';
 
-  const COLORES = ['orange', 'blue'];
+  const COLORES = ['#F97316', '#3B82F6', '#22C55E', '#A855F7', '#EC4899', '#EF4444', '#EAB308', '#06B6D4'];
+
+  const LIBRO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
 
   document.getElementById('backBtn').addEventListener('click', () => history.back());
 
@@ -295,9 +297,7 @@
 
       lista.innerHTML = aulas.map((a, i) => {
         const hex = a.color_hex || COLORES[i % COLORES.length];
-        const iconBg = hex + '22';
-        const color = i % 2 === 0 ? 'orange' : 'blue';
-        const btnColor = a.color_hex || (color === 'orange' ? '#F97316' : '#3B82F6');
+        const btnColor = hex;
         const promedio = a.promedio ?? '—';
         const pruebaDiaria = a.prueba_diaria ?? 0;
         const enLinea = a.en_linea ?? 0;
@@ -305,7 +305,9 @@
         return `
           <div class="aula-card" data-id="${a.id}">
             <div class="aula-card__top">
-              <div class="aula-card__icon" style="background:${iconBg};">📚</div>
+              <div class="aula-card__icon" style="background:${hex};">
+                ${LIBRO_SVG}
+              </div>
               <div class="aula-card__info">
                 <div class="aula-card__name">${a.nombre}</div>
                 <div class="aula-card__codigo-label">Código:</div>

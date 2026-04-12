@@ -2,7 +2,7 @@
 app/api/v1/endpoints/perfil.py
 Endpoints de perfil del usuario: avatar, estadísticas, edición y contraseña.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, Integer, cast
@@ -137,7 +137,7 @@ async def obtener_estadisticas(
     Sin periodo devuelve el acumulado histórico.
     """
     if periodo:
-        ahora = datetime.now(timezone.utc)
+        ahora = datetime.utcnow()
         if periodo == "dia":
             desde = ahora - timedelta(days=1)
         elif periodo == "semana":

@@ -129,21 +129,34 @@ async def guardar_avatar(
 @router.get("/estadisticas", response_model=list[EstadisticaMateria])
 async def obtener_estadisticas(
     periodo: Optional[str] = Query(None, regex="^(dia|semana|mes)$"),
+    mes: Optional[str] = Query(None, regex="^\\d{4}-(0[1-9]|1[0-2])$"),
     usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Retorna el porcentaje de acierto por materia del usuario.
-    Si se pasa ?periodo=dia|semana|mes filtra por respuestas recientes.
-    Sin periodo devuelve el acumulado histórico.
+    - Sin params: acumulado histórico
+    - ?periodo=dia|semana: últimas 24h o 7 días
+    - ?periodo=mes&mes=YYYY-MM: mes específico
+    - ?periodo=mes sin mes: mes actual
     """
     if periodo:
         ahora = datetime.utcnow()
         if periodo == "dia":
             desde = ahora - timedelta(days=1)
+            hasta = ahora
         elif periodo == "semana":
             desde = ahora - timedelta(weeks=1)
+            hasta = ahora
         else:  # mes
-            desde = ahora - timedelta(days=30)
+            if mes:
+                anio, num_mes = int(mes.split("-")[0]), int(mes.split("-")[1])
+            else:
+                anio, num_mes = ahora.year, ahora.month
+            desde = datetime(anio, num_mes, 1)
+            if num_mes == 12:
+                hasta = datetime(anio + 1, 1, 1)
+            else:
+                hasta = datetime(anio, num_mes + 1, 1)
 
         resultado = await db.execute(
             select(
@@ -157,6 +170,7 @@ async def obtener_estadisticas(
             .where(
                 SesionJuego.usuario_id == usuario.id,
                 RespuestaUsuario.respondida_en >= desde,
+                RespuestaUsuario.respondida_en < hasta,
             )
             .group_by(Materia.nombre)
             .order_by(Materia.nombre)

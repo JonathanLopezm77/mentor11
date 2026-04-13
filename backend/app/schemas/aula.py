@@ -13,6 +13,7 @@ from pydantic import BaseModel
 class CrearAulaRequest(BaseModel):
     nombre: str
     materia_id: int
+    color_hex: Optional[str] = None
 
 
 class AulaRespuesta(BaseModel):

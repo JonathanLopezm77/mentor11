@@ -57,12 +57,21 @@ function getIcono(materia) {
 }
 
 // ── Cargar y renderizar estadísticas ─────────────────────────
-async function cargarEstadisticas() {
+let periodoActivo = '';
+
+async function cargarEstadisticas(periodo = '') {
   const card = document.getElementById('subjectsCard');
   const promedioEl = document.getElementById('promedioGeneral');
 
+  card.innerHTML = '<p class="stats-loading">Cargando...</p>';
+  promedioEl.textContent = '— %';
+
+  const url = periodo
+    ? `/api/v1/perfil/estadisticas?periodo=${periodo}`
+    : '/api/v1/perfil/estadisticas';
+
   try {
-    const res = await fetch('/api/v1/perfil/estadisticas', {
+    const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     const datos = await res.json();
@@ -102,6 +111,16 @@ async function cargarEstadisticas() {
     card.innerHTML = '<p class="stats-loading">Error al cargar estadísticas.</p>';
   }
 }
+
+// ── Filtros de periodo ────────────────────────────────────────
+document.querySelectorAll('.stats-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stats-filter-btn').forEach(b => b.classList.remove('stats-filter-btn--active'));
+    btn.classList.add('stats-filter-btn--active');
+    periodoActivo = btn.dataset.periodo;
+    cargarEstadisticas(periodoActivo);
+  });
+});
 
 // ── Navegación ────────────────────────────────────────────────
 document.getElementById('backBtn').addEventListener('click', () => {

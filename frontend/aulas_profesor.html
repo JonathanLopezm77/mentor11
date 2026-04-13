@@ -5,92 +5,267 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mentor 11 — Mis Aulas</title>
   <link rel="stylesheet" href="/static/css/styles.css" />
-  <link rel="stylesheet" href="/static/css/dashboard.css" />
-  <link rel="stylesheet" href="/static/css/dashboard_profesor.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    .aulas-page { display:flex; flex-direction:column; min-height:100vh; background:var(--gray-50); }
-    .aulas-topbar { display:flex; align-items:center; gap:12px; padding:20px 20px 0; }
-    .aulas-topbar__back { background:none; border:none; cursor:pointer; color:var(--gray-700); display:flex; align-items:center; padding:6px; border-radius:var(--radius-sm); }
-    .aulas-topbar__back:hover { background:var(--gray-100); }
-    .aulas-topbar__title { font-size:1.25rem; font-weight:800; color:var(--gray-900); flex:1; }
-    .aulas-topbar__add { background:var(--orange-500); border:none; cursor:pointer; color:#fff; width:36px; height:36px; border-radius:50%; font-size:1.4rem; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-btn); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0F172A; min-height: 100vh; }
 
-    /* Modal crear aula */
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.2s; }
-    .modal-overlay.visible { opacity:1; pointer-events:all; }
-    .modal-sheet { background:#fff; border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-width:480px; transform:translateY(100%); transition:transform 0.3s ease; }
-    .modal-overlay.visible .modal-sheet { transform:translateY(0); }
-    .modal-title { font-size:1.1rem; font-weight:800; color:var(--gray-900); margin-bottom:20px; }
-    .modal-field { margin-bottom:16px; }
-    .modal-label { font-size:0.78rem; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; display:block; }
-    .modal-input { width:100%; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:12px 14px; font-size:0.95rem; font-family:var(--font); outline:none; background:#fff; color:var(--gray-900); }
-    .modal-input:focus { border-color:var(--orange-400); }
-    .modal-select { width:100%; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:12px 14px; font-size:0.95rem; font-family:var(--font); outline:none; background:#fff; color:var(--gray-900); appearance:none; }
-    .modal-select:focus { border-color:var(--orange-400); }
-    .modal-btn { width:100%; padding:14px; border:none; border-radius:var(--radius-full); background:var(--orange-500); color:#fff; font-size:1rem; font-weight:700; font-family:var(--font); cursor:pointer; box-shadow:var(--shadow-btn); margin-top:8px; }
-    .modal-btn:disabled { opacity:0.5; }
-    .modal-err { color:var(--error); font-size:0.82rem; margin-top:8px; text-align:center; }
+    /* ── Topbar ───────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 20px 16px;
+      position: relative;
+    }
+    .topbar__back {
+      position: absolute;
+      left: 20px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: #F97316;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(249,115,22,0.4);
+    }
+    .topbar__title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .topbar__add {
+      position: absolute;
+      right: 20px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: #F97316;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      font-size: 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(249,115,22,0.4);
+      text-decoration: none;
+    }
 
-    /* Lista de aulas */
-    .aulas-list { padding:16px 20px; flex:1; display:flex; flex-direction:column; gap:12px; }
-    .aula-card { background:#fff; border:1.5px solid var(--gray-200); border-radius:var(--radius-md); padding:16px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow 0.2s, transform 0.15s; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-    .aula-card:hover { box-shadow:var(--shadow-card); transform:translateY(-2px); }
-    .aula-card__header { display:flex; align-items:center; justify-content:space-between; }
-    .aula-card__name { font-size:1rem; font-weight:700; color:var(--gray-900); }
-    .aula-card__code { background:var(--orange-100); color:var(--orange-600); font-size:0.75rem; font-weight:800; border-radius:var(--radius-sm); padding:4px 10px; letter-spacing:1px; }
-    .aula-card__meta { display:flex; gap:12px; align-items:center; }
-    .aula-card__materia { font-size:0.82rem; font-weight:600; color:var(--gray-500); }
-    .aula-card__students { font-size:0.82rem; color:var(--gray-400); display:flex; align-items:center; gap:4px; }
-    .aula-card__arrow { color:var(--gray-400); }
+    /* ── Lista ────────────────────────────────────────────── */
+    .aulas-list {
+      padding: 8px 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-    .aulas-empty { text-align:center; padding:60px 20px; color:var(--gray-400); font-size:0.9rem; }
-    .aulas-empty__icon { font-size:3rem; margin-bottom:12px; }
+    /* ── Card ─────────────────────────────────────────────── */
+    .aula-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
 
-    .loading-msg { text-align:center; color:var(--gray-400); padding:40px 0; }
+    .aula-card__top {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .aula-card__icon {
+      width: 54px; height: 54px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.6rem;
+    }
+    .aula-card__icon--orange { background: #FFF7ED; }
+    .aula-card__icon--blue   { background: #EFF6FF; }
+
+    .aula-card__info { flex: 1; min-width: 0; }
+    .aula-card__name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.2;
+    }
+    .aula-card__codigo-label {
+      font-size: 0.72rem;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .aula-card__codigo-val {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .aula-card__btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      color: #fff;
+      align-self: center;
+      white-space: nowrap;
+    }
+    .aula-card__btn--orange { background: #F97316; box-shadow: 0 3px 10px rgba(249,115,22,0.35); }
+    .aula-card__btn--blue   { background: #3B82F6; box-shadow: 0 3px 10px rgba(59,130,246,0.35); }
+
+    /* En línea */
+    .aula-card__online {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #64748B;
+    }
+    .aula-card__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22C55E;
+    }
+
+    /* Divisor */
+    .aula-card__divider {
+      height: 1px;
+      background: #F1F5F9;
+      margin: 14px 0 12px;
+    }
+
+    /* Stats row */
+    .aula-card__stats {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+    .aula-card__stat-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .aula-card__stat-lbl {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 3px;
+    }
+
+    /* Empty / Loading */
+    .aulas-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94A3B8;
+      font-size: 0.9rem;
+    }
+    .aulas-empty__icon { font-size: 3rem; margin-bottom: 12px; }
+    .loading-msg { text-align: center; color: #94A3B8; padding: 40px 0; }
+
+    /* ── Modal crear aula ─────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.visible { opacity: 1; pointer-events: all; }
+    .modal-sheet {
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+      padding: 28px 24px 44px;
+      width: 100%; max-width: 480px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.visible .modal-sheet { transform: translateY(0); }
+
+    .modal-handle {
+      width: 40px; height: 4px;
+      background: #E2E8F0;
+      border-radius: 2px;
+      margin: 0 auto 24px;
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .modal-field { margin-bottom: 18px; }
+    .modal-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .modal-input, .modal-select {
+      width: 100%;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      background: #F8FAFC;
+      color: #0F172A;
+      appearance: none;
+    }
+    .modal-input:focus, .modal-select:focus { border-color: #F97316; background: #fff; }
+    .modal-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 999px;
+      background: #F97316;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(249,115,22,0.4);
+      margin-top: 8px;
+    }
+    .modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-err {
+      color: #EF4444;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-<div class="aulas-page">
 
-  <div class="aulas-topbar">
-    <button class="aulas-topbar__back" id="backBtn">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+  <div class="topbar">
+    <button class="topbar__back" id="backBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M15 18l-6-6 6-6"/>
       </svg>
     </button>
-    <span class="aulas-topbar__title">Mis Aulas</span>
-    <button class="aulas-topbar__add" id="crearBtn" title="Crear aula">+</button>
+    <span class="topbar__title">Mis Aulas</span>
+    <a class="topbar__add" href="crear_aula.html" title="Crear aula">+</a>
   </div>
 
   <div class="aulas-list" id="aulasList">
     <p class="loading-msg">Cargando...</p>
   </div>
 
-</div>
-
-<!-- Modal crear aula -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-sheet">
-    <div class="modal-title">Nueva Aula</div>
-
-    <div class="modal-field">
-      <label class="modal-label" for="inputNombre">Nombre del aula</label>
-      <input class="modal-input" id="inputNombre" type="text" placeholder="Ej: Grado 11 A" maxlength="100" />
-    </div>
-
-    <div class="modal-field">
-      <label class="modal-label" for="selectMateria">Materia</label>
-      <select class="modal-select" id="selectMateria">
-        <option value="">Cargando materias...</option>
-      </select>
-    </div>
-
-    <div class="modal-err" id="modalErr" hidden></div>
-    <button class="modal-btn" id="guardarBtn">Crear Aula</button>
-  </div>
-</div>
 
 <script>
   const API = '/api/v1';
@@ -98,81 +273,11 @@
   const usuario = JSON.parse(localStorage.getItem('usuario') ?? 'null');
   if (!usuario) location.href = '/';
 
-  // ── Botón volver ───────────────────────────────────────────
+  const COLORES = ['#F97316', '#3B82F6', '#22C55E', '#A855F7', '#EC4899', '#EF4444', '#EAB308', '#06B6D4'];
+
+  const LIBRO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+
   document.getElementById('backBtn').addEventListener('click', () => history.back());
-
-  // ── Modal ──────────────────────────────────────────────────
-  const overlay = document.getElementById('modalOverlay');
-  const crearBtn = document.getElementById('crearBtn');
-  const guardarBtn = document.getElementById('guardarBtn');
-  const modalErr = document.getElementById('modalErr');
-  const inputNombre = document.getElementById('inputNombre');
-  const selectMateria = document.getElementById('selectMateria');
-
-  function abrirModal() {
-    overlay.classList.add('visible');
-    inputNombre.value = '';
-    modalErr.hidden = true;
-    inputNombre.focus();
-  }
-
-  function cerrarModal() {
-    overlay.classList.remove('visible');
-  }
-
-  overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
-  crearBtn.addEventListener('click', abrirModal);
-
-  // Abrir directamente si viene con ?crear=1
-  if (new URLSearchParams(location.search).get('crear') === '1') {
-    abrirModal();
-  }
-
-  // Cargar materias en el select
-  async function cargarMaterias() {
-    try {
-      const res = await fetch(`${API}/juego/materias`, { headers: { Authorization: `Bearer ${token}` } });
-      const materias = await res.json();
-      selectMateria.innerHTML = materias.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-    } catch {
-      selectMateria.innerHTML = '<option value="">Error al cargar</option>';
-    }
-  }
-  cargarMaterias();
-
-  // Crear aula
-  guardarBtn.addEventListener('click', async () => {
-    const nombre = inputNombre.value.trim();
-    const materiaId = parseInt(selectMateria.value);
-    if (!nombre) { mostrarErr('Escribe un nombre para el aula'); return; }
-    if (!materiaId) { mostrarErr('Selecciona una materia'); return; }
-
-    guardarBtn.disabled = true;
-    guardarBtn.textContent = 'Creando...';
-    modalErr.hidden = true;
-
-    try {
-      const res = await fetch(`${API}/profesor/aulas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ nombre, materia_id: materiaId }),
-      });
-      const data = await res.json();
-      if (!res.ok) { mostrarErr(data.detail ?? 'Error al crear'); return; }
-      cerrarModal();
-      await cargarAulas();
-    } catch {
-      mostrarErr('Error de conexión');
-    } finally {
-      guardarBtn.disabled = false;
-      guardarBtn.textContent = 'Crear Aula';
-    }
-  });
-
-  function mostrarErr(msg) {
-    modalErr.textContent = msg;
-    modalErr.hidden = false;
-  }
 
   // ── Lista de aulas ─────────────────────────────────────────
   async function cargarAulas() {
@@ -185,33 +290,69 @@
         lista.innerHTML = `
           <div class="aulas-empty">
             <div class="aulas-empty__icon">🏫</div>
-            <div>Aún no has creado ningún aula.<br>Toca <b>+</b> para crear la primera.</div>
+            <p>Aún no has creado ningún aula.<br>Toca <b>+</b> para crear la primera.</p>
           </div>`;
         return;
       }
 
-      lista.innerHTML = aulas.map(a => `
-        <div class="aula-card" data-id="${a.id}">
-          <div class="aula-card__header">
-            <span class="aula-card__name">${a.nombre}</span>
-            <span class="aula-card__code">${a.codigo_acceso}</span>
-          </div>
-          <div class="aula-card__meta">
-            <span class="aula-card__materia">${a.materia_nombre ?? 'Sin materia'}</span>
-            <span class="aula-card__students">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+      lista.innerHTML = aulas.map((a, i) => {
+        const hex = a.color_hex || COLORES[i % COLORES.length];
+        const btnColor = hex;
+        const promedio = a.promedio ?? '—';
+        const pruebaDiaria = a.prueba_diaria ?? 0;
+        const enLinea = a.en_linea ?? 0;
+
+        return `
+          <div class="aula-card" data-id="${a.id}">
+            <div class="aula-card__top">
+              <div class="aula-card__icon" style="background:${hex};">
+                ${LIBRO_SVG}
+              </div>
+              <div class="aula-card__info">
+                <div class="aula-card__name">${a.nombre}</div>
+                <div class="aula-card__codigo-label">Código:</div>
+                <div class="aula-card__codigo-val">${a.codigo_acceso}</div>
+              </div>
+              <button class="aula-card__btn" style="background:${btnColor};box-shadow:0 3px 10px ${btnColor}55;" data-id="${a.id}">Ingresar</button>
+            </div>
+
+            <div class="aula-card__online">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
-              ${a.total_estudiantes}
-            </span>
-          </div>
-        </div>
-      `).join('');
+              ${enLinea} en línea
+              <span class="aula-card__dot"></span>
+            </div>
 
+            <div class="aula-card__divider"></div>
+
+            <div class="aula-card__stats">
+              <div>
+                <div class="aula-card__stat-val">${pruebaDiaria}</div>
+                <div class="aula-card__stat-lbl">Prueba<br>Diaria</div>
+              </div>
+              <div>
+                <div class="aula-card__stat-val">${promedio}${typeof promedio === 'number' ? ' %' : ''}</div>
+                <div class="aula-card__stat-lbl">Promedio</div>
+              </div>
+              <div>
+                <div class="aula-card__stat-val">${a.total_estudiantes}</div>
+                <div class="aula-card__stat-lbl">Estudiantes</div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      lista.querySelectorAll('.aula-card__btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          location.href = `aula_detalle.html?id=${btn.dataset.id}`;
+        });
+      });
       lista.querySelectorAll('.aula-card').forEach(card => {
         card.addEventListener('click', () => {
           location.href = `aula_detalle.html?id=${card.dataset.id}`;

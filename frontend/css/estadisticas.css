@@ -54,6 +54,40 @@
   align-items: center;
 }
 
+/* ── Filtro periodo ───────────────────────────────────────── */
+.stats-filter {
+  display: flex;
+  gap: 8px;
+  padding: 20px 20px 16px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.stats-filter-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 20px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stats-filter-btn--active {
+  background: var(--orange-500);
+  border-color: var(--orange-500);
+  color: var(--white);
+  box-shadow: 0 3px 10px rgba(249,115,22,0.35);
+}
+
+.stats-filter-btn:hover:not(.stats-filter-btn--active) {
+  border-color: var(--orange-500);
+  color: var(--orange-500);
+}
+
 /* ── Tarjeta Resumen ──────────────────────────────────────── */
 .stats-summary-card {
   margin: 8px 20px 20px;

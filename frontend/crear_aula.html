@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor 11 — Nueva Aula</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #F8FAFC; min-height: 100vh; }
+
+    /* ── Topbar ───────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 20px 16px;
+      background: #fff;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .topbar__back {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: #F97316;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(249,115,22,0.35);
+      flex-shrink: 0;
+    }
+    .topbar__title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #F97316;
+    }
+
+    /* ── Contenido ────────────────────────────────────────── */
+    .content {
+      padding: 24px 20px 40px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Campo ────────────────────────────────────────────── */
+    .field { margin-bottom: 20px; }
+    .field__label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: none;
+      margin-bottom: 8px;
+    }
+    .field__input {
+      width: 100%;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+      background: #fff;
+      color: #0F172A;
+    }
+    .field__input:focus { border-color: #F97316; }
+    .field__input[readonly] {
+      background: #F8FAFC;
+      color: #64748B;
+      cursor: default;
+    }
+
+    /* ── Color picker ─────────────────────────────────────── */
+    .color-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #64748B;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .color-swatch {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s;
+      outline: 3px solid transparent;
+      outline-offset: 2px;
+    }
+    .color-swatch:hover { transform: scale(1.07); }
+    .color-swatch.selected { outline-color: #0F172A; }
+    .color-swatch__check {
+      display: none;
+      color: #fff;
+    }
+    .color-swatch.selected .color-swatch__check { display: block; }
+
+    /* ── Vista Previa ─────────────────────────────────────── */
+    .preview-box {
+      background: #FFF7ED;
+      border: 1.5px solid #FED7AA;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 28px;
+    }
+    .preview-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #F97316;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .preview-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .preview-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .preview-name {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+    .preview-code {
+      font-size: 0.78rem;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ── Botones ──────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn--cancel {
+      background: #F1F5F9;
+      color: #64748B;
+    }
+    .btn--create {
+      background: #F97316;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(249,115,22,0.35);
+    }
+    .btn--create:disabled {
+      background: #E2E8F0;
+      color: #94A3B8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .error-msg {
+      color: #EF4444;
+      font-size: 0.82rem;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="topbar__back" id="backBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <span class="topbar__title">Nueva Aula</span>
+  </div>
+
+  <div class="content">
+
+    <div class="field">
+      <label class="field__label">Nombre del Aula</label>
+      <input class="field__input" id="inputNombre" type="text" placeholder="Aula 11 - A" maxlength="100" />
+    </div>
+
+    <div class="field">
+      <label class="field__label">Materia</label>
+      <select class="field__input" id="selectMateria" style="text-align:left;font-weight:600;">
+        <option value="">Selecciona una materia</option>
+      </select>
+    </div>
+
+    <span class="color-label">Color del Aula</span>
+    <div class="color-grid" id="colorGrid">
+      <!-- Generado por JS -->
+    </div>
+
+    <div class="preview-box">
+      <div class="preview-label">Vista Previa</div>
+      <div class="preview-card">
+        <div class="preview-icon" id="previewIcon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div>
+          <div class="preview-name" id="previewNombre">Nombre del aula</div>
+          <div class="preview-code" id="previewCodigo">Código: —</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg" hidden></div>
+
+    <div class="btn-row">
+      <button class="btn btn--cancel" id="cancelBtn">Cancelar</button>
+      <button class="btn btn--create" id="crearBtn" disabled>Crear</button>
+    </div>
+
+  </div>
+
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('access_token');
+  if (!token) location.href = '/';
+
+  const COLORES = [
+    '#F97316', // naranja
+    '#3B82F6', // azul
+    '#22C55E', // verde
+    '#A855F7', // morado
+    '#EC4899', // rosa
+    '#EF4444', // rojo
+    '#EAB308', // amarillo
+    '#06B6D4', // cyan
+  ];
+
+  // Colores con opacidad baja para el fondo del icono
+  function bgLight(hex) {
+    return hex + '22';
+  }
+
+  let colorSeleccionado = COLORES[0];
+
+  // ── Generar swatches ──────────────────────────────────────
+  const colorGrid = document.getElementById('colorGrid');
+  COLORES.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch' + (i === 0 ? ' selected' : '');
+    btn.style.background = c;
+    btn.dataset.color = c;
+    btn.innerHTML = `<svg class="color-swatch__check" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      btn.classList.add('selected');
+      colorSeleccionado = c;
+      actualizarPreview();
+    });
+    colorGrid.appendChild(btn);
+  });
+
+  // ── Cargar materias ───────────────────────────────────────
+  async function cargarMaterias() {
+    try {
+      const res = await fetch(`${API}/juego/materias`, { headers: { Authorization: `Bearer ${token}` } });
+      const mat = await res.json();
+      const sel = document.getElementById('selectMateria');
+      sel.innerHTML = '<option value="">Selecciona una materia</option>' +
+        mat.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+    } catch {}
+  }
+  cargarMaterias();
+
+  // ── Vista previa ──────────────────────────────────────────
+  function actualizarPreview() {
+    const nombre = document.getElementById('inputNombre').value.trim() || 'Nombre del aula';
+    document.getElementById('previewNombre').textContent = nombre;
+    document.getElementById('previewCodigo').textContent = 'Código: —';
+    const icon = document.getElementById('previewIcon');
+    icon.style.background = colorSeleccionado;
+
+    // Habilitar botón si hay nombre y materia
+    const materia = document.getElementById('selectMateria').value;
+    document.getElementById('crearBtn').disabled = !(nombre.length > 1 && materia);
+  }
+
+  document.getElementById('inputNombre').addEventListener('input', actualizarPreview);
+  document.getElementById('selectMateria').addEventListener('change', actualizarPreview);
+
+  // ── Volver ────────────────────────────────────────────────
+  document.getElementById('backBtn').addEventListener('click', () => history.back());
+  document.getElementById('cancelBtn').addEventListener('click', () => history.back());
+
+  // ── Crear aula ────────────────────────────────────────────
+  document.getElementById('crearBtn').addEventListener('click', async () => {
+    const nombre = document.getElementById('inputNombre').value.trim();
+    const materiaId = parseInt(document.getElementById('selectMateria').value);
+    const errorMsg = document.getElementById('errorMsg');
+    const crearBtn = document.getElementById('crearBtn');
+
+    errorMsg.hidden = true;
+    crearBtn.disabled = true;
+    crearBtn.textContent = 'Creando...';
+
+    try {
+      const res = await fetch(`${API}/profesor/aulas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre, materia_id: materiaId, color_hex: colorSeleccionado }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorMsg.textContent = data.detail ?? 'Error al crear el aula';
+        errorMsg.hidden = false;
+        return;
+      }
+      location.href = 'aulas_profesor.html';
+    } catch {
+      errorMsg.textContent = 'Error de conexión';
+      errorMsg.hidden = false;
+    } finally {
+      crearBtn.disabled = false;
+      crearBtn.textContent = 'Crear';
+    }
+  });
+</script>
+</body>
+</html>

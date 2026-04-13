@@ -862,6 +862,79 @@ async function abrirEstadisticas() {
   }
 }
 
+// ── Filtro de periodo en stats overlay ───────────────────────
+async function cargarStatsPeriodo(periodo = '', mes = '') {
+  const card = document.getElementById('statsBars');
+  const promedioEl = document.getElementById('promedioGeneral');
+  card.innerHTML = '<p class="stats-loading-msg">Cargando...</p>';
+  promedioEl.textContent = '— %';
+
+  let url = '/api/v1/perfil/estadisticas';
+  if (periodo) {
+    url += `?periodo=${periodo}`;
+    if (mes) url += `&mes=${mes}`;
+  }
+
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    const datos = await res.json();
+    if (!datos.length) {
+      card.innerHTML = '<p class="stats-loading-msg">Sin datos en este periodo.</p>';
+      promedioEl.textContent = '0 %';
+      return;
+    }
+    datosStats = datos;
+    const promedio = Math.round(datos.reduce((s, d) => s + d.porcentaje, 0) / datos.length);
+    animarContador(promedioEl, promedio, 900);
+    renderVista(datos);
+  } catch (_) {
+    card.innerHTML = '<p class="stats-loading-msg">Error al cargar.</p>';
+  }
+}
+
+// Generar opciones del selector de mes (últimos 12 meses)
+function poblarSelectorMes() {
+  const select = document.getElementById('statsMesSelect');
+  select.innerHTML = '';
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const ahora = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    const valor = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const opcion = document.createElement('option');
+    opcion.value = valor;
+    opcion.textContent = `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+    select.appendChild(opcion);
+  }
+}
+
+document.getElementById('statsMesSelect').addEventListener('change', (e) => {
+  cargarStatsPeriodo('mes', e.target.value);
+});
+
+document.querySelectorAll('.stats-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stats-filter-btn').forEach(b => {
+      b.style.background = '#fff';
+      b.style.borderColor = '#E2E8F0';
+      b.style.color = '#64748B';
+    });
+    btn.style.background = '#F97316';
+    btn.style.borderColor = '#F97316';
+    btn.style.color = '#fff';
+    const picker = document.getElementById('statsMesPicker');
+    if (btn.dataset.periodo === 'mes') {
+      poblarSelectorMes();
+      picker.style.display = 'block';
+      const mesVal = document.getElementById('statsMesSelect').value;
+      cargarStatsPeriodo('mes', mesVal);
+    } else {
+      picker.style.display = 'none';
+      cargarStatsPeriodo(btn.dataset.periodo);
+    }
+  });
+});
+
 statsBtn.addEventListener('click', abrirEstadisticas);
 const backSfx = new Audio('/static/back.mp3');
 backSfx.volume = 0.7;

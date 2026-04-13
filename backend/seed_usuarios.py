@@ -31,7 +31,7 @@ async def main():
                 ),
                 Usuario(
                     username="AdminCris",
-                    email="admin@mentor11.co",
+                    email="admincris@mentor11.co",
                     password_hash=hash_password("admin12345678"),
                     rol=RolUsuario.admin_tech,
                     es_premium=True,
@@ -64,7 +64,7 @@ async def main():
                 ),
                 Usuario(
                     username="Adminsebas",
-                    email="admin@mentor11.co",
+                    email="adminsebas@mentor11.co",
                     password_hash=hash_password("admin12345678"),
                     rol=RolUsuario.admin_tech,
                     es_premium=True,

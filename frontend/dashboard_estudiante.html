@@ -608,9 +608,13 @@
     (function () {
       const audio = document.getElementById('themeSong');
       audio.volume = 0.3;
-      const play = () => { audio.play().catch(() => {}); };
-      document.addEventListener('click', play, { once: true });
-      document.addEventListener('keydown', play, { once: true });
+      audio.play().catch(() => {
+        const unlock = () => {
+          audio.play().catch(() => {});
+          document.removeEventListener('click', unlock);
+        };
+        document.addEventListener('click', unlock);
+      });
     })();
   </script>
 </body>

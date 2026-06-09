@@ -397,7 +397,8 @@ function playNavSound() {
   osc.type = 'sine';
   osc.frequency.setValueAtTime(520, audioCtx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(640, audioCtx.currentTime + 0.08);
-  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  const navGain = typeof window.getHoverGain === 'function' ? window.getHoverGain(0.15) : 0.15;
+  gain.gain.setValueAtTime(navGain || 0.0001, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
   osc.start(audioCtx.currentTime);
   osc.stop(audioCtx.currentTime + 0.12);
@@ -424,7 +425,8 @@ function playAvatarHover() {
   osc.type = 'sine';
   osc.frequency.setValueAtTime(880, audioCtx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.06);
-  gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+  const avaGain = typeof window.getHoverGain === 'function' ? window.getHoverGain(0.02) : 0.02;
+  gain.gain.setValueAtTime(avaGain || 0.0001, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
   osc.start(audioCtx.currentTime);
   osc.stop(audioCtx.currentTime + 0.1);

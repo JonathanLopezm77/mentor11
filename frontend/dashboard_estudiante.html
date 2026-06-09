@@ -607,7 +607,20 @@
   <script>
     (function () {
       const audio = document.getElementById('themeSong');
-      audio.volume = 0.3;
+      audio.volume = 0.15;
+
+      // Restaurar posicion guardada
+      const saved = sessionStorage.getItem('themeSongTime');
+      if (saved) audio.currentTime = parseFloat(saved);
+
+      // Guardar posicion al salir
+      window.addEventListener('pagehide', () => {
+        sessionStorage.setItem('themeSongTime', audio.currentTime);
+      });
+      window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('themeSongTime', audio.currentTime);
+      });
+
       audio.play().catch(() => {
         const unlock = () => {
           audio.play().catch(() => {});

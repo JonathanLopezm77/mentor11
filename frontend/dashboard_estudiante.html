@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mentor 12 — Dashboard</title>
+  <title>Mentor 11 — Dashboard</title>
   <link rel="stylesheet" href="/static/css/styles.css?v=3" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=16" />
   <link rel="stylesheet" href="/static/css/perfil.css" />
@@ -12,6 +12,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .dash-header-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .snd-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:900; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .snd-overlay.open { opacity:1; pointer-events:all; }
+    .snd-panel { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:480px; background:#fff; border-radius:24px 24px 0 0; z-index:901; padding:0 0 32px; box-shadow:0 -4px 32px rgba(0,0,0,0.18); transition:transform .3s cubic-bezier(.4,0,.2,1); }
+    .snd-panel.open { transform:translateX(-50%) translateY(0); }
+    .snd-handle { width:40px; height:4px; background:#e0e0e0; border-radius:2px; margin:12px auto 20px; }
+    .snd-title { font-size:1.1rem; font-weight:700; color:#222; text-align:center; margin-bottom:24px; }
+    .snd-row { display:flex; align-items:center; gap:12px; padding:0 24px; margin-bottom:20px; }
+    .snd-row-icon { width:38px; height:38px; border-radius:50%; background:#FFF3E0; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#F97316; }
+    .snd-row-label { font-size:.95rem; font-weight:600; color:#333; width:72px; flex-shrink:0; }
+    .snd-slider { flex:1; accent-color:#F97316; height:4px; cursor:pointer; }
+    .snd-toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
+    .snd-toggle input { opacity:0; width:0; height:0; }
+    .snd-toggle-track { position:absolute; inset:0; background:#ccc; border-radius:12px; transition:.3s; cursor:pointer; }
+    .snd-toggle input:checked + .snd-toggle-track { background:#F97316; }
+    .snd-toggle-track::after { content:''; position:absolute; left:3px; top:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.3s; }
+    .snd-toggle input:checked + .snd-toggle-track::after { left:23px; }
+    .snd-divider { height:1px; background:#f0f0f0; margin:4px 24px 20px; }
+  </style>
 </head>
 
 <body class="dash-body">
@@ -26,14 +46,60 @@
         </div>
         <span class="dash-rank" id="rankLabel">Novato</span>
       </div>
-      <button class="dash-bell" id="bellBtn" aria-label="Notificaciones">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-      </button>
+      <div class="dash-header-actions">
+        <button class="dash-bell" id="bellBtn" aria-label="Notificaciones">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+        </button>
+        <button class="dash-bell" id="soundSettingsBtn" aria-label="Configuracion de sonido">
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
     </header>
+
+    <!-- ── Panel de configuracion de sonido ────────────────── -->
+    <div class="snd-overlay" id="sndOverlay"></div>
+    <div class="snd-panel" id="sndPanel">
+      <div class="snd-handle"></div>
+      <div class="snd-title">Configuracion de Sonido</div>
+
+      <div class="snd-row">
+        <div class="snd-row-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+          </svg>
+        </div>
+        <span class="snd-row-label">Musica</span>
+        <input type="range" class="snd-slider" id="musicVolSlider" min="0" max="1" step="0.01" value="0.12" />
+        <label class="snd-toggle">
+          <input type="checkbox" id="musicToggle" checked />
+          <span class="snd-toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="snd-divider"></div>
+
+      <div class="snd-row">
+        <div class="snd-row-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </div>
+        <span class="snd-row-label">Efectos</span>
+        <input type="range" class="snd-slider" id="sfxVolSlider" min="0" max="1" step="0.01" value="1" />
+        <label class="snd-toggle">
+          <input type="checkbox" id="sfxToggle" checked />
+          <span class="snd-toggle-track"></span>
+        </label>
+      </div>
+    </div>
 
     <!-- ── Racha ─────────────────────────────────────────────── -->
     <section class="dash-streak">
@@ -606,23 +672,73 @@
   <audio id="themeSong" src="/static/theme_song.wav" loop preload="auto"></audio>
   <script>
     (function () {
+      // ── Parchar Audio para controlar efectos globalmente ──
+      const _origPlay = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function () {
+        if (this.id !== 'themeSong') {
+          const sfxVol = parseFloat(localStorage.getItem('sfxVolume') ?? '1');
+          const sfxOn  = localStorage.getItem('sfxEnabled') !== 'false';
+          this.volume  = sfxOn ? sfxVol : 0;
+        }
+        return _origPlay.call(this);
+      };
+
+      // ── Musica de fondo ───────────────────────────────────
       const audio = document.getElementById('themeSong');
-      audio.volume = 0.12;
+      const musicVol = parseFloat(localStorage.getItem('musicVolume') ?? '0.12');
+      const musicOn  = localStorage.getItem('musicEnabled') !== 'false';
+      audio.volume   = musicOn ? musicVol : 0;
 
       const saved = sessionStorage.getItem('themeSongTime');
       if (saved) audio.currentTime = parseFloat(saved);
 
-      // Guardar posicion cada segundo
       setInterval(() => {
         if (!audio.paused) sessionStorage.setItem('themeSongTime', audio.currentTime);
       }, 1000);
-
-      window.addEventListener('pagehide', () => sessionStorage.setItem('themeSongTime', audio.currentTime));
+      window.addEventListener('pagehide',     () => sessionStorage.setItem('themeSongTime', audio.currentTime));
       window.addEventListener('beforeunload', () => sessionStorage.setItem('themeSongTime', audio.currentTime));
 
       audio.play().catch(() => {
         const unlock = () => { audio.play().catch(() => {}); document.removeEventListener('click', unlock); };
         document.addEventListener('click', unlock);
+      });
+
+      // ── Panel de configuracion ────────────────────────────
+      const overlay   = document.getElementById('sndOverlay');
+      const panel     = document.getElementById('sndPanel');
+      const settBtn   = document.getElementById('soundSettingsBtn');
+      const musicSlider = document.getElementById('musicVolSlider');
+      const musicToggle = document.getElementById('musicToggle');
+      const sfxSlider   = document.getElementById('sfxVolSlider');
+      const sfxToggle   = document.getElementById('sfxToggle');
+
+      // Inicializar controles con valores guardados
+      musicSlider.value   = musicVol;
+      musicToggle.checked = musicOn;
+      sfxSlider.value     = parseFloat(localStorage.getItem('sfxVolume') ?? '1');
+      sfxToggle.checked   = localStorage.getItem('sfxEnabled') !== 'false';
+
+      function openPanel()  { overlay.classList.add('open'); panel.classList.add('open'); }
+      function closePanel() { overlay.classList.remove('open'); panel.classList.remove('open'); }
+
+      settBtn.addEventListener('click', openPanel);
+      overlay.addEventListener('click', closePanel);
+
+      musicSlider.addEventListener('input', () => {
+        const v = parseFloat(musicSlider.value);
+        localStorage.setItem('musicVolume', v);
+        if (musicToggle.checked) audio.volume = v;
+      });
+      musicToggle.addEventListener('change', () => {
+        const on = musicToggle.checked;
+        localStorage.setItem('musicEnabled', on);
+        audio.volume = on ? parseFloat(musicSlider.value) : 0;
+      });
+      sfxSlider.addEventListener('input', () => {
+        localStorage.setItem('sfxVolume', sfxSlider.value);
+      });
+      sfxToggle.addEventListener('change', () => {
+        localStorage.setItem('sfxEnabled', sfxToggle.checked);
       });
     })();
   </script>

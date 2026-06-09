@@ -607,25 +607,21 @@
   <script>
     (function () {
       const audio = document.getElementById('themeSong');
-      audio.volume = 0.15;
+      audio.volume = 0.12;
 
-      // Restaurar posicion guardada
       const saved = sessionStorage.getItem('themeSongTime');
       if (saved) audio.currentTime = parseFloat(saved);
 
-      // Guardar posicion al salir
-      window.addEventListener('pagehide', () => {
-        sessionStorage.setItem('themeSongTime', audio.currentTime);
-      });
-      window.addEventListener('beforeunload', () => {
-        sessionStorage.setItem('themeSongTime', audio.currentTime);
-      });
+      // Guardar posicion cada segundo
+      setInterval(() => {
+        if (!audio.paused) sessionStorage.setItem('themeSongTime', audio.currentTime);
+      }, 1000);
+
+      window.addEventListener('pagehide', () => sessionStorage.setItem('themeSongTime', audio.currentTime));
+      window.addEventListener('beforeunload', () => sessionStorage.setItem('themeSongTime', audio.currentTime));
 
       audio.play().catch(() => {
-        const unlock = () => {
-          audio.play().catch(() => {});
-          document.removeEventListener('click', unlock);
-        };
+        const unlock = () => { audio.play().catch(() => {}); document.removeEventListener('click', unlock); };
         document.addEventListener('click', unlock);
       });
     })();

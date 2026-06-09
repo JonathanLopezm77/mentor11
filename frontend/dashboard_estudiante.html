@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mentor 11 — Dashboard</title>
+  <title>Mentor 12 — Dashboard</title>
   <link rel="stylesheet" href="/static/css/styles.css?v=3" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=16" />
   <link rel="stylesheet" href="/static/css/perfil.css" />
@@ -600,6 +600,17 @@
       document.getElementById('cerrarPolitica').addEventListener('click', cerrar);
       document.getElementById('cerrarPoliticaBtn').addEventListener('click', cerrar);
       overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+    })();
+  </script>
+
+  <audio id="themeSong" src="/static/theme_song.wav" loop preload="auto"></audio>
+  <script>
+    (function () {
+      const audio = document.getElementById('themeSong');
+      audio.volume = 0.3;
+      const play = () => { audio.play().catch(() => {}); };
+      document.addEventListener('click', play, { once: true });
+      document.addEventListener('keydown', play, { once: true });
     })();
   </script>
 </body>

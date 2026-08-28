@@ -14,6 +14,7 @@ from sqlalchemy import select
 from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
 from app.models.usuario import Avatar
+from app.services import online_state
 
 router = APIRouter()
 
@@ -47,6 +48,7 @@ async def _cerrar_sala_delayed(sala_id: str, usuario_id: int):
         if p["usuario_id"] == usuario_id and p.get("reconectado"):
             return
     _salas.pop(sala_id, None)
+    online_state.limpiar_sala(sala_id)
     for p in sala["jugadores"]:
         if p["usuario_id"] != usuario_id:
             await _enviar(p["ws"], {
@@ -95,6 +97,7 @@ async def online_ws(websocket: WebSocket):
                     "room_id": sala_id,
                     "rival": rival_p["nombre"] if rival_p else "",
                     "rival_avatar": rival_p["avatar"] if rival_p else None,
+                    "poderes": online_state.inventario_de(usuario_id),
                 })
             else:
                 await _enviar(websocket, {"type": "room_not_found"})
@@ -118,12 +121,14 @@ async def online_ws(websocket: WebSocket):
                         "modo": None,
                         "anfitrion_id": rival["usuario_id"],
                     }
+                    online_state.crear_sala(sala_id, [rival["usuario_id"], usuario_id])
                     await _enviar(rival["ws"], {
                         "type": "match_found",
                         "room_id": sala_id,
                         "rival": nombre,
                         "rival_avatar": jugador["avatar"],
                         "is_host": True,
+                        "poderes": online_state.inventario_de(rival["usuario_id"]),
                     })
                     await _enviar(websocket, {
                         "type": "match_found",
@@ -131,6 +136,7 @@ async def online_ws(websocket: WebSocket):
                         "rival": rival["nombre"],
                         "rival_avatar": rival["avatar"],
                         "is_host": False,
+                        "poderes": online_state.inventario_de(usuario_id),
                     })
                 else:
                     _cola.append(jugador)
@@ -198,6 +204,48 @@ async def online_ws(websocket: WebSocket):
                                 "value": datos.get("value", 0),
                             })
 
+            if tipo == "usar_poder" and sala_id:
+                sala = _salas.get(sala_id)
+                poder_id = datos.get("poder")
+                rival_id = online_state.rival_de(usuario_id)
+                rival_p = next((p for p in sala["jugadores"] if p["usuario_id"] == rival_id), None) if sala else None
+
+                if not sala or poder_id not in online_state.PODERES or rival_id is None:
+                    await _enviar(websocket, {"type": "poder_error", "poder": poder_id, "mensaje": "Poder invalido"})
+                elif not online_state.consumir_poder(usuario_id, poder_id):
+                    await _enviar(websocket, {"type": "poder_error", "poder": poder_id, "mensaje": "No posees ese poder"})
+                else:
+                    if poder_id == "doble_puntos":
+                        online_state.activar_efecto(usuario_id, "doble_puntos", online_state.DURACION_X2_S)
+                        await _enviar(websocket, {"type": "efecto_propio", "poder": poder_id, "duracion_s": online_state.DURACION_X2_S})
+
+                    elif poder_id == "equivocarse":
+                        online_state.otorgar_proteccion(usuario_id)
+                        await _enviar(websocket, {"type": "efecto_propio", "poder": poder_id})
+
+                    elif poder_id == "cambiar_orden":
+                        online_state.activar_efecto(rival_id, "cambiar_orden", online_state.DURACION_CAMBIAR_ORDEN_S)
+                        if rival_p:
+                            await _enviar(rival_p["ws"], {"type": "orden_alterado", "duracion_s": online_state.DURACION_CAMBIAR_ORDEN_S})
+
+                    elif poder_id == "congelar":
+                        online_state.activar_efecto(rival_id, "congelar", online_state.DURACION_CONGELAR_S)
+                        if rival_p:
+                            await _enviar(rival_p["ws"], {"type": "congelado", "duracion_s": online_state.DURACION_CONGELAR_S})
+
+                    elif poder_id == "devolver_rival_2":
+                        if rival_p:
+                            await _enviar(rival_p["ws"], {"type": "repetir_preguntas", "cantidad": 2})
+
+                    elif poder_id == "robar_poder":
+                        robado = online_state.robar_poder_aleatorio(usuario_id)
+                        await _enviar(websocket, {"type": "inventario_actualizado", "poderes": online_state.inventario_de(usuario_id), "robado": robado})
+                        if rival_p:
+                            await _enviar(rival_p["ws"], {"type": "inventario_actualizado", "poderes": online_state.inventario_de(rival_id), "robado": None})
+
+                    if poder_id != "robar_poder":
+                        await _enviar(websocket, {"type": "poder_usado", "poder": poder_id})
+
             if tipo == "finish" and sala_id:
                 sala = _salas.get(sala_id)
                 if not sala:
@@ -212,20 +260,23 @@ async def online_ws(websocket: WebSocket):
                 sala["finalizados"][usuario_id] = mis_correctas
 
                 if len(sala["finalizados"]) == 2:
-                    # Calcular resultados individuales
+                    # Calcular resultados individuales — el ganador se decide por
+                    # puntos (respeta doble_puntos), no por cantidad de correctas.
                     ids = list(sala["finalizados"].keys())
                     c0 = sala["finalizados"][ids[0]]
                     c1 = sala["finalizados"][ids[1]]
-                    if c0 == c1:
+                    p0 = online_state.puntos_de(ids[0])
+                    p1 = online_state.puntos_de(ids[1])
+                    if p0 == p1:
                         sala["resultados_fin"] = {
-                            ids[0]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c0, "rival_correctas": c1},
-                            ids[1]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c1, "rival_correctas": c0},
+                            ids[0]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c0, "rival_correctas": c1, "mis_puntos": p0, "rival_puntos": p1},
+                            ids[1]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c1, "rival_correctas": c0, "mis_puntos": p1, "rival_puntos": p0},
                         }
                     else:
-                        ganador = ids[0] if c0 > c1 else ids[1]
+                        ganador = ids[0] if p0 > p1 else ids[1]
                         sala["resultados_fin"] = {
-                            ids[0]: {"type": "resultado", "empate": False, "ganaste": ids[0] == ganador, "mis_correctas": c0, "rival_correctas": c1},
-                            ids[1]: {"type": "resultado", "empate": False, "ganaste": ids[1] == ganador, "mis_correctas": c1, "rival_correctas": c0},
+                            ids[0]: {"type": "resultado", "empate": False, "ganaste": ids[0] == ganador, "mis_correctas": c0, "rival_correctas": c1, "mis_puntos": p0, "rival_puntos": p1},
+                            ids[1]: {"type": "resultado", "empate": False, "ganaste": ids[1] == ganador, "mis_correctas": c1, "rival_correctas": c0, "mis_puntos": p1, "rival_puntos": p0},
                         }
                     sala["evento_fin"].set()  # Notificar a ambas corrutinas
 
@@ -254,6 +305,7 @@ async def online_ws(websocket: WebSocket):
                     sala_final.setdefault("fin_confirmados", set()).add(usuario_id)
                     if len(sala_final["fin_confirmados"]) >= 2:
                         _salas.pop(sala_id, None)
+                        online_state.limpiar_sala(sala_id)
                         sala_id = None
 
                 break  # salir del bucle principal

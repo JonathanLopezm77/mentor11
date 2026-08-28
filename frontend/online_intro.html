@@ -63,6 +63,20 @@
     .screen { display:none; flex-direction:column; flex:1; }
     .screen--active { display:flex; }
     .libre-intro__main { justify-content:center; gap:0; padding:28px 24px 0; }
+
+    /* ── Pantalla ruleta de poderes ── */
+    .ruleta-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:32px 24px; }
+    .ruleta-title { font-size:1.25rem; font-weight:800; color:var(--gray-900); text-align:center; }
+    .ruleta-subtitle { font-size:.85rem; color:var(--gray-500); text-align:center; margin-top:-16px; }
+    .ruleta-poderes { display:flex; gap:16px; }
+    .ruleta-poder { display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; transform:scale(.4) rotate(-25deg); animation:poder-pop .5s cubic-bezier(.34,1.56,.64,1) forwards; }
+    .ruleta-poder:nth-child(1){animation-delay:.2s} .ruleta-poder:nth-child(2){animation-delay:.55s} .ruleta-poder:nth-child(3){animation-delay:.9s}
+    @keyframes poder-pop { to{opacity:1;transform:scale(1) rotate(0)} }
+    .ruleta-poder__icon { width:64px;height:64px;border-radius:16px;background:var(--orange-50);border:2px solid #FED7AA;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 14px rgba(249,115,22,.25); }
+    .ruleta-poder__icon img { width:100%;height:100%;object-fit:contain; }
+    .ruleta-poder__name { font-size:.72rem;font-weight:700;color:var(--gray-700);text-align:center;max-width:80px; }
+    .ruleta-continuar { opacity:0; animation:fadein .4s ease 1.5s forwards; }
+    @keyframes fadein { to{opacity:1} }
   </style>
 </head>
 <body class="libre-body">
@@ -176,6 +190,18 @@
     </div>
   </div>
 
+  <!-- Pantalla 7 — Ruleta de poderes -->
+  <div class="screen" id="screenRuleta">
+    <div class="ruleta-wrap">
+      <p class="ruleta-title">🎁 ¡Te tocaron 3 poderes!</p>
+      <p class="ruleta-subtitle">Úsalos durante la partida para ganar ventaja</p>
+      <div class="ruleta-poderes" id="ruletaPoderes"></div>
+    </div>
+    <div class="libre-footer">
+      <button class="libre-cta ruleta-continuar" id="continuarPartidaBtn">Comenzar partida →</button>
+    </div>
+  </div>
+
   <script>
     const API = '/api/v1';
     const token = localStorage.getItem('access_token');
@@ -188,9 +214,33 @@
     let esHost = false;
     let rivalNombre = '';
     let rivalAvatar = null;
+    let misPoderes = {};
+    let datosMode = null;
 
     // Iconos materias
     const ICONOS = { LC:'📖', MAT:'🔢', CN:'🔬', SOC:'🌍', ING:'🌐' };
+
+    // Iconos y nombres de los poderes
+    const ICONOS_PODER = {
+      cambiar_orden: '/static/img/p_cambiarorden.png',
+      mitad_mitad: '/static/img/p_mitadmitad.png',
+      doble_puntos: '/static/img/p_x2.png',
+      robar_poder: '/static/img/p_robarp.png',
+      setenta_cinco: '/static/img/p_75.png',
+      devolver_rival_2: '/static/img/p_devolverrival2.png',
+      equivocarse: '/static/img/p_equivocar.png',
+      congelar: '/static/img/P_CONGELAR.png',
+    };
+    const NOMBRES_PODER = {
+      cambiar_orden: 'Cambiar orden',
+      mitad_mitad: 'Mitad y mitad',
+      doble_puntos: 'x2 puntos',
+      robar_poder: 'Robar poder',
+      setenta_cinco: '75%',
+      devolver_rival_2: 'Devolver 2',
+      equivocarse: 'Equivocarse',
+      congelar: 'Congelar',
+    };
 
     function mostrar(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen--active'));
@@ -253,6 +303,24 @@
       }
     }
 
+    function mostrarRuleta() {
+      const cont = document.getElementById('ruletaPoderes');
+      cont.innerHTML = '';
+      Object.keys(misPoderes).forEach((poderId) => {
+        const div = document.createElement('div');
+        div.className = 'ruleta-poder';
+        div.innerHTML =
+          `<div class="ruleta-poder__icon"><img src="${ICONOS_PODER[poderId] ?? ''}" alt="${NOMBRES_PODER[poderId] ?? poderId}" /></div>` +
+          `<span class="ruleta-poder__name">${NOMBRES_PODER[poderId] ?? poderId}</span>`;
+        cont.appendChild(div);
+      });
+      mostrar('screenRuleta');
+    }
+
+    document.getElementById('continuarPartidaBtn').addEventListener('click', () => {
+      location.href = 'pregunta_online.html';
+    });
+
     document.getElementById('confirmarLibreBtn').addEventListener('click', () => {
       const ids = [...document.querySelectorAll('#configMateriasList .selected')].map(el => Number(el.dataset.id));
       let cantidad = parseInt(document.getElementById('configCantidad').value, 10);
@@ -272,6 +340,7 @@
         if (datos.type === 'match_found') {
           rivalNombre = datos.rival;
           rivalAvatar = datos.rival_avatar ?? null;
+          misPoderes = datos.poderes ?? {};
           esHost = datos.is_host;
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
@@ -312,10 +381,11 @@
             modo: datos.mode,
             materia_ids: datos.materia_ids ?? null,
             cantidad: datos.cantidad ?? 10,
+            poderes: misPoderes,
             token,
             username: miNombre,
           }));
-          location.href = 'pregunta_online.html';
+          mostrarRuleta();
         }
 
         if (datos.type === 'search_cancelled') {

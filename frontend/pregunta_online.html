@@ -81,6 +81,50 @@
       letter-spacing: .02em;
     }
 
+    /* ── Barra de poderes ── */
+    .poderes-bar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 16px 0;
+    }
+    .poder-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      border: 2px solid var(--gray-200);
+      background: #fff;
+      padding: 5px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .poder-btn img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .poder-btn:active:not(:disabled) { transform: scale(.9); }
+    .poder-btn:not(:disabled):hover { border-color: var(--orange-500); }
+    .poder-btn:disabled { opacity: .35; cursor: not-allowed; filter: grayscale(1); }
+
+    /* ── Aviso flotante de poderes ── */
+    .poder-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      background: #1c1917;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 700;
+      z-index: 300;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      opacity: 0;
+      transition: opacity .25s ease;
+      pointer-events: none;
+      max-width: 85%;
+      text-align: center;
+    }
+    .poder-toast--visible { opacity: 1; }
+
     /* ── Overlays de fin de partida ── */
     .overlay-fin {
       display: none;
@@ -155,6 +199,9 @@
     </div>
   </div>
 
+  <!-- ── Barra de poderes ────────────────────────────────────── -->
+  <div class="poderes-bar" id="poderesBar"></div>
+
   <!-- ── Contenido principal ────────────────────────────────── -->
   <main class="pregunta-main">
     <div class="pregunta-card">
@@ -218,6 +265,42 @@
     });
     const play = src => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(()=>{}); };
 
+    // ── Poderes: iconos y nombres ────────────────────────────────
+    const ICONOS_PODER = {
+      cambiar_orden: '/static/img/p_cambiarorden.png',
+      mitad_mitad: '/static/img/p_mitadmitad.png',
+      doble_puntos: '/static/img/p_x2.png',
+      robar_poder: '/static/img/p_robarp.png',
+      setenta_cinco: '/static/img/p_75.png',
+      devolver_rival_2: '/static/img/p_devolverrival2.png',
+      equivocarse: '/static/img/p_equivocar.png',
+      congelar: '/static/img/P_CONGELAR.png',
+    };
+    const NOMBRES_PODER = {
+      cambiar_orden: 'Cambiar orden',
+      mitad_mitad: 'Mitad y mitad',
+      doble_puntos: 'x2 puntos',
+      robar_poder: 'Robar poder',
+      setenta_cinco: '75%',
+      devolver_rival_2: 'Devolver 2',
+      equivocarse: 'Equivocarse',
+      congelar: 'Congelar',
+    };
+
+    function mostrarToast(msg) {
+      let t = document.getElementById('poderToast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'poderToast';
+        t.className = 'poder-toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.classList.add('poder-toast--visible');
+      clearTimeout(t._timeout);
+      t._timeout = setTimeout(() => t.classList.remove('poder-toast--visible'), 2200);
+    }
+
     // ── Estado desde sessionStorage ───────────────────────────
     const API = '/api/v1';
     const token = localStorage.getItem('access_token');
@@ -260,6 +343,133 @@
     let respondida = false;
     let partidaTerminada = false;
 
+    // ── Poderes: estado e interfaz ─────────────────────────────
+    let poderes = onlineState.poderes ?? {};
+    let congeladoHasta = 0;
+    let ordenAlteradoHasta = 0;
+    let ordenIntervalId = null;
+
+    function renderPoderes() {
+      const cont = document.getElementById('poderesBar');
+      cont.innerHTML = '';
+      Object.keys(poderes).forEach((poderId) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'poder-btn';
+        btn.title = NOMBRES_PODER[poderId] || poderId;
+        btn.disabled = !(poderes[poderId] > 0);
+        btn.innerHTML = `<img src="${ICONOS_PODER[poderId] || ''}" alt="${NOMBRES_PODER[poderId] || poderId}" />`;
+        btn.addEventListener('click', () => usarPoder(poderId));
+        cont.appendChild(btn);
+      });
+    }
+
+    function usarPoder(poderId) {
+      if (!(poderes[poderId] > 0) || partidaTerminada) return;
+      if (poderId === 'mitad_mitad') { usarMitadMitad(); return; }
+      if (poderId === 'setenta_cinco') { usarSetentaCinco(); return; }
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'usar_poder', poder: poderId }));
+    }
+
+    async function usarMitadMitad() {
+      if (respondida || partidaTerminada) return;
+      const preguntaActual = preguntas[actual];
+      if (!preguntaActual) return;
+      try {
+        const res = await fetch(`${API}/juego/poderes/mitad_mitad`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ pregunta_id: preguntaActual.id }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        data.ocultar_ids.forEach((id) => {
+          const btn = document.querySelector(`.opcion-btn[data-id="${id}"]`);
+          if (btn) { btn.disabled = true; btn.style.visibility = 'hidden'; }
+        });
+        poderes.mitad_mitad = 0;
+        renderPoderes();
+        mostrarToast('✂️ ¡Mitad y mitad! Se eliminaron 2 opciones incorrectas.');
+      } catch (_) {}
+    }
+
+    async function usarSetentaCinco() {
+      if (respondida || partidaTerminada) return;
+      const preguntaActual = preguntas[actual];
+      if (!preguntaActual) return;
+      respondida = true;
+      document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
+      try {
+        const res = await fetch(`${API}/juego/sesiones/${sesionId}/poderes/setenta_cinco`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ pregunta_id: preguntaActual.id }),
+        });
+        if (!res.ok) {
+          respondida = false;
+          document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = false));
+          return;
+        }
+        const data = await res.json();
+        poderes.setenta_cinco = 0;
+        renderPoderes();
+        mostrarToast('🎯 ¡75% activado! El sistema respondió por ti.');
+        procesarRespuesta(data, data.opcion_elegida_id);
+      } catch (_) {
+        respondida = false;
+        document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = false));
+      }
+    }
+
+    function reordenarOpciones() {
+      const grid = document.getElementById('opcionesGrid');
+      const btns = [...grid.children];
+      for (let i = btns.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [btns[i], btns[j]] = [btns[j], btns[i]];
+      }
+      btns.forEach((b) => grid.appendChild(b));
+    }
+
+    function aplicarOrdenAlterado(duracionS) {
+      ordenAlteradoHasta = Date.now() + duracionS * 1000;
+      mostrarToast('🔀 ¡Tu rival desordenó tus respuestas por ' + duracionS + 's!');
+      reordenarOpciones();
+      if (ordenIntervalId) clearInterval(ordenIntervalId);
+      ordenIntervalId = setInterval(() => {
+        if (Date.now() >= ordenAlteradoHasta) {
+          clearInterval(ordenIntervalId);
+          ordenIntervalId = null;
+          return;
+        }
+        reordenarOpciones();
+      }, 2500);
+    }
+
+    function aplicarCongelado(duracionS) {
+      congeladoHasta = Date.now() + duracionS * 1000;
+      document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
+      document.getElementById('siguienteBtn').disabled = true;
+      mostrarToast('❄️ ¡Tu rival te congeló por ' + duracionS + 's!');
+      const intervalo = setInterval(() => {
+        if (Date.now() >= congeladoHasta) {
+          clearInterval(intervalo);
+          if (!respondida) document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = false));
+          document.getElementById('siguienteBtn').disabled = false;
+        }
+      }, 500);
+    }
+
+    function aplicarRepetirPreguntas(cantidad) {
+      const disponibles = Math.min(cantidad, actual);
+      if (disponibles <= 0) return;
+      const aRepetir = preguntas.slice(actual - disponibles, actual).map((p) => ({ ...p }));
+      preguntas = preguntas.concat(aRepetir);
+      guardarProgreso();
+      mostrarToast('↩️ ¡Tu rival te hizo repetir ' + disponibles + ' pregunta' + (disponibles > 1 ? 's' : '') + '!');
+    }
+
     // ── Restaurar progreso si hubo recarga ────────────────────
     const _progreso = JSON.parse(sessionStorage.getItem('online_progreso') ?? 'null');
     let sesionId    = _progreso?.sesionId    ?? null;
@@ -289,18 +499,17 @@
         }
 
         if (data.type === 'resultado') {
-          const total = preguntas.length || '?';
           if (data.empate) {
             document.getElementById('empateSubtitle').textContent =
-              `Ambos con ${data.mis_correctas} / ${total} correctas.`;
+              `Ambos con ${data.mis_puntos} puntos (${data.mis_correctas} correctas).`;
             mostrarOverlay('overlayEmpate');
           } else if (data.ganaste) {
             document.getElementById('ganaSubtitle').textContent =
-              `Tú: ${data.mis_correctas} correctas · Rival: ${data.rival_correctas} correctas`;
+              `Tú: ${data.mis_puntos} pts (${data.mis_correctas} correctas) · Rival: ${data.rival_puntos} pts (${data.rival_correctas} correctas)`;
             mostrarOverlay('overlayGana');
           } else {
             document.getElementById('pierdeSubtitle').textContent =
-              `Rival: ${data.rival_correctas} correctas · Tú: ${data.mis_correctas} correctas`;
+              `Rival: ${data.rival_puntos} pts (${data.rival_correctas} correctas) · Tú: ${data.mis_puntos} pts (${data.mis_correctas} correctas)`;
             mostrarOverlay('overlayPierde');
           }
         }
@@ -311,6 +520,46 @@
 
         if (data.type === 'room_not_found') {
           // La sala ya no existe — se continúa sin rival
+        }
+
+        if (data.type === 'rejoined' && data.poderes) {
+          poderes = data.poderes;
+          renderPoderes();
+        }
+
+        // ── Poderes propios confirmados por el servidor ──────────
+        if (data.type === 'poder_usado') {
+          poderes[data.poder] = 0;
+          renderPoderes();
+        }
+
+        if (data.type === 'poder_error') {
+          mostrarToast(data.mensaje || 'No se pudo usar el poder');
+        }
+
+        if (data.type === 'efecto_propio') {
+          if (data.poder === 'doble_puntos') mostrarToast('⚡ ¡x2 puntos activado por ' + data.duracion_s + 's!');
+          if (data.poder === 'equivocarse') mostrarToast('🤞 ¡Protegido del próximo error!');
+        }
+
+        if (data.type === 'inventario_actualizado') {
+          poderes = data.poderes;
+          renderPoderes();
+          if (data.robado) mostrarToast('🎯 ¡Le robaste "' + (NOMBRES_PODER[data.robado] || data.robado) + '" a tu rival!');
+          else mostrarToast('⚠️ ¡Tu rival te robó un poder!');
+        }
+
+        // ── Poderes del rival que me afectan a mí ────────────────
+        if (data.type === 'orden_alterado') {
+          aplicarOrdenAlterado(data.duracion_s ?? 30);
+        }
+
+        if (data.type === 'congelado') {
+          aplicarCongelado(data.duracion_s ?? 20);
+        }
+
+        if (data.type === 'repetir_preguntas') {
+          aplicarRepetirPreguntas(data.cantidad ?? 2);
         }
       };
 
@@ -333,6 +582,7 @@
 
     // ── Cargar materias y preguntas ───────────────────────────
     async function init() {
+      renderPoderes();
       conectarWS();
 
       // Si hay progreso guardado (recarga), restaurar directamente
@@ -420,6 +670,59 @@
         btn.addEventListener('click', () => responder(op.id, p.id));
         grid.appendChild(btn);
       });
+
+      // Si sigue activo un efecto del rival, se respeta también en la nueva pregunta
+      if (Date.now() < ordenAlteradoHasta) reordenarOpciones();
+      if (Date.now() < congeladoHasta) {
+        document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
+        document.getElementById('siguienteBtn').disabled = true;
+      }
+    }
+
+    // ── Procesa el resultado de una respuesta (manual o vía 75%) ──
+    function procesarRespuesta(data, opcionElegidaId) {
+      document.querySelectorAll('.opcion-btn').forEach(btn => {
+        const id = Number(btn.dataset.id);
+        if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
+        else if (id === opcionElegidaId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
+      });
+
+      const contoComoCorrecta = data.es_correcta || data.proteccion_usada;
+      if (contoComoCorrecta) {
+        correctas++;
+        play('/static/correcta.mp3');
+      } else {
+        incorrectas++;
+        play('/static/error.mp3');
+      }
+      if (data.proteccion_usada) mostrarToast('🤞 ¡Protección activada! Ese error no cuenta.');
+
+      // Barra llena según respuestas correctas
+      const pct = Math.round((correctas / preguntas.length) * 100);
+      document.getElementById('barYo').style.width = pct + '%';
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'progress', value: pct }));
+      }
+
+      guardarProgreso();
+
+      if (data.explicacion) {
+        const exp = document.getElementById('explicacion');
+        exp.textContent = `💡 ${data.explicacion}`;
+        exp.hidden = false;
+      }
+
+      const siguienteIdx = actual + 1;
+      if (siguienteIdx >= preguntas.length) {
+        document.getElementById('siguienteBtn').textContent = 'Ver resultado';
+        document.getElementById('siguienteBtn').hidden = false;
+      } else {
+        if (contoComoCorrecta) {
+          setTimeout(() => { actual++; guardarProgreso(); mostrarPregunta(); }, 900);
+        } else {
+          document.getElementById('siguienteBtn').hidden = false;
+        }
+      }
     }
 
     // ── Responder ─────────────────────────────────────────────
@@ -435,48 +738,7 @@
           body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId })
         });
         const data = await res.json();
-
-        document.querySelectorAll('.opcion-btn').forEach(btn => {
-          const id = Number(btn.dataset.id);
-          if (id === data.opcion_correcta_id) btn.classList.add('opcion-btn--correcta');
-          else if (id === opcionId && !data.es_correcta) btn.classList.add('opcion-btn--incorrecta');
-        });
-
-        if (data.es_correcta) {
-          correctas++;
-          play('/static/correcta.mp3');
-        } else {
-          incorrectas++;
-          play('/static/error.mp3');
-        }
-
-        // Barra llena según respuestas correctas
-        const pct = Math.round((correctas / preguntas.length) * 100);
-        document.getElementById('barYo').style.width = pct + '%';
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'progress', value: pct }));
-        }
-
-        guardarProgreso();
-
-        if (data.explicacion) {
-          const exp = document.getElementById('explicacion');
-          exp.textContent = `💡 ${data.explicacion}`;
-          exp.hidden = false;
-        }
-
-        const siguienteIdx = actual + 1;
-        if (siguienteIdx >= preguntas.length) {
-          document.getElementById('siguienteBtn').textContent = 'Ver resultado';
-          document.getElementById('siguienteBtn').hidden = false;
-        } else {
-          if (data.es_correcta) {
-            setTimeout(() => { actual++; guardarProgreso(); mostrarPregunta(); }, 900);
-          } else {
-            document.getElementById('siguienteBtn').hidden = false;
-          }
-        }
-
+        procesarRespuesta(data, opcionId);
       } catch (err) {
         console.error('[Online] Error responder:', err);
         document.querySelectorAll('.opcion-btn').forEach(b => b.disabled = false);

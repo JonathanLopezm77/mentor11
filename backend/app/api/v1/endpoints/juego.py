@@ -17,6 +17,9 @@ from app.schemas.juego import (
     ResponderPreguntaRequest,
     RetroalimentacionRespuesta,
     ResultadoSesion,
+    MitadMitadRequest,
+    MitadMitadRespuesta,
+    SetentaCincoRequest,
     OpcionSchema,  # noqa: F401
 )
 from app.services.juego_service import (
@@ -25,6 +28,8 @@ from app.services.juego_service import (
     iniciar_sesion,
     responder_pregunta,
     finalizar_sesion,
+    usar_mitad_mitad,
+    usar_setenta_cinco,
     JuegoError,
 )
 
@@ -128,6 +133,41 @@ async def responder(
     """
     try:
         resultado = await responder_pregunta(db, sesion_id, usuario.id, datos)
+    except JuegoError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+
+    return resultado
+
+
+@router.post("/poderes/mitad_mitad", response_model=MitadMitadRespuesta)
+async def poder_mitad_mitad(
+    datos: MitadMitadRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    """Consume el poder 'mitad y mitad' y devuelve 2 opciones incorrectas a ocultar."""
+    try:
+        ocultar_ids = await usar_mitad_mitad(db, usuario.id, datos.pregunta_id)
+    except JuegoError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+
+    return {"ocultar_ids": ocultar_ids}
+
+
+@router.post(
+    "/sesiones/{sesion_id}/poderes/setenta_cinco",
+    response_model=RetroalimentacionRespuesta,
+)
+async def poder_setenta_cinco(
+    sesion_id: int,
+    datos: SetentaCincoRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    """Consume el poder '75%' — el servidor elige la opción y la responde
+    con 75% de probabilidad real de acertar."""
+    try:
+        resultado = await usar_setenta_cinco(db, sesion_id, usuario.id, datos.pregunta_id)
     except JuegoError as e:
         raise HTTPException(status_code=e.status_code, detail=e.mensaje)
 

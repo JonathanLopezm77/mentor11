@@ -51,8 +51,11 @@ class RetroalimentacionRespuesta(BaseModel):
 
     es_correcta: bool
     opcion_correcta_id: int  # Frontend colorea en verde la opción con este id
+    opcion_elegida_id: int  # Cuál opción se respondió (útil cuando la elige el poder 75%)
     explicacion: str | None
     pista_disponible: bool
+    puntos_online: int = 0  # Puntos ganados para la partida online (0 fuera de online)
+    proteccion_usada: bool = False  # True si el poder "equivocarse" absorbió este error
 
 
 # ─── Sesión de juego ──────────────────────────────────────────────────────────
@@ -78,6 +81,21 @@ class SesionRespuesta(BaseModel):
     mensaje: str = "Sesión iniciada correctamente"
 
     model_config = {"from_attributes": True}
+
+
+# ─── Poderes (modo Online) ─────────────────────────────────────────────────────
+
+
+class MitadMitadRequest(BaseModel):
+    pregunta_id: int
+
+
+class MitadMitadRespuesta(BaseModel):
+    ocultar_ids: list[int]  # Ids de opciones incorrectas a ocultar en el frontend
+
+
+class SetentaCincoRequest(BaseModel):
+    pregunta_id: int
 
 
 class ResultadoSesion(BaseModel):

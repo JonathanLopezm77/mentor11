@@ -17,6 +17,7 @@ from app.models.juego import (
     ModoJuego,
 )
 from app.schemas.juego import IniciarSesionRequest, ResponderPreguntaRequest
+from app.services import online_state
 
 
 class JuegoError(Exception):
@@ -133,6 +134,9 @@ async def responder_pregunta(
     if not sesion:
         raise JuegoError("Sesión no encontrada o ya finalizada", 404)
 
+    if online_state.efecto_activo(usuario_id, "congelar"):
+        raise JuegoError("Estás congelado por el rival, espera unos segundos", 403)
+
     resultado = await db.execute(
         select(Pregunta)
         .options(selectinload(Pregunta.respuestas), selectinload(Pregunta.pistas))
@@ -171,13 +175,76 @@ async def responder_pregunta(
 
     await db.commit()
 
+    puntos_online, proteccion_usada = online_state.puntos_por_respuesta(usuario_id, es_correcta)
+
     return {
         "es_correcta": es_correcta,
         "opcion_correcta_id": opcion_correcta.id,
+        "opcion_elegida_id": datos.opcion_id,
         "explicacion": pregunta.explicacion_texto,
         "pista_disponible": len(pregunta.pistas) > 0,
+        "puntos_online": puntos_online,
+        "proteccion_usada": proteccion_usada,
     }
 
+
+# ─── Poderes (modo Online) ─────────────────────────────────────────────────────
+
+
+async def usar_mitad_mitad(
+    db: AsyncSession,
+    usuario_id: int,
+    pregunta_id: int,
+) -> list[int]:
+    """Devuelve hasta 2 ids de opciones incorrectas para ocultar. Consume el poder."""
+    resultado = await db.execute(
+        select(Pregunta)
+        .options(selectinload(Pregunta.respuestas))
+        .where(Pregunta.id == pregunta_id)
+    )
+    pregunta = resultado.scalar_one_or_none()
+    if not pregunta:
+        raise JuegoError("Pregunta no encontrada", 404)
+
+    if not online_state.consumir_poder(usuario_id, "mitad_mitad"):
+        raise JuegoError("No posees el poder mitad y mitad", 403)
+
+    incorrectas = [r.id for r in pregunta.respuestas if not r.es_correcta]
+    return random.sample(incorrectas, min(2, len(incorrectas)))
+
+
+async def usar_setenta_cinco(
+    db: AsyncSession,
+    sesion_id: int,
+    usuario_id: int,
+    pregunta_id: int,
+) -> dict:
+    """Elige una opción con 75% de probabilidad de ser la correcta y la responde
+    a través del flujo normal de responder_pregunta. Consume el poder."""
+    resultado = await db.execute(
+        select(Pregunta)
+        .options(selectinload(Pregunta.respuestas))
+        .where(Pregunta.id == pregunta_id)
+    )
+    pregunta = resultado.scalar_one_or_none()
+    if not pregunta:
+        raise JuegoError("Pregunta no encontrada", 404)
+
+    correcta = next((r for r in pregunta.respuestas if r.es_correcta), None)
+    incorrectas = [r for r in pregunta.respuestas if not r.es_correcta]
+    if not correcta and not incorrectas:
+        raise JuegoError("La pregunta no tiene opciones válidas", 500)
+
+    if not online_state.consumir_poder(usuario_id, "setenta_cinco"):
+        raise JuegoError("No posees el poder 75%", 403)
+
+    if correcta and (random.random() < 0.75 or not incorrectas):
+        elegido_id = correcta.id
+    else:
+        elegido_id = random.choice(incorrectas).id
+
+    datos = ResponderPreguntaRequest(pregunta_id=pregunta_id, opcion_id=elegido_id)
+    return await responder_pregunta(db, sesion_id, usuario_id, datos)
 
 async def finalizar_sesion(
     db: AsyncSession,

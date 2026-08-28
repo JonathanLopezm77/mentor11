@@ -44,7 +44,7 @@ let preguntasRespondidas = 0;
 function avanzarPregunta() {
   actual++;
   preguntasRespondidas++;
-  if (preguntasRespondidas % 5 === 0 && typeof iniciarMinijuegoSecuencia === 'function') {
+  if (preguntasRespondidas % 2 === 0 && typeof iniciarMinijuegoSecuencia === 'function') {
     iniciarMinijuegoSecuencia(
       () => mostrarPregunta(),
       () => {

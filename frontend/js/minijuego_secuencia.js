@@ -1,10 +1,11 @@
 /**
- * Mentor 11 -- Minijuego de secuencia (pausa cada 5 preguntas en Arcade)
- * Dura 15s: cada secuencia acertada suma puntos y lanza una nueva ronda,
- * un poco mas larga, hasta que se acaba el tiempo.
+ * Mentor 11 -- Minijuego de secuencia (pausa cada 2 preguntas en Arcade)
+ * Dura 20s: cada secuencia acertada suma puntos y lanza una nueva ronda,
+ * un poco mas larga, hasta que se acaba el tiempo. El reloj corre siempre,
+ * incluso mientras se muestra la secuencia.
  */
 
-const MJ_DURACION_MS = 15000;
+const MJ_DURACION_MS = 20000;
 const MJ_MUESTRA_MS = 4000;
 
 function esperar(ms) {
@@ -14,7 +15,6 @@ function esperar(ms) {
 function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemorizarFin) {
   let ronda = 0;
   let terminado = false;
-  let pausado = false;
 
   const overlay = document.createElement('div');
   overlay.className = 'mj-overlay';
@@ -23,7 +23,7 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     '<div class="mj-header">' +
     '<div class="mj-top">' +
     '<p class="mj-ronda" id="mjRonda">Ronda 1</p>' +
-    '<p class="mj-timer" id="mjTimer">15s</p>' +
+    '<p class="mj-timer" id="mjTimer">20s</p>' +
     '</div>' +
     '<div class="mj-timerbar"><div class="mj-timerbar__fill" id="mjTimerFill"></div></div>' +
     '</div>' +
@@ -84,7 +84,6 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     const ahora = Date.now();
     const delta = ahora - ultimoTick;
     ultimoTick = ahora;
-    if (pausado) return;
     restante = Math.max(0, restante - delta);
     timerLabel.textContent = Math.ceil(restante / 1000) + 's';
     timerFill.style.width = (restante / MJ_DURACION_MS * 100) + '%';
@@ -130,12 +129,10 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     hint.textContent = 'Memoriza la secuencia...';
     await esperar(400);
     if (terminado) return;
-    pausado = true;
     if (typeof onMemorizarInicio === 'function') onMemorizarInicio();
     mostrarSecuenciaCompleta(secuencia);
     await esperar(MJ_MUESTRA_MS);
     ocultarSecuenciaCompleta();
-    pausado = false;
     if (typeof onMemorizarFin === 'function') onMemorizarFin();
     if (terminado) return;
     hint.textContent = 'Tu turno: repite la secuencia';

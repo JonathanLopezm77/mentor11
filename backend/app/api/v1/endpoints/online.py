@@ -209,11 +209,13 @@ async def online_ws(websocket: WebSocket):
             if tipo == "progress" and sala_id:
                 sala = _salas.get(sala_id)
                 if sala:
+                    valor = datos.get("value", 0)
+                    sala.setdefault("progreso", {})[usuario_id] = valor
                     for p in sala["jugadores"]:
                         if p["usuario_id"] != usuario_id:
                             await _enviar(p["ws"], {
                                 "type": "rival_progress",
-                                "value": datos.get("value", 0),
+                                "value": valor,
                             })
 
             if tipo == "usar_poder" and sala_id:
@@ -260,66 +262,36 @@ async def online_ws(websocket: WebSocket):
 
             if tipo == "finish" and sala_id:
                 sala = _salas.get(sala_id)
-                if not sala:
-                    break
+                if not sala or sala.get("terminada"):
+                    break  # la sala ya no existe o el rival ya termino primero
+
+                sala["terminada"] = True
 
                 mis_correctas = datos.get("correctas", 0)
-                if "finalizados" not in sala:
-                    sala["finalizados"] = {}
-                if "evento_fin" not in sala:
-                    sala["evento_fin"] = asyncio.Event()
+                otro = next((p for p in sala["jugadores"] if p["usuario_id"] != usuario_id), None)
+                rival_id = otro["usuario_id"] if otro else None
 
-                sala["finalizados"][usuario_id] = mis_correctas
+                mis_puntos = online_state.puntos_de(usuario_id)
+                rival_puntos = online_state.puntos_de(rival_id) if rival_id is not None else 0
+                # El rival puede seguir jugando — no sabemos cuantas tiene correctas,
+                # solo su ultimo % de progreso reportado.
+                rival_progreso_pct = sala.get("progreso", {}).get(rival_id, 0) if rival_id is not None else 0
 
-                if len(sala["finalizados"]) == 2:
-                    # Calcular resultados individuales — el ganador se decide por
-                    # puntos (respeta doble_puntos), no por cantidad de correctas.
-                    ids = list(sala["finalizados"].keys())
-                    c0 = sala["finalizados"][ids[0]]
-                    c1 = sala["finalizados"][ids[1]]
-                    p0 = online_state.puntos_de(ids[0])
-                    p1 = online_state.puntos_de(ids[1])
-                    if p0 == p1:
-                        sala["resultados_fin"] = {
-                            ids[0]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c0, "rival_correctas": c1, "mis_puntos": p0, "rival_puntos": p1},
-                            ids[1]: {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": c1, "rival_correctas": c0, "mis_puntos": p1, "rival_puntos": p0},
-                        }
-                    else:
-                        ganador = ids[0] if p0 > p1 else ids[1]
-                        sala["resultados_fin"] = {
-                            ids[0]: {"type": "resultado", "empate": False, "ganaste": ids[0] == ganador, "mis_correctas": c0, "rival_correctas": c1, "mis_puntos": p0, "rival_puntos": p1},
-                            ids[1]: {"type": "resultado", "empate": False, "ganaste": ids[1] == ganador, "mis_correctas": c1, "rival_correctas": c0, "mis_puntos": p1, "rival_puntos": p0},
-                        }
-                    sala["evento_fin"].set()  # Notificar a ambas corrutinas
+                if mis_puntos == rival_puntos:
+                    resultado_mio = {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": mis_correctas, "rival_correctas": None, "rival_progreso_pct": rival_progreso_pct, "mis_puntos": mis_puntos, "rival_puntos": rival_puntos}
+                    resultado_rival = {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": None, "rival_correctas": mis_correctas, "mis_puntos": rival_puntos, "rival_puntos": mis_puntos}
+                else:
+                    yo_gane = mis_puntos > rival_puntos
+                    resultado_mio = {"type": "resultado", "empate": False, "ganaste": yo_gane, "mis_correctas": mis_correctas, "rival_correctas": None, "rival_progreso_pct": rival_progreso_pct, "mis_puntos": mis_puntos, "rival_puntos": rival_puntos}
+                    resultado_rival = {"type": "resultado", "empate": False, "ganaste": not yo_gane, "mis_correctas": None, "rival_correctas": mis_correctas, "mis_puntos": rival_puntos, "rival_puntos": mis_puntos}
 
-                # Ambos jugadores esperan el evento con keep-alive cada 20s
-                evento = sala["evento_fin"]
-                tarea_evento = asyncio.ensure_future(evento.wait())
-                while not tarea_evento.done():
-                    try:
-                        await asyncio.wait_for(asyncio.shield(tarea_evento), timeout=20.0)
-                    except asyncio.TimeoutError:
-                        if evento.is_set():
-                            break
-                        # Mantener conexión viva mientras esperamos al rival
-                        await _enviar(websocket, {"type": "esperando_rival"})
-                        if not _salas.get(sala_id):
-                            tarea_evento.cancel()
-                            break
+                await _enviar(websocket, resultado_mio)
+                if otro:
+                    await _enviar(otro["ws"], resultado_rival)
 
-                # Cada jugador envía el resultado desde su propia corrutina
-                sala_final = _salas.get(sala_id)
-                if sala_final and "resultados_fin" in sala_final:
-                    mi_resultado = sala_final["resultados_fin"].get(usuario_id)
-                    if mi_resultado:
-                        await _enviar(websocket, mi_resultado)
-                    # Limpiar sala cuando ambos han recibido
-                    sala_final.setdefault("fin_confirmados", set()).add(usuario_id)
-                    if len(sala_final["fin_confirmados"]) >= 2:
-                        _salas.pop(sala_id, None)
-                        online_state.limpiar_sala(sala_id)
-                        sala_id = None
-
+                _salas.pop(sala_id, None)
+                online_state.limpiar_sala(sala_id)
+                sala_id = None
                 break  # salir del bucle principal
 
     except WebSocketDisconnect:

@@ -547,17 +547,26 @@
         }
 
         if (data.type === 'resultado') {
+          // La partida termina apenas alguno de los 2 llena su barra —
+          // puede llegar aunque yo siga respondiendo, así que se corta ya.
+          partidaTerminada = true;
+          document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
+          document.getElementById('siguienteBtn').hidden = true;
+
+          const misCorrectasReal = data.mis_correctas != null ? data.mis_correctas : correctas;
+          const miTexto = `${data.mis_puntos} pts (${misCorrectasReal} correctas)`;
+          const rivalTexto = data.rival_correctas != null
+            ? `${data.rival_puntos} pts (${data.rival_correctas} correctas)`
+            : `${data.rival_puntos} pts (se quedó en ${data.rival_progreso_pct ?? 0}% de su barra)`;
+
           if (data.empate) {
-            document.getElementById('empateSubtitle').textContent =
-              `Ambos con ${data.mis_puntos} puntos (${data.mis_correctas} correctas).`;
+            document.getElementById('empateSubtitle').textContent = `Ambos con ${data.mis_puntos} puntos.`;
             mostrarOverlay('overlayEmpate');
           } else if (data.ganaste) {
-            document.getElementById('ganaSubtitle').textContent =
-              `Tú: ${data.mis_puntos} pts (${data.mis_correctas} correctas) · Rival: ${data.rival_puntos} pts (${data.rival_correctas} correctas)`;
+            document.getElementById('ganaSubtitle').textContent = `Tú: ${miTexto} · Rival: ${rivalTexto}`;
             mostrarOverlay('overlayGana');
           } else {
-            document.getElementById('pierdeSubtitle').textContent =
-              `Rival: ${data.rival_puntos} pts (${data.rival_correctas} correctas) · Tú: ${data.mis_puntos} pts (${data.mis_correctas} correctas)`;
+            document.getElementById('pierdeSubtitle').textContent = `Rival: ${rivalTexto} · Tú: ${miTexto}`;
             mostrarOverlay('overlayPierde');
           }
         }
@@ -792,13 +801,13 @@
         });
       } catch (_) {}
 
-      // Enviar aciertos al servidor para que compare con el rival
+      // Avisar al servidor: mi barra se llenó primero — la partida termina ya
+      // para los dos, no hay que esperar a que el rival también termine.
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'finish', correctas }));
       }
 
-      // Mostrar pantalla de espera mientras el rival termina
-      document.getElementById('enunciado').textContent = '⏳ Esperando que tu rival termine...';
+      document.getElementById('enunciado').textContent = '🏁 ¡Llenaste tu barra! Cerrando la partida...';
       document.getElementById('opcionesGrid').innerHTML = '';
       document.getElementById('siguienteBtn').hidden = true;
       document.getElementById('explicacion').hidden = true;

@@ -56,8 +56,7 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
   }
 
   function mostrarSecuenciaCompleta(secuencia) {
-    const unicos = new Set(secuencia);
-    unicos.forEach((idx) => tiles[idx].classList.add('mj-tile--lit'));
+    secuencia.forEach((idx) => tiles[idx].classList.add('mj-tile--lit'));
   }
 
   function ocultarSecuenciaCompleta() {
@@ -89,15 +88,14 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
 
   function esperarEntrada(secuencia) {
     return new Promise((resolve) => {
-      const entrada = [];
+      const objetivo = new Set(secuencia);
       function onClick(e) {
         if (terminado) { cleanup(); resolve('agotado'); return; }
         const idx = Number(e.currentTarget.dataset.idx);
+        if (!objetivo.has(idx)) { cleanup(); resolve('incorrecta'); return; }
+        objetivo.delete(idx);
         flash(idx, 'mj-tile--activa', 220);
-        entrada.push(idx);
-        const pos = entrada.length - 1;
-        if (entrada[pos] !== secuencia[pos]) { cleanup(); resolve('incorrecta'); return; }
-        if (entrada.length === secuencia.length) { cleanup(); resolve('correcta'); }
+        if (objetivo.size === 0) { cleanup(); resolve('correcta'); }
       }
       function cleanup() { tiles.forEach((t) => t.removeEventListener('click', onClick)); }
       tiles.forEach((t) => t.addEventListener('click', onClick));
@@ -108,9 +106,13 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     if (terminado) return;
     ronda++;
     rondaLabel.textContent = 'Ronda ' + ronda;
-    const largo = ronda + 2;
+    const largo = Math.min(ronda + 2, 9);
+    const disponibles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     const secuencia = [];
-    for (let i = 0; i < largo; i++) secuencia.push(Math.floor(Math.random() * 9));
+    for (let i = 0; i < largo; i++) {
+      const pick = disponibles.splice(Math.floor(Math.random() * disponibles.length), 1)[0];
+      secuencia.push(pick);
+    }
 
     hint.textContent = 'Memoriza la secuencia...';
     await esperar(400);
@@ -121,7 +123,7 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     ocultarSecuenciaCompleta();
     if (typeof onMemorizarFin === 'function') onMemorizarFin();
     if (terminado) return;
-    hint.textContent = 'Tu turno: repite la secuencia';
+    hint.textContent = 'Tu turno: toca las casillas que se iluminaron';
 
     const resultado = await esperarEntrada(secuencia);
     if (terminado) return;

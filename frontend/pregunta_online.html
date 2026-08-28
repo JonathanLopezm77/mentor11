@@ -6,7 +6,7 @@
   <title>Mentor 11 — Online</title>
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/libre.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bangers&display=swap" rel="stylesheet" />
   <style>
     /* ── Banner VS con avatares en los bordes y barras debajo ── */
     .vs-banner {
@@ -26,8 +26,8 @@
       width: 38%;
     }
     .vs-banner__avatar {
-      width: 44px;
-      height: 44px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       border: 2.5px solid var(--orange-500);
       background: var(--orange-100);
@@ -38,7 +38,7 @@
       flex-shrink: 0;
     }
     .vs-banner__avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .vs-banner__avatar span { font-weight: 800; color: var(--orange-600); font-size: 1.05rem; }
+    .vs-banner__avatar span { font-weight: 800; color: var(--orange-600); font-size: 1.4rem; }
     .vs-banner__name {
       font-size: .68rem;
       font-weight: 700;
@@ -64,25 +64,21 @@
     .vs-banner__bar-fill--yo    { background: var(--orange-500); }
     .vs-banner__bar-fill--rival { background: #f59e0b; }
     .vs-banner__badge {
-      width: 40px;
-      height: 40px;
-      background: #0a0a0a;
-      border: 3px solid #c026d3;
-      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: rotate(-8deg);
       flex-shrink: 0;
-      margin-top: 3px;
-      box-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+      transform: rotate(-8deg);
+      margin-top: 8px;
     }
     .vs-banner__badge span {
-      font-weight: 800;
-      font-size: .95rem;
+      font-family: 'Bangers', 'Inter', system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 2.6rem;
+      line-height: 1;
       color: #fff;
-      -webkit-text-stroke: 1.1px #000;
-      letter-spacing: -0.02em;
+      -webkit-text-stroke: 2px #000;
+      letter-spacing: .02em;
     }
 
     /* ── Overlays de fin de partida ── */

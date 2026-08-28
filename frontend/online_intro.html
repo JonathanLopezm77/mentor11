@@ -46,26 +46,26 @@
     .match-player__name--rival { animation-delay:.15s; }
     @keyframes player-entra { from{opacity:0;transform:scale(.6) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
-    .match-swords { position:relative; width:150px; height:64px; margin:2px 0; }
+    .match-swords { position:relative; width:190px; height:90px; margin:2px 0; }
     .match-sword {
-      position:absolute; top:50%; left:50%; font-size:2.4rem; line-height:1; opacity:0;
+      position:absolute; top:50%; left:50%; font-size:3.6rem; line-height:1; opacity:0;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
     }
-    .match-sword--left  { animation: sword-clash-left .6s cubic-bezier(.3,.6,.35,1.4) .55s forwards; }
-    .match-sword--right { animation: sword-clash-right .6s cubic-bezier(.3,.6,.35,1.4) .55s forwards; }
+    .match-sword--left  { animation: sword-clash-left 1.2s cubic-bezier(.3,.6,.35,1.4) .6s forwards; }
+    .match-sword--right { animation: sword-clash-right 1.2s cubic-bezier(.3,.6,.35,1.4) .6s forwards; }
     @keyframes sword-clash-left {
-      0%   { transform: translate(calc(-50% - 110px), -50%) rotate(-75deg); opacity: 0; }
+      0%   { transform: translate(calc(-50% - 140px), -50%) rotate(-75deg); opacity: 0; }
       55%  { transform: translate(-50%, -50%) rotate(-38deg); opacity: 1; }
       72%  { transform: translate(-50%, -50%) rotate(-52deg); }
       100% { transform: translate(-50%, -50%) rotate(-45deg); }
     }
     @keyframes sword-clash-right {
-      0%   { transform: translate(calc(-50% + 110px), -50%) rotate(75deg); opacity: 0; }
+      0%   { transform: translate(calc(-50% + 140px), -50%) rotate(75deg); opacity: 0; }
       55%  { transform: translate(-50%, -50%) rotate(38deg); opacity: 1; }
       72%  { transform: translate(-50%, -50%) rotate(52deg); }
       100% { transform: translate(-50%, -50%) rotate(45deg); }
     }
-    .match-swords--impacto { animation: swords-shake .3s ease .93s; }
+    .match-swords--impacto { animation: swords-shake .3s ease 1.26s; }
     @keyframes swords-shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-4px); }
@@ -77,7 +77,7 @@
       background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.9);
       transform:translate(-50%,-50%) scale(0); opacity:0;
     }
-    .match-spark--activa { animation: spark-pop .45s ease .85s forwards; }
+    .match-spark--activa { animation: spark-pop .45s ease 1.2s forwards; }
     @keyframes spark-pop {
       0%   { transform:translate(-50%,-50%) scale(0); opacity:0; }
       45%  { transform:translate(-50%,-50%) scale(3.2); opacity:1; }
@@ -86,7 +86,7 @@
     .match-vs {
       font-family:'Bangers','Inter',system-ui,sans-serif; font-weight:400; font-size:1.9rem; color:#fff;
       -webkit-text-stroke:1.5px #000; letter-spacing:.02em; flex-shrink:0;
-      opacity:0; animation: match-vs-in .3s ease .95s forwards;
+      opacity:0; animation: match-vs-in .3s ease 1.3s forwards;
     }
     @keyframes match-vs-in { to { opacity:1; } }
 
@@ -528,8 +528,9 @@
           mostrar('screenMatch');
 
           // Choque de espadas: sonido justo cuando se cruzan en el centro
-          setTimeout(() => play('/static/match_espadas.mp3'), 880);
+          setTimeout(() => play('/static/match_espadas.mp3'), 1260);
 
+          // Espera a que termine toda la animación (0.6s delay + 1.2s de giro) y 1s más
           setTimeout(() => {
             document.getElementById('modoRivalName').textContent = rivalNombre;
             if (esHost) {
@@ -542,7 +543,7 @@
               document.getElementById('modoGrid').style.pointerEvents = 'none';
             }
             mostrar('screenModo');
-          }, 1500);
+          }, 2800);
         }
 
         if (datos.type === 'modo_configurando') {

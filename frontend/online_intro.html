@@ -121,13 +121,13 @@
     }
     @keyframes match-vs-in { to { opacity:1; } }
 
-    .modo-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px 20px; }
-    .modo-title { font-size:1.05rem; font-weight:800; color:var(--gray-900); text-align:center; }
+    .modo-wrap { flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px 20px; background:#1c1917; }
+    .modo-title { font-size:1.05rem; font-weight:800; color:#fff; text-align:center; }
     .modo-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; }
-    .modo-card { background:var(--white); border:1.5px solid var(--gray-200); border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; font-family:var(--font); transition:border-color .2s,transform .2s,box-shadow .2s; }
+    .modo-card { background:#131110; border:1.5px solid #2b2724; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; font-family:var(--font); transition:border-color .2s,transform .2s,box-shadow .2s; }
     .modo-card:hover { border-color:var(--orange-500); transform:translateY(-2px); box-shadow:0 4px 14px rgba(249,115,22,.25); }
     .modo-card__icon { font-size:2.2rem; }
-    .modo-card__label { font-size:.88rem; font-weight:700; color:var(--gray-900); }
+    .modo-card__label { font-size:.88rem; font-weight:700; color:#fff; }
 
     /* ── Pantalla config libre ── */
     .config-wrap { flex:1; display:flex; flex-direction:column; padding:20px 20px 0; gap:16px; overflow-y:auto; }
@@ -146,9 +146,9 @@
     .libre-intro__main { justify-content:center; gap:0; padding:28px 24px 0; }
 
     /* ── Pantalla ruleta de poderes (carretes tipo tragamonedas) ── */
-    .ruleta-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:32px 24px; }
-    .ruleta-title { font-size:1.25rem; font-weight:800; color:var(--gray-900); text-align:center; }
-    .ruleta-subtitle { font-size:.85rem; color:var(--gray-500); text-align:center; margin-top:-14px; }
+    .ruleta-wrap { flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:32px 24px; background:#1c1917; }
+    .ruleta-title { font-size:1.25rem; font-weight:800; color:#fff; text-align:center; }
+    .ruleta-subtitle { font-size:.85rem; color:#a8a29e; text-align:center; margin-top:-14px; }
     .ruleta-reeles { display:flex; gap:18px; }
     .ruleta-reel-col { display:flex; flex-direction:column; align-items:center; gap:10px; }
     .reel {
@@ -166,7 +166,7 @@
     .reel__linea { position: absolute; left: 8px; right: 8px; height: 0; border-top: 2px dashed rgba(255,255,255,.28); pointer-events: none; }
     .reel__linea--arriba { top: 90px; }
     .reel__linea--abajo { top: 180px; }
-    .ruleta-poder__name { font-size:.82rem; font-weight:700; color:var(--gray-700); text-align:center; max-width:100px; min-height: 1.4em; opacity: 0; transition: opacity .3s ease; }
+    .ruleta-poder__name { font-size:.82rem; font-weight:700; color:#fff; text-align:center; max-width:100px; min-height: 1.4em; opacity: 0; transition: opacity .3s ease; }
     .ruleta-poder__name--listo { opacity: 1; }
     .ruleta-continuar { opacity:0; pointer-events: none; transition: opacity .4s ease; }
     .ruleta-continuar--listo { opacity:1; pointer-events: auto; }

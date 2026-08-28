@@ -7,6 +7,9 @@ venv/
 .venv/
 env/
 
+# ── Claude Code ────────────────────────────
+.claude/
+
 # ── Variables de entorno ──────────────────
 .env
 .env.local

@@ -6,7 +6,7 @@
   <title>Mentor 11 — Online</title>
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/libre.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bangers&display=swap" rel="stylesheet" />
   <style>
     .online-icon { font-size: 7rem; line-height: 1; display: block; text-align: center; animation: flotar 2.8s ease-in-out infinite; }
     @keyframes flotar { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
@@ -28,17 +28,67 @@
     .searching-dots span:nth-child(2){animation-delay:.2s} .searching-dots span:nth-child(3){animation-delay:.4s}
     @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
 
-    .match-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:32px 24px; }
-    .match-vs-row { display:flex; align-items:center; justify-content:center; gap:18px; width:100%; }
-    .match-player { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; animation:player-entra .5s cubic-bezier(.34,1.56,.64,1) both; }
-    .match-player--rival { animation-delay:.15s; }
-    @keyframes player-entra { from{opacity:0;transform:scale(.6) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
-    .match-player__avatar { width:72px; height:72px; border-radius:50%; background:var(--orange-100); border:3px solid var(--orange-500); display:flex; align-items:center; justify-content:center; font-size:2.4rem; }
-    .match-player__name { font-size:.92rem; font-weight:700; color:var(--gray-900); text-align:center; max-width:110px; word-break:break-word; }
-    .match-player__you { font-size:.72rem; font-weight:600; color:var(--orange-500); text-transform:uppercase; letter-spacing:.5px; }
-    .match-vs { font-size:1.5rem; font-weight:800; color:var(--gray-400); flex-shrink:0; }
-    .match-found-badge { background:var(--orange-50); border:1.5px solid var(--orange-100); border-radius:var(--radius-full); padding:6px 18px; font-size:.85rem; font-weight:700; color:var(--orange-600); animation:badge-pop .4s cubic-bezier(.34,1.56,.64,1) .3s both; }
+    .match-wrap {
+      flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+      background:#1c1917; padding:36px 24px;
+    }
+    .match-found-badge { background:var(--orange-50); border:1.5px solid var(--orange-100); border-radius:var(--radius-full); padding:6px 18px; font-size:.85rem; font-weight:700; color:var(--orange-600); animation:badge-pop .4s cubic-bezier(.34,1.56,.64,1) .3s both; margin-bottom:8px; }
     @keyframes badge-pop { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
+
+    .match-player__name { font-size:1.05rem; font-weight:800; color:#fff; text-align:center; max-width:220px; word-break:break-word; animation:player-entra .5s cubic-bezier(.34,1.56,.64,1) both; }
+    .match-player__avatar {
+      width:88px; height:88px; border-radius:50%; background:var(--orange-100); border:3px solid var(--orange-500);
+      display:flex; align-items:center; justify-content:center; font-size:2.6rem; overflow:hidden;
+      animation:player-entra .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .match-player__avatar img { width:100%; height:100%; object-fit:cover; }
+    .match-player__avatar--rival { animation-delay:.15s; }
+    .match-player__name--rival { animation-delay:.15s; }
+    @keyframes player-entra { from{opacity:0;transform:scale(.6) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+    .match-swords { position:relative; width:150px; height:64px; margin:2px 0; }
+    .match-sword {
+      position:absolute; top:50%; left:50%; font-size:2.4rem; line-height:1; opacity:0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    }
+    .match-sword--left  { animation: sword-clash-left .6s cubic-bezier(.3,.6,.35,1.4) .55s forwards; }
+    .match-sword--right { animation: sword-clash-right .6s cubic-bezier(.3,.6,.35,1.4) .55s forwards; }
+    @keyframes sword-clash-left {
+      0%   { transform: translate(calc(-50% - 110px), -50%) rotate(-75deg); opacity: 0; }
+      55%  { transform: translate(-50%, -50%) rotate(-38deg); opacity: 1; }
+      72%  { transform: translate(-50%, -50%) rotate(-52deg); }
+      100% { transform: translate(-50%, -50%) rotate(-45deg); }
+    }
+    @keyframes sword-clash-right {
+      0%   { transform: translate(calc(-50% + 110px), -50%) rotate(75deg); opacity: 0; }
+      55%  { transform: translate(-50%, -50%) rotate(38deg); opacity: 1; }
+      72%  { transform: translate(-50%, -50%) rotate(52deg); }
+      100% { transform: translate(-50%, -50%) rotate(45deg); }
+    }
+    .match-swords--impacto { animation: swords-shake .3s ease .93s; }
+    @keyframes swords-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      50% { transform: translateX(4px); }
+      75% { transform: translateX(-2px); }
+    }
+    .match-spark {
+      position:absolute; top:50%; left:50%; width:10px; height:10px; border-radius:50%;
+      background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.9);
+      transform:translate(-50%,-50%) scale(0); opacity:0;
+    }
+    .match-spark--activa { animation: spark-pop .45s ease .85s forwards; }
+    @keyframes spark-pop {
+      0%   { transform:translate(-50%,-50%) scale(0); opacity:0; }
+      45%  { transform:translate(-50%,-50%) scale(3.2); opacity:1; }
+      100% { transform:translate(-50%,-50%) scale(5); opacity:0; }
+    }
+    .match-vs {
+      font-family:'Bangers','Inter',system-ui,sans-serif; font-weight:400; font-size:1.9rem; color:#fff;
+      -webkit-text-stroke:1.5px #000; letter-spacing:.02em; flex-shrink:0;
+      opacity:0; animation: match-vs-in .3s ease .95s forwards;
+    }
+    @keyframes match-vs-in { to { opacity:1; } }
 
     .modo-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px 20px; }
     .modo-title { font-size:1.05rem; font-weight:800; color:var(--gray-900); text-align:center; }
@@ -146,19 +196,19 @@
   <div class="screen" id="screenMatch">
     <div class="match-wrap">
       <p class="match-found-badge">¡Rival encontrado!</p>
-      <div class="match-vs-row">
-        <div class="match-player">
-          <div class="match-player__avatar">🎓</div>
-          <p class="match-player__you">Tú</p>
-          <p class="match-player__name" id="myName">—</p>
-        </div>
-        <span class="match-vs">VS</span>
-        <div class="match-player match-player--rival">
-          <div class="match-player__avatar">🎓</div>
-          <p class="match-player__you" style="color:var(--gray-400);">Rival</p>
-          <p class="match-player__name" id="rivalNameDisplay">—</p>
-        </div>
+
+      <p class="match-player__name" id="myName">—</p>
+      <div class="match-player__avatar" id="myAvatar"><span>🎓</span></div>
+
+      <div class="match-swords match-swords--impacto" id="matchSwords">
+        <span class="match-spark match-spark--activa"></span>
+        <span class="match-sword match-sword--left">🗡️</span>
+        <span class="match-sword match-sword--right">🗡️</span>
       </div>
+      <p class="match-vs">VS</p>
+
+      <div class="match-player__avatar match-player__avatar--rival" id="rivalAvatar"><span>🎓</span></div>
+      <p class="match-player__name match-player__name--rival" id="rivalNameDisplay">—</p>
     </div>
   </div>
 
@@ -242,7 +292,7 @@
   <script>
     // ── Sonidos de la ruleta ──────────────────────────────────
     const SFX = {};
-    [['/static/ruleta_giro.mp3', .5], ['/static/ruleta_cae.mp3', .6], ['/static/ruleta_listo.mp3', .6]].forEach(([src, vol]) => {
+    [['/static/ruleta_giro.mp3', .5], ['/static/ruleta_cae.mp3', .6], ['/static/ruleta_listo.mp3', .6], ['/static/match_espadas.mp3', .7]].forEach(([src, vol]) => {
       const a = new Audio(src); a.preload = 'auto'; a.volume = vol; SFX[src] = a;
     });
     const play = (src) => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(() => {}); };
@@ -260,6 +310,20 @@
     let rivalAvatar = null;
     let misPoderes = {};
     let datosMode = null;
+    let miAvatarCargado = false;
+
+    async function cargarMiAvatar() {
+      if (miAvatarCargado) return;
+      try {
+        const res = await fetch(`${API}/perfil/avatar`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.imagen_src) {
+          document.getElementById('myAvatar').innerHTML = `<img src="${data.imagen_src}" alt="Mi avatar" />`;
+          miAvatarCargado = true;
+        }
+      } catch (_) {}
+    }
 
     // Iconos materias
     const ICONOS = { LC:'📖', MAT:'🔢', CN:'🔬', SOC:'🌍', ING:'🌐' };
@@ -457,10 +521,14 @@
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
           if (rivalAvatar) {
-            document.querySelector('.match-player--rival .match-player__avatar').innerHTML =
-              `<img src="${rivalAvatar}" alt="Avatar rival" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+            document.getElementById('rivalAvatar').innerHTML =
+              `<img src="${rivalAvatar}" alt="Avatar rival" />`;
           }
+          cargarMiAvatar();
           mostrar('screenMatch');
+
+          // Choque de espadas: sonido justo cuando se cruzan en el centro
+          setTimeout(() => play('/static/match_espadas.mp3'), 880);
 
           setTimeout(() => {
             document.getElementById('modoRivalName').textContent = rivalNombre;

@@ -46,26 +46,57 @@
     .match-player__name--rival { animation-delay:.15s; }
     @keyframes player-entra { from{opacity:0;transform:scale(.6) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
-    .match-swords { position:relative; width:150px; height:140px; margin:4px 0; }
-    .match-sword-svg {
-      position:absolute; top:50%; left:50%; width:140px; height:auto;
-      transform: translate(-50%,-50%) scale(0.2) rotate(-25deg); opacity: 0;
-      animation:
-        swords-slam 1s cubic-bezier(.22,.7,.32,1.15) .5s forwards,
-        swords-glow 1.7s ease-in-out 1.9s infinite;
+    /* ── Espadas cruzadas (adaptado de codepen.io/JoseRosario/pen/ooLpzx) ── */
+    .match-swords { position:relative; width:200px; height:200px; margin:4px 0; }
+    .cs-stage {
+      width:400px; height:400px; position:absolute; top:0; left:0;
+      transform:scale(0.5); transform-origin:top left;
     }
-    @keyframes swords-slam {
-      0%   { transform: translate(-50%,-50%) scale(0.2) rotate(-25deg); opacity: 0; }
-      55%  { transform: translate(-50%,-50%) scale(1.15) rotate(6deg); opacity: 1; }
-      72%  { transform: translate(-50%,-50%) scale(0.94) rotate(-3deg); }
-      88%  { transform: translate(-50%,-50%) scale(1.04) rotate(1deg); }
-      100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    .cs-sword {
+      width:500px; height:122px; position:absolute; top:50%; left:50%;
+      transform-origin:left top; opacity:0;
     }
-    @keyframes swords-glow {
-      0%, 100% { filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)) drop-shadow(0 0 0 rgba(255,255,255,0)); }
-      50%      { filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)) drop-shadow(0 0 10px rgba(255,255,255,.7)); }
+    .cs-left {
+      transform: rotate(-135deg) translateX(-50%) translateY(-50%) translateZ(0);
+      animation: cs-left 700ms cubic-bezier(.42,0,.36,1.23) 300ms forwards;
     }
-    .match-swords--impacto { animation: swords-shake .32s ease 1.05s; }
+    .cs-right {
+      transform: rotate(-45deg) translateX(-50%) translateY(-50%) translateZ(0);
+      animation: cs-right 700ms cubic-bezier(.42,0,.36,1.23) 550ms forwards;
+    }
+    @keyframes cs-left {
+      0%   { opacity:1; transform: rotate(-75deg) translateX(-280%) translateY(20%) scale(1.7) translateZ(0); }
+      100% { opacity:1; transform: rotate(-135deg) translateX(-50%) translateY(-50%) scale(1) translateZ(0); }
+    }
+    @keyframes cs-right {
+      0%   { opacity:1; transform: rotate(-75deg) translateX(-280%) translateY(20%) scale(1.7) translateZ(0); }
+      100% { opacity:1; transform: rotate(-45deg) translateX(-50%) translateY(-50%) scale(1) translateZ(0); }
+    }
+    .cs-pommel {
+      background-color:#FCAB40; height:70px; width:36px; border-radius:20px;
+      position:absolute; top:50%; left:0; transform:translateY(-50%);
+    }
+    .cs-hilt {
+      border-bottom:78px solid #642116; border-left:10px solid transparent; border-right:10px solid transparent;
+      height:0; width:50px; position:absolute; transform:rotate(-90deg); bottom:22px; left:50px;
+    }
+    .cs-guard {
+      background-color:#F97316; height:120px; width:36px; border-radius:20px;
+      position:absolute; top:50%; left:110px; transform:translateY(-50%);
+    }
+    .cs-iron { width:335px; height:60px; position:absolute; top:50%; transform:translateY(-50%); left:145px; }
+    .cs-iron-left { position:absolute; background-color:#CCD6DD; height:50%; width:100%; }
+    .cs-iron-left::before {
+      content:''; width:0; height:0; border-style:solid; border-width:30px 0 0 30px;
+      border-color:transparent transparent transparent #CCD6DD; z-index:2; left:calc(100% - 1px); position:absolute;
+    }
+    .cs-iron-right { position:absolute; background-color:#9AAAB4; height:50%; width:100%; bottom:0; }
+    .cs-iron-right::before {
+      content:''; width:0; height:0; border-style:solid; border-width:30px 30px 0 0;
+      border-color:#9AAAB4 transparent transparent transparent; z-index:2; left:calc(100% - 1px); position:absolute;
+    }
+
+    .match-swords--impacto { animation: swords-shake .32s ease 1.2s; }
     @keyframes swords-shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-5px); }
@@ -75,9 +106,9 @@
     .match-spark {
       position:absolute; top:50%; left:50%; width:12px; height:12px; border-radius:50%;
       background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.9);
-      transform:translate(-50%,-50%) scale(0); opacity:0;
+      transform:translate(-50%,-50%) scale(0); opacity:0; z-index:3;
     }
-    .match-spark--activa { animation: spark-pop .5s ease 1.05s forwards; }
+    .match-spark--activa { animation: spark-pop .5s ease 1.2s forwards; }
     @keyframes spark-pop {
       0%   { transform:translate(-50%,-50%) scale(0); opacity:0; }
       40%  { transform:translate(-50%,-50%) scale(4); opacity:1; }
@@ -86,7 +117,7 @@
     .match-vs {
       font-family:'Bangers','Inter',system-ui,sans-serif; font-weight:400; font-size:2.1rem; color:#fff;
       -webkit-text-stroke:1.5px #000; letter-spacing:.02em; flex-shrink:0;
-      opacity:0; animation: match-vs-in .3s ease 1.1s forwards;
+      opacity:0; animation: match-vs-in .3s ease 1.3s forwards;
     }
     @keyframes match-vs-in { to { opacity:1; } }
 
@@ -202,17 +233,26 @@
 
       <div class="match-swords match-swords--impacto" id="matchSwords">
         <span class="match-spark match-spark--activa"></span>
-        <svg class="match-sword-svg" viewBox="0 0 512 472.178" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="espadasGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#f8fafc"/>
-              <stop offset="45%" stop-color="#e2e8f0"/>
-              <stop offset="55%" stop-color="#cbd5e1"/>
-              <stop offset="100%" stop-color="#f1f5f9"/>
-            </linearGradient>
-          </defs>
-          <path fill="url(#espadasGrad)" d="M476.079 10.208l-48.678 105.717a7.269 7.269 0 01-1.801 2.393L310.365 219.249l74.965 81.314c6.784-2.789 13.816-4.524 20.824-5.189 16.697-1.586 33.257 2.898 46.096 13.656a5.408 5.408 0 01.633 8.188l-33.872 33.873 62.95 70.999c7.948-1.519 16.485.797 22.638 6.949 9.868 9.869 9.868 25.87 0 35.738-9.869 9.868-25.871 9.868-35.739 0a25.383 25.383 0 01-3.383-4.188l-.275.02c-3.468.225-6.874.522-10.533.841-16.808 1.474-38.32 3.354-51.495-1.179-8.702-2.991-15.775-7.738-21.3-14.132-5.425-6.283-9.216-14.003-11.459-23.058-1.38-5.576 2.022-11.221 7.598-12.602 5.576-1.38 11.221 2.024 12.601 7.598 1.455 5.876 3.762 10.71 6.97 14.424 3.11 3.598 7.22 6.317 12.38 8.089l42.865.143.329-9.611-62.131-52.047-31.748 31.748-.338.295a5.396 5.396 0 01-7.603-.633c-10.937-12.878-15.502-29.565-13.905-46.39.677-7.143 2.468-14.311 5.351-21.217l-86.785-76.011-86.783 76.011c2.882 6.906 4.674 14.074 5.351 21.217 1.597 16.825-2.969 33.512-13.905 46.39a5.396 5.396 0 01-7.603.633l-.33-.303-31.749-31.745-62.138 52.052.329 9.611 42.865-.143c5.16-1.772 9.27-4.491 12.38-8.089 3.208-3.714 5.515-8.548 6.97-14.424 1.38-5.574 7.025-8.978 12.601-7.598 5.576 1.381 8.977 7.026 7.597 12.602-2.242 9.055-6.033 16.775-11.458 23.058-5.525 6.394-12.598 11.141-21.301 14.132-13.174 4.533-34.686 2.653-51.494 1.179-3.659-.319-7.065-.616-10.533-.841l-.275-.02a25.434 25.434 0 01-3.383 4.188c-9.868 9.868-25.87 9.868-35.739 0-9.868-9.868-9.868-25.869 0-35.738 6.152-6.152 14.69-8.468 22.638-6.949l62.952-71.002-33.874-33.87a5.408 5.408 0 01.633-8.188c12.838-10.758 29.398-15.242 46.096-13.656 7.008.665 14.039 2.399 20.824 5.188l74.962-81.314L86.4 118.318a7.229 7.229 0 01-1.799-2.394L35.921 10.208A7.195 7.195 0 0145.712.781l106.324 47.593a7.173 7.173 0 012.359 1.695l101.602 110.207L357.599 50.064a7.323 7.323 0 012.365-1.69L466.288.781a7.195 7.195 0 019.791 9.427zM288.195 238.667l-1.66 1.454-6.476 5.674 67.424 65.473 7.517-7.73-66.805-64.871zm-62.43-45.597l5.318-5.769 1.992-2.161L118.827 74.198l-7.517 7.73L225.765 193.07zM409.874 72.999L166.923 308.93l-7.517-7.73L402.357 65.269l7.517 7.73z"/>
-        </svg>
+        <div class="cs-stage">
+          <div class="cs-sword cs-left">
+            <div class="cs-pommel"></div>
+            <div class="cs-hilt"></div>
+            <div class="cs-guard"></div>
+            <div class="cs-iron">
+              <div class="cs-iron-left"></div>
+              <div class="cs-iron-right"></div>
+            </div>
+          </div>
+          <div class="cs-sword cs-right">
+            <div class="cs-pommel"></div>
+            <div class="cs-hilt"></div>
+            <div class="cs-guard"></div>
+            <div class="cs-iron">
+              <div class="cs-iron-left"></div>
+              <div class="cs-iron-right"></div>
+            </div>
+          </div>
+        </div>
       </div>
       <p class="match-vs">VS</p>
 
@@ -536,11 +576,11 @@
           cargarMiAvatar();
           mostrar('screenMatch');
 
-          // Choque de espadas: sonido justo cuando el ícono "cae" en su lugar
-          setTimeout(() => play('/static/match_espadas.mp3'), 1050);
+          // Choque de espadas: sonido justo cuando la espada derecha termina de caer
+          setTimeout(() => play('/static/match_espadas.mp3'), 1200);
 
-          // Espera a que termine toda la animación (0.5s delay + 1s de golpe = 1.5s)
-          // y las deja cruzadas en pantalla 3s más antes de pasar a elegir modo.
+          // Espera a que termine toda la animación (~1.25s) y las deja
+          // cruzadas en pantalla 3s más antes de pasar a elegir modo.
           setTimeout(() => {
             document.getElementById('modoRivalName').textContent = rivalNombre;
             if (esHost) {
@@ -553,7 +593,7 @@
               document.getElementById('modoGrid').style.pointerEvents = 'none';
             }
             mostrar('screenModo');
-          }, 4500);
+          }, 4300);
         }
 
         if (datos.type === 'modo_configurando') {

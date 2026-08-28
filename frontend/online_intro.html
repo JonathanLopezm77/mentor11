@@ -122,6 +122,12 @@
     @keyframes match-vs-in { to { opacity:1; } }
 
     .modo-wrap { flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px 20px; background:#1c1917; }
+    .modo-avatares { display:flex; align-items:center; gap:12px; }
+    .modo-avatar {
+      width:46px; height:46px; border-radius:50%; background:var(--orange-100); border:2px solid var(--orange-500);
+      display:flex; align-items:center; justify-content:center; font-size:1.3rem; overflow:hidden; flex-shrink:0;
+    }
+    .modo-avatar img { width:100%; height:100%; object-fit:cover; }
     .modo-title { font-size:1.05rem; font-weight:800; color:#fff; text-align:center; }
     .modo-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; }
     .modo-card { background:#131110; border:1.5px solid #2b2724; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; font-family:var(--font); transition:border-color .2s,transform .2s,box-shadow .2s; }
@@ -264,7 +270,11 @@
   <!-- Pantalla 4 — Selección de modo -->
   <div class="screen" id="screenModo">
     <div class="modo-wrap">
-      <p class="match-found-badge" style="margin-bottom:4px;">VS <span id="modoRivalName"></span></p>
+      <div class="modo-avatares">
+        <div class="modo-avatar" id="modoAvatarYo"><span>🎓</span></div>
+        <p class="match-found-badge">VS <span id="modoRivalName"></span></p>
+        <div class="modo-avatar" id="modoAvatarRival"><span>🎓</span></div>
+      </div>
       <p class="modo-title" id="modoTitulo">Elige el modo de juego</p>
       <div class="modo-grid" id="modoGrid" style="grid-template-columns:1fr 1fr;max-width:260px;margin:0 auto;">
         <button class="modo-card" data-modo="aleatorio"><span class="modo-card__icon">🎲</span><span class="modo-card__label">Aleatorio</span></button>
@@ -360,6 +370,7 @@
     let misPoderes = {};
     let datosMode = null;
     let miAvatarCargado = false;
+    let timerTransicionModo = null;
 
     async function cargarMiAvatar() {
       if (miAvatarCargado) return;
@@ -368,7 +379,9 @@
         if (!res.ok) return;
         const data = await res.json();
         if (data.imagen_src) {
-          document.getElementById('myAvatar').innerHTML = `<img src="${data.imagen_src}" alt="Mi avatar" />`;
+          const html = `<img src="${data.imagen_src}" alt="Mi avatar" />`;
+          document.getElementById('myAvatar').innerHTML = html;
+          document.getElementById('modoAvatarYo').innerHTML = html;
           miAvatarCargado = true;
         }
       } catch (_) {}
@@ -570,8 +583,9 @@
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
           if (rivalAvatar) {
-            document.getElementById('rivalAvatar').innerHTML =
-              `<img src="${rivalAvatar}" alt="Avatar rival" />`;
+            const rivalHtml = `<img src="${rivalAvatar}" alt="Avatar rival" />`;
+            document.getElementById('rivalAvatar').innerHTML = rivalHtml;
+            document.getElementById('modoAvatarRival').innerHTML = rivalHtml;
           }
           cargarMiAvatar();
           mostrar('screenMatch');
@@ -581,7 +595,11 @@
 
           // Espera a que termine toda la animación (~1.25s) y las deja
           // cruzadas en pantalla 3s más antes de pasar a elegir modo.
-          setTimeout(() => {
+          // Si el rival elige más rápido y ya llega mode_selected/modo_configurando
+          // antes de que se cumpla este tiempo, este timer se cancela para no
+          // devolver al jugador a esta pantalla (ver más abajo).
+          timerTransicionModo = setTimeout(() => {
+            timerTransicionModo = null;
             document.getElementById('modoRivalName').textContent = rivalNombre;
             if (esHost) {
               document.getElementById('modoTitulo').textContent = 'Elige el modo de juego';
@@ -597,7 +615,10 @@
         }
 
         if (datos.type === 'modo_configurando') {
-          // El anfitrión eligió Libre y está configurando — mostrar espera al rival
+          // El anfitrión eligió Libre y está configurando — mostrar espera al rival.
+          // Cancela la transición pendiente a screenModo para que no nos devuelva ahí.
+          clearTimeout(timerTransicionModo);
+          timerTransicionModo = null;
           if (!esHost) {
             document.getElementById('esperandoTitulo').textContent = rivalNombre + ' está configurando...';
             mostrar('screenEsperandoConfig');
@@ -605,6 +626,11 @@
         }
 
         if (datos.type === 'mode_selected') {
+          // El modo ya se eligió (a veces antes de que termine nuestra propia
+          // animación de espadas) — cancela esa transición pendiente para no
+          // quedar atrapados de vuelta en la pantalla de elegir modo.
+          clearTimeout(timerTransicionModo);
+          timerTransicionModo = null;
           sessionStorage.setItem('online_state', JSON.stringify({
             room_id: datos.room_id,
             rival: rivalNombre,

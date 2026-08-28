@@ -5,10 +5,13 @@ Grace period de 15s para reconexión cuando el jugador navega a pregunta_online.
 """
 
 import asyncio
+import base64
+import io
 import uuid
 from typing import Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from PIL import Image
 from sqlalchemy import select
 
 from app.core.security import decode_token
@@ -18,13 +21,39 @@ from app.services import online_state
 
 router = APIRouter()
 
+AVATAR_THUMB_SIZE = 120
+
+
+def _redimensionar_avatar_sync(data_uri: str) -> str:
+    """Reduce un avatar (tipicamente un PNG de 500x500 compuesto en canvas,
+    varias decenas de KB en base64) a una miniatura liviana antes de
+    mandarlo por WebSocket. El texto completo del avatar original viajando
+    en cada mensaje de match_found es lento/fragil en conexiones moviles.
+    Es sincrona/bloqueante (Pillow) — se corre en un hilo aparte."""
+    try:
+        _, b64data = data_uri.split(",", 1)
+        raw = base64.b64decode(b64data)
+        img = Image.open(io.BytesIO(raw)).convert("RGBA")
+        img.thumbnail((AVATAR_THUMB_SIZE, AVATAR_THUMB_SIZE), Image.LANCZOS)
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG", optimize=True)
+        nuevo_b64 = base64.b64encode(buffer.getvalue()).decode("ascii")
+        return f"data:image/png;base64,{nuevo_b64}"
+    except Exception:
+        return data_uri  # si algo falla, se manda el original como respaldo
+
 
 async def _obtener_avatar(usuario_id: int) -> str | None:
     async with AsyncSessionLocal() as db:
         resultado = await db.execute(
             select(Avatar.imagen_src).where(Avatar.usuario_id == usuario_id)
         )
-        return resultado.scalar_one_or_none()
+        imagen_src = resultado.scalar_one_or_none()
+
+    if not imagen_src or not imagen_src.startswith("data:image"):
+        return imagen_src
+
+    return await asyncio.to_thread(_redimensionar_avatar_sync, imagen_src)
 
 _cola: list[dict] = []
 _cola_lock = asyncio.Lock()

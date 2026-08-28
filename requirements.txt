@@ -36,3 +36,6 @@ python-dateutil==2.9.0
 resend==2.26.0
 cloudinary==1.44.1
 openpyxl==3.1.5
+
+# Procesamiento de imagenes (miniaturas de avatar para el modo Online)
+Pillow==10.4.0

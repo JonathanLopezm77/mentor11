@@ -240,6 +240,13 @@
   </div>
 
   <script>
+    // ── Sonidos de la ruleta ──────────────────────────────────
+    const SFX = {};
+    [['/static/ruleta_giro.mp3', .5], ['/static/ruleta_cae.mp3', .6], ['/static/ruleta_listo.mp3', .6]].forEach(([src, vol]) => {
+      const a = new Audio(src); a.preload = 'auto'; a.volume = vol; SFX[src] = a;
+    });
+    const play = (src) => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(() => {}); };
+
     const API = '/api/v1';
     const token = localStorage.getItem('access_token');
     if (!token) location.href = '/';
@@ -396,12 +403,14 @@
     function mostrarRuleta() {
       mostrar('screenRuleta');
       document.getElementById('continuarPartidaBtn').classList.remove('ruleta-continuar--listo');
+      play('/static/ruleta_giro.mp3');
 
       const ids = Object.keys(misPoderes);
       const promesas = ids.map((poderId, i) => {
         document.getElementById('reelNombre' + i).textContent = '';
         document.getElementById('reelNombre' + i).classList.remove('ruleta-poder__name--listo');
         return crearReel(document.getElementById('reelStrip' + i), poderId, i * 300).then(() => {
+          play('/static/ruleta_cae.mp3');
           const nombreEl = document.getElementById('reelNombre' + i);
           nombreEl.textContent = NOMBRES_PODER[poderId] ?? poderId;
           nombreEl.classList.add('ruleta-poder__name--listo');
@@ -409,6 +418,7 @@
       });
 
       Promise.all(promesas).then(() => {
+        play('/static/ruleta_listo.mp3');
         document.getElementById('continuarPartidaBtn').classList.add('ruleta-continuar--listo');
       });
     }

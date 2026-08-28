@@ -260,10 +260,27 @@
     // ── Sonidos ────────────────────────────────────────────────
     const SFX = {};
     [['/static/correcta.mp3',.8],['/static/error.mp3',.8],
-     ['/static/sig_pregun.mp3',.7],['/static/arcade_stat.mp3',.6]].forEach(([src,vol]) => {
+     ['/static/sig_pregun.mp3',.7],['/static/arcade_stat.mp3',.6],
+     ['/static/poder_cambiarorden.mp3',.6],['/static/poder_mitadmitad.mp3',.6],
+     ['/static/poder_x2.mp3',.6],['/static/poder_robarp.mp3',.6],
+     ['/static/poder_75.mp3',.6],['/static/poder_devolverrival2.mp3',.6],
+     ['/static/poder_equivocar.mp3',.6],['/static/poder_congelar.mp3',.6]].forEach(([src,vol]) => {
       const a = new Audio(src); a.preload = 'auto'; a.volume = vol; SFX[src] = a;
     });
     const play = src => { const a = SFX[src]; if (!a) return; a.currentTime = 0; a.play().catch(()=>{}); };
+
+    // Sonido de cada poder — el mismo suena para quien lo activa y para quien lo recibe
+    const SONIDOS_PODER = {
+      cambiar_orden: '/static/poder_cambiarorden.mp3',
+      mitad_mitad: '/static/poder_mitadmitad.mp3',
+      doble_puntos: '/static/poder_x2.mp3',
+      robar_poder: '/static/poder_robarp.mp3',
+      setenta_cinco: '/static/poder_75.mp3',
+      devolver_rival_2: '/static/poder_devolverrival2.mp3',
+      equivocarse: '/static/poder_equivocar.mp3',
+      congelar: '/static/poder_congelar.mp3',
+    };
+    const playPoder = (poderId) => { const src = SONIDOS_PODER[poderId]; if (src) play(src); };
 
     // ── Poderes: iconos y nombres ────────────────────────────────
     const ICONOS_PODER = {
@@ -390,6 +407,7 @@
         });
         poderes.mitad_mitad = 0;
         renderPoderes();
+        playPoder('mitad_mitad');
         mostrarToast('✂️ ¡Mitad y mitad! Se eliminaron 2 opciones incorrectas.');
       } catch (_) {}
     }
@@ -414,6 +432,7 @@
         const data = await res.json();
         poderes.setenta_cinco = 0;
         renderPoderes();
+        playPoder('setenta_cinco');
         mostrarToast('🎯 ¡75% activado! El sistema respondió por ti.');
         procesarRespuesta(data, data.opcion_elegida_id);
       } catch (_) {
@@ -434,6 +453,7 @@
 
     function aplicarOrdenAlterado(duracionS) {
       ordenAlteradoHasta = Date.now() + duracionS * 1000;
+      playPoder('cambiar_orden');
       mostrarToast('🔀 ¡Tu rival desordenó tus respuestas por ' + duracionS + 's!');
       reordenarOpciones();
       if (ordenIntervalId) clearInterval(ordenIntervalId);
@@ -451,6 +471,7 @@
       congeladoHasta = Date.now() + duracionS * 1000;
       document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
       document.getElementById('siguienteBtn').disabled = true;
+      playPoder('congelar');
       mostrarToast('❄️ ¡Tu rival te congeló por ' + duracionS + 's!');
       const intervalo = setInterval(() => {
         if (Date.now() >= congeladoHasta) {
@@ -467,6 +488,7 @@
       const aRepetir = preguntas.slice(actual - disponibles, actual).map((p) => ({ ...p }));
       preguntas = preguntas.concat(aRepetir);
       guardarProgreso();
+      playPoder('devolver_rival_2');
       mostrarToast('↩️ ¡Tu rival te hizo repetir ' + disponibles + ' pregunta' + (disponibles > 1 ? 's' : '') + '!');
     }
 
@@ -531,6 +553,7 @@
         if (data.type === 'poder_usado') {
           poderes[data.poder] = 0;
           renderPoderes();
+          playPoder(data.poder);
         }
 
         if (data.type === 'poder_error') {
@@ -545,6 +568,7 @@
         if (data.type === 'inventario_actualizado') {
           poderes = data.poderes;
           renderPoderes();
+          playPoder('robar_poder');
           if (data.robado) mostrarToast('🎯 ¡Le robaste "' + (NOMBRES_PODER[data.robado] || data.robado) + '" a tu rival!');
           else mostrarToast('⚠️ ¡Tu rival te robó un poder!');
         }

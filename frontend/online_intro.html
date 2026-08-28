@@ -271,7 +271,6 @@
   <div class="screen" id="screenModo">
     <div class="modo-wrap">
       <div class="modo-avatares">
-        <div class="modo-avatar" id="modoAvatarYo"><span>🎓</span></div>
         <p class="match-found-badge">VS <span id="modoRivalName"></span></p>
         <div class="modo-avatar" id="modoAvatarRival"><span>🎓</span></div>
       </div>
@@ -372,6 +371,21 @@
     let miAvatarCargado = false;
     let timerTransicionModo = null;
 
+    // Pinta un avatar de forma segura: precarga la imagen y solo la muestra
+    // si termina de cargar bien. Si falla o llega corrupta (puede pasar con
+    // el avatar de 500x500px en base64 viajando por WebSocket en una
+    // conexión móvil lenta), se queda con el ícono por defecto en vez de
+    // dejar el espacio en blanco.
+    function pintarAvatarSeguro(elId, src) {
+      const el = document.getElementById(elId);
+      if (!el || !src || !src.startsWith('data:image')) return;
+      const img = new Image();
+      img.alt = 'Avatar';
+      img.onload = () => { el.innerHTML = ''; el.appendChild(img); };
+      img.onerror = () => {}; // se queda con el placeholder que ya estaba
+      img.src = src;
+    }
+
     async function cargarMiAvatar() {
       if (miAvatarCargado) return;
       try {
@@ -379,9 +393,7 @@
         if (!res.ok) return;
         const data = await res.json();
         if (data.imagen_src) {
-          const html = `<img src="${data.imagen_src}" alt="Mi avatar" />`;
-          document.getElementById('myAvatar').innerHTML = html;
-          document.getElementById('modoAvatarYo').innerHTML = html;
+          pintarAvatarSeguro('myAvatar', data.imagen_src);
           miAvatarCargado = true;
         }
       } catch (_) {}
@@ -582,11 +594,8 @@
           esHost = datos.is_host;
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
-          if (rivalAvatar) {
-            const rivalHtml = `<img src="${rivalAvatar}" alt="Avatar rival" />`;
-            document.getElementById('rivalAvatar').innerHTML = rivalHtml;
-            document.getElementById('modoAvatarRival').innerHTML = rivalHtml;
-          }
+          pintarAvatarSeguro('rivalAvatar', rivalAvatar);
+          pintarAvatarSeguro('modoAvatarRival', rivalAvatar);
           cargarMiAvatar();
           mostrar('screenMatch');
 

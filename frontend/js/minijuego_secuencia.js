@@ -6,7 +6,7 @@
  */
 
 const MJ_DURACION_MS = 20000;
-const MJ_MUESTRA_MS = 4000;
+const MJ_MUESTRA_MS = 800;
 
 function esperar(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -56,26 +56,12 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
   }
 
   function mostrarSecuenciaCompleta(secuencia) {
-    const ordenesPorTile = new Map();
-    secuencia.forEach((idx, pos) => {
-      if (!ordenesPorTile.has(idx)) ordenesPorTile.set(idx, []);
-      ordenesPorTile.get(idx).push(pos + 1);
-    });
-    ordenesPorTile.forEach((ordenes, idx) => {
-      tiles[idx].classList.add('mj-tile--lit');
-      const badge = document.createElement('span');
-      badge.className = 'mj-tile__orden';
-      badge.textContent = ordenes.join(', ');
-      tiles[idx].appendChild(badge);
-    });
+    const unicos = new Set(secuencia);
+    unicos.forEach((idx) => tiles[idx].classList.add('mj-tile--lit'));
   }
 
   function ocultarSecuenciaCompleta() {
-    tiles.forEach((t) => {
-      t.classList.remove('mj-tile--lit');
-      const badge = t.querySelector('.mj-tile__orden');
-      if (badge) badge.remove();
-    });
+    tiles.forEach((t) => t.classList.remove('mj-tile--lit'));
   }
 
   let restante = MJ_DURACION_MS;

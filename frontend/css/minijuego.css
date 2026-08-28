@@ -104,24 +104,6 @@
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-.mj-tile__orden {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.55);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
 .mj-tile:active {
   transform: scale(0.95);
 }

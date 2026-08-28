@@ -46,47 +46,61 @@
     .match-player__name--rival { animation-delay:.15s; }
     @keyframes player-entra { from{opacity:0;transform:scale(.6) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
-    .match-swords { position:relative; width:190px; height:90px; margin:2px 0; }
+    .match-swords { position:relative; width:220px; height:110px; margin:4px 0; }
+    .match-sword-svg { width:76px; height:75px; display:block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
     .match-sword {
-      position:absolute; top:50%; left:50%; font-size:3.6rem; line-height:1; opacity:0;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+      position:absolute; top:50%; left:50%; opacity:0;
     }
-    .match-sword--left  { animation: sword-clash-left 1.2s cubic-bezier(.3,.6,.35,1.4) .6s forwards; }
-    .match-sword--right { animation: sword-clash-right 1.2s cubic-bezier(.3,.6,.35,1.4) .6s forwards; }
+    .match-sword--left {
+      animation:
+        sword-clash-left 1.4s cubic-bezier(.28,.62,.3,1.35) .6s forwards,
+        sword-glow 1.7s ease-in-out 2.2s infinite;
+    }
+    .match-sword--right {
+      animation:
+        sword-clash-right 1.4s cubic-bezier(.28,.62,.3,1.35) .6s forwards,
+        sword-glow 1.7s ease-in-out 2.2s infinite;
+    }
     @keyframes sword-clash-left {
-      0%   { transform: translate(calc(-50% - 140px), -50%) rotate(-75deg); opacity: 0; }
-      55%  { transform: translate(-50%, -50%) rotate(-38deg); opacity: 1; }
-      72%  { transform: translate(-50%, -50%) rotate(-52deg); }
+      0%   { transform: translate(calc(-50% - 160px), -50%) rotate(-80deg); opacity: 0; }
+      55%  { transform: translate(-50%, -50%) rotate(-36deg); opacity: 1; }
+      70%  { transform: translate(-50%, -50%) rotate(-53deg); }
+      85%  { transform: translate(-50%, -50%) rotate(-42deg); }
       100% { transform: translate(-50%, -50%) rotate(-45deg); }
     }
     @keyframes sword-clash-right {
-      0%   { transform: translate(calc(-50% + 140px), -50%) rotate(75deg); opacity: 0; }
-      55%  { transform: translate(-50%, -50%) rotate(38deg); opacity: 1; }
-      72%  { transform: translate(-50%, -50%) rotate(52deg); }
+      0%   { transform: translate(calc(-50% + 160px), -50%) rotate(80deg); opacity: 0; }
+      55%  { transform: translate(-50%, -50%) rotate(36deg); opacity: 1; }
+      70%  { transform: translate(-50%, -50%) rotate(53deg); }
+      85%  { transform: translate(-50%, -50%) rotate(42deg); }
       100% { transform: translate(-50%, -50%) rotate(45deg); }
     }
-    .match-swords--impacto { animation: swords-shake .3s ease 1.26s; }
+    @keyframes sword-glow {
+      0%, 100% { filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)) drop-shadow(0 0 0 rgba(255,255,255,0)); }
+      50%      { filter: drop-shadow(0 3px 6px rgba(0,0,0,.55)) drop-shadow(0 0 9px rgba(255,255,255,.65)); }
+    }
+    .match-swords--impacto { animation: swords-shake .32s ease 1.37s; }
     @keyframes swords-shake {
       0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      50% { transform: translateX(4px); }
-      75% { transform: translateX(-2px); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
     }
     .match-spark {
-      position:absolute; top:50%; left:50%; width:10px; height:10px; border-radius:50%;
+      position:absolute; top:50%; left:50%; width:12px; height:12px; border-radius:50%;
       background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.9);
       transform:translate(-50%,-50%) scale(0); opacity:0;
     }
-    .match-spark--activa { animation: spark-pop .45s ease 1.2s forwards; }
+    .match-spark--activa { animation: spark-pop .5s ease 1.32s forwards; }
     @keyframes spark-pop {
       0%   { transform:translate(-50%,-50%) scale(0); opacity:0; }
-      45%  { transform:translate(-50%,-50%) scale(3.2); opacity:1; }
-      100% { transform:translate(-50%,-50%) scale(5); opacity:0; }
+      40%  { transform:translate(-50%,-50%) scale(4); opacity:1; }
+      100% { transform:translate(-50%,-50%) scale(6.5); opacity:0; }
     }
     .match-vs {
-      font-family:'Bangers','Inter',system-ui,sans-serif; font-weight:400; font-size:1.9rem; color:#fff;
+      font-family:'Bangers','Inter',system-ui,sans-serif; font-weight:400; font-size:2.1rem; color:#fff;
       -webkit-text-stroke:1.5px #000; letter-spacing:.02em; flex-shrink:0;
-      opacity:0; animation: match-vs-in .3s ease 1.3s forwards;
+      opacity:0; animation: match-vs-in .3s ease 1.45s forwards;
     }
     @keyframes match-vs-in { to { opacity:1; } }
 
@@ -202,8 +216,32 @@
 
       <div class="match-swords match-swords--impacto" id="matchSwords">
         <span class="match-spark match-spark--activa"></span>
-        <span class="match-sword match-sword--left">🗡️</span>
-        <span class="match-sword match-sword--right">🗡️</span>
+        <span class="match-sword match-sword--left">
+          <svg class="match-sword-svg" viewBox="0 0 122.88 121.66" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hojaGradL" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f8fafc"/>
+                <stop offset="45%" stop-color="#cbd5e1"/>
+                <stop offset="55%" stop-color="#94a3b8"/>
+                <stop offset="100%" stop-color="#e2e8f0"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#hojaGradL)" stroke="#475569" stroke-width="1.5" d="M7.21,96.55l2.84,2.84l23.32-23.32l-4-4c-3.38-3.38-4.05-8.48-2.01-12.54l7.9,7.9l66.52-66.52 c0.3-0.3,0.71-0.45,1.11-0.42L121.4,0c0.8-0.02,1.46,0.61,1.48,1.41c0,0.03,0,0.06,0,0.09h0l-0.7,18.41 c-0.01,0.38-0.17,0.72-0.42,0.97l0,0L55.24,87.41l7.05,7.05c-4.06,2.04-9.16,1.37-12.54-2.01l-4-4l-23.32,23.32l2.68,2.68 c1.64,1.64,1.64,4.33,0,5.98l0,0c-1.64,1.64-4.33,1.64-5.98,0L1.23,102.52c-1.64-1.64-1.64-4.33,0-5.98h0 C2.88,94.9,5.57,94.9,7.21,96.55L7.21,96.55z M45.22,75.4l60.91-60.91l0,0c0.56-0.56,1.48-0.57,2.05,0 c0.57,0.56,0.57,1.48,0.01,2.05l0,0l0,0L47.27,77.45l6.91,6.91l65.13-65.13l0.62-16.29l-16.49,0.43L38.31,68.49L45.22,75.4 L45.22,75.4z"/>
+          </svg>
+        </span>
+        <span class="match-sword match-sword--right">
+          <svg class="match-sword-svg" viewBox="0 0 122.88 121.66" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hojaGradR" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f8fafc"/>
+                <stop offset="45%" stop-color="#cbd5e1"/>
+                <stop offset="55%" stop-color="#94a3b8"/>
+                <stop offset="100%" stop-color="#e2e8f0"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#hojaGradR)" stroke="#475569" stroke-width="1.5" d="M7.21,96.55l2.84,2.84l23.32-23.32l-4-4c-3.38-3.38-4.05-8.48-2.01-12.54l7.9,7.9l66.52-66.52 c0.3-0.3,0.71-0.45,1.11-0.42L121.4,0c0.8-0.02,1.46,0.61,1.48,1.41c0,0.03,0,0.06,0,0.09h0l-0.7,18.41 c-0.01,0.38-0.17,0.72-0.42,0.97l0,0L55.24,87.41l7.05,7.05c-4.06,2.04-9.16,1.37-12.54-2.01l-4-4l-23.32,23.32l2.68,2.68 c1.64,1.64,1.64,4.33,0,5.98l0,0c-1.64,1.64-4.33,1.64-5.98,0L1.23,102.52c-1.64-1.64-1.64-4.33,0-5.98h0 C2.88,94.9,5.57,94.9,7.21,96.55L7.21,96.55z M45.22,75.4l60.91-60.91l0,0c0.56-0.56,1.48-0.57,2.05,0 c0.57,0.56,0.57,1.48,0.01,2.05l0,0l0,0L47.27,77.45l6.91,6.91l65.13-65.13l0.62-16.29l-16.49,0.43L38.31,68.49L45.22,75.4 L45.22,75.4z"/>
+          </svg>
+        </span>
       </div>
       <p class="match-vs">VS</p>
 
@@ -528,9 +566,10 @@
           mostrar('screenMatch');
 
           // Choque de espadas: sonido justo cuando se cruzan en el centro
-          setTimeout(() => play('/static/match_espadas.mp3'), 1260);
+          setTimeout(() => play('/static/match_espadas.mp3'), 1370);
 
-          // Espera a que termine toda la animación (0.6s delay + 1.2s de giro) y 1s más
+          // Espera a que termine toda la animación (0.6s delay + 1.4s de giro = 2.0s)
+          // y las deja cruzadas en pantalla 3s más antes de pasar a elegir modo.
           setTimeout(() => {
             document.getElementById('modoRivalName').textContent = rivalNombre;
             if (esHost) {
@@ -543,7 +582,7 @@
               document.getElementById('modoGrid').style.pointerEvents = 'none';
             }
             mostrar('screenModo');
-          }, 2800);
+          }, 5000);
         }
 
         if (datos.type === 'modo_configurando') {

@@ -235,7 +235,7 @@
       </div>
     </div>
     <div class="libre-footer">
-      <button class="libre-cta ruleta-continuar" id="continuarPartidaBtn">Comenzar partida →</button>
+      <button class="libre-cta ruleta-continuar" id="continuarPartidaBtn">Listo ✓</button>
     </div>
   </div>
 
@@ -402,7 +402,10 @@
 
     function mostrarRuleta() {
       mostrar('screenRuleta');
-      document.getElementById('continuarPartidaBtn').classList.remove('ruleta-continuar--listo');
+      const btn = document.getElementById('continuarPartidaBtn');
+      btn.classList.remove('ruleta-continuar--listo');
+      btn.disabled = false;
+      btn.textContent = 'Listo ✓';
       play('/static/ruleta_giro.mp3');
 
       const ids = Object.keys(misPoderes);
@@ -424,7 +427,10 @@
     }
 
     document.getElementById('continuarPartidaBtn').addEventListener('click', () => {
-      location.href = 'pregunta_online.html';
+      const btn = document.getElementById('continuarPartidaBtn');
+      btn.disabled = true;
+      btn.textContent = 'Esperando a tu rival…';
+      ws.send(JSON.stringify({ type: 'listo' }));
     });
 
     document.getElementById('confirmarLibreBtn').addEventListener('click', () => {
@@ -492,6 +498,15 @@
             username: miNombre,
           }));
           mostrarRuleta();
+        }
+
+        if (datos.type === 'rival_listo') {
+          const btn = document.getElementById('continuarPartidaBtn');
+          if (!btn.disabled) btn.textContent = 'Listo ✓ (tu rival ya está listo)';
+        }
+
+        if (datos.type === 'iniciar_partida') {
+          location.href = 'pregunta_online.html';
         }
 
         if (datos.type === 'search_cancelled') {

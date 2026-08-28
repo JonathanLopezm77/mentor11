@@ -499,9 +499,35 @@
     let actual      = _progreso?.actual      ?? 0;
     let correctas   = _progreso?.correctas   ?? 0;
     let incorrectas = _progreso?.incorrectas ?? 0;
+    let materiaIds  = _progreso?.materiaIds  ?? null;
+
+    // Meta: cuántas respuestas correctas hacen falta para llenar la barra.
+    // No hay límite de preguntas — se siguen cargando más hasta llegar a la meta.
+    const meta = onlineState.cantidad ?? 10;
+    let vistasIds = new Set(_progreso?.vistasIds ?? []);
+    let cargandoMas = false;
 
     function guardarProgreso() {
-      sessionStorage.setItem('online_progreso', JSON.stringify({ sesionId, preguntas, actual, correctas, incorrectas }));
+      sessionStorage.setItem('online_progreso', JSON.stringify({
+        sesionId, preguntas, actual, correctas, incorrectas, materiaIds, vistasIds: [...vistasIds],
+      }));
+    }
+
+    async function cargarMasPreguntas() {
+      if (cargandoMas || !materiaIds) return;
+      cargandoMas = true;
+      try {
+        const excluir = [...vistasIds].slice(-60).join(',');
+        const url = `${API}/juego/preguntas?materia_ids=${materiaIds}&cantidad=15` + (excluir ? `&excluir_ids=${excluir}` : '');
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const nuevas = await res.json();
+          for (const p of nuevas) {
+            if (!vistasIds.has(p.id)) { preguntas.push(p); vistasIds.add(p.id); }
+          }
+        }
+      } catch (_) {}
+      cargandoMas = false;
     }
 
     // ── WebSocket ─────────────────────────────────────────────
@@ -591,19 +617,6 @@
       ws.onclose = () => {};
     }
 
-    function enviarProgreso() {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      const total = preguntas.length;
-      const pct = total > 0 ? Math.round((actual / total) * 100) : 0;
-      ws.send(JSON.stringify({ type: 'progress', value: pct }));
-      document.getElementById('barYo').style.width = pct + '%';
-    }
-
-    function enviarFinish() {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: 'finish' }));
-    }
-
     // ── Cargar materias y preguntas ───────────────────────────
     async function init() {
       renderPoderes();
@@ -611,19 +624,15 @@
 
       // Si hay progreso guardado (recarga), restaurar directamente
       if (_progreso && preguntas.length > 0) {
-        const pct = preguntas.length > 0 ? Math.round((correctas / preguntas.length) * 100) : 0;
+        const pct = Math.min(100, Math.round((correctas / meta) * 100));
         document.getElementById('barYo').style.width = pct + '%';
         mostrarPregunta();
         return;
       }
 
       try {
-        let materiaIds;
-        let cantidad;
-
         if (modo === 'libre' && onlineState.materia_ids) {
           materiaIds = onlineState.materia_ids.join(',');
-          cantidad = onlineState.cantidad ?? 10;
         } else {
           const matRes = await fetch(`${API}/juego/materias`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -631,7 +640,6 @@
           if (!matRes.ok) throw new Error('materias');
           const materias = await matRes.json();
           materiaIds = materias.map(m => m.id).join(',');
-          cantidad = 10;
         }
 
         // Crear sesión
@@ -641,20 +649,15 @@
           body: JSON.stringify({
             modo_juego: modo === 'libre' ? 'libre' : 'aleatorio',
             materia_ids: materiaIds.split(',').map(Number),
-            total_preguntas: cantidad,
+            total_preguntas: meta,
           })
         });
         if (!sesRes.ok) throw new Error('sesion');
         const sesData = await sesRes.json();
         sesionId = sesData.sesion_id;
 
-        // Cargar preguntas
-        const pRes = await fetch(
-          `${API}/juego/preguntas?materia_ids=${materiaIds}&cantidad=${cantidad}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!pRes.ok) throw new Error('preguntas');
-        preguntas = await pRes.json();
+        // Cargar el primer lote de preguntas (no hay límite total — se piden más sobre la marcha)
+        await cargarMasPreguntas();
 
         if (!preguntas.length) {
           document.getElementById('enunciado').textContent = 'No hay preguntas disponibles.';
@@ -671,14 +674,20 @@
 
     // ── Mostrar pregunta ──────────────────────────────────────
     function mostrarPregunta() {
-      if (actual >= preguntas.length) {
+      if (correctas >= meta) {
         finalizarPartida();
+        return;
+      }
+      if (preguntas.length - actual <= 4) cargarMasPreguntas();
+      if (actual >= preguntas.length) {
+        document.getElementById('enunciado').textContent = 'Cargando siguiente pregunta...';
+        setTimeout(mostrarPregunta, 500);
         return;
       }
       respondida = false;
 
       const p = preguntas[actual];
-      document.getElementById('contador').textContent = `${actual + 1} / ${preguntas.length}`;
+      document.getElementById('contador').textContent = `${correctas} / ${meta} ✔`;
       document.getElementById('enunciado').textContent = p.enunciado;
       document.getElementById('explicacion').hidden = true;
       document.getElementById('explicacion').textContent = '';
@@ -721,8 +730,8 @@
       }
       if (data.proteccion_usada) mostrarToast('🤞 ¡Protección activada! Ese error no cuenta.');
 
-      // Barra llena según respuestas correctas
-      const pct = Math.round((correctas / preguntas.length) * 100);
+      // Barra llena según respuestas correctas, hasta la meta
+      const pct = Math.min(100, Math.round((correctas / meta) * 100));
       document.getElementById('barYo').style.width = pct + '%';
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'progress', value: pct }));
@@ -736,16 +745,16 @@
         exp.hidden = false;
       }
 
-      const siguienteIdx = actual + 1;
-      if (siguienteIdx >= preguntas.length) {
-        document.getElementById('siguienteBtn').textContent = 'Ver resultado';
-        document.getElementById('siguienteBtn').hidden = false;
-      } else {
-        if (contoComoCorrecta) {
-          setTimeout(() => { actual++; guardarProgreso(); mostrarPregunta(); }, 900);
-        } else {
+      if (contoComoCorrecta) {
+        if (correctas >= meta) {
+          document.getElementById('siguienteBtn').textContent = 'Ver resultado';
           document.getElementById('siguienteBtn').hidden = false;
+        } else {
+          setTimeout(() => { actual++; guardarProgreso(); mostrarPregunta(); }, 900);
         }
+      } else {
+        document.getElementById('siguienteBtn').textContent = 'Siguiente →';
+        document.getElementById('siguienteBtn').hidden = false;
       }
     }
 
@@ -818,11 +827,7 @@
       play('/static/sig_pregun.mp3');
       actual++;
       guardarProgreso();
-      if (actual >= preguntas.length) {
-        finalizarPartida();
-      } else {
-        mostrarPregunta();
-      }
+      mostrarPregunta();
     });
 
     // ── Botón Volver ──────────────────────────────────────────

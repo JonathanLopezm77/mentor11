@@ -186,6 +186,18 @@ async def online_ws(websocket: WebSocket):
                             "cantidad": cantidad,
                         })
 
+            if tipo == "listo" and sala_id:
+                sala = _salas.get(sala_id)
+                if sala:
+                    sala.setdefault("listos", set()).add(usuario_id)
+                    if len(sala["listos"]) >= 2:
+                        for p in sala["jugadores"]:
+                            await _enviar(p["ws"], {"type": "iniciar_partida"})
+                    else:
+                        for p in sala["jugadores"]:
+                            if p["usuario_id"] != usuario_id:
+                                await _enviar(p["ws"], {"type": "rival_listo"})
+
             if tipo == "configurando_libre" and sala_id:
                 # El anfitrión abrió la pantalla de config — avisar al rival
                 sala = _salas.get(sala_id)

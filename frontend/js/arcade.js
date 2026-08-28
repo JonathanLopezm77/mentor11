@@ -39,6 +39,23 @@ bgMusic.play().catch(() => {
 let sesionId = null, materiaIds = [], preguntas = [], actual = 0;
 let vidas = 3, puntaje = 0, correctas = 0;
 let vistasIds = new Set(), cargandoMas = false, juegoTerminado = false;
+let preguntasRespondidas = 0;
+
+function avanzarPregunta() {
+  actual++;
+  preguntasRespondidas++;
+  if (preguntasRespondidas % 5 === 0 && typeof iniciarMinijuegoSecuencia === 'function') {
+    iniciarMinijuegoSecuencia(
+      () => mostrarPregunta(),
+      () => {
+        puntaje += 2;
+        document.getElementById('arcadeScore').textContent = puntaje;
+      }
+    );
+  } else {
+    mostrarPregunta();
+  }
+}
 
 async function init() {
   try {
@@ -168,7 +185,7 @@ async function responder(opcionId, preguntaId) {
       puntaje += 10; correctas++;
       document.getElementById('arcadeScore').textContent = puntaje;
       playSfx('/static/correcta.mp3');
-      setTimeout(() => { actual++; mostrarPregunta(); }, 900);
+      setTimeout(avanzarPregunta, 900);
     } else {
       playSfx('/static/error.mp3');
       perderVida();
@@ -242,7 +259,7 @@ async function mostrarGameOver() {
   location.href = 'resultado_arcade.html';
 }
 
-document.getElementById('siguienteBtn').addEventListener('click', () => { playSfx('/static/bop.mp3'); actual++; mostrarPregunta(); });
+document.getElementById('siguienteBtn').addEventListener('click', () => { playSfx('/static/bop.mp3'); avanzarPregunta(); });
 document.getElementById('arcadeBackBtn').addEventListener('click', () => {
   playSfx('/static/back.mp3');
   const finalize = sesionId ? fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => { }) : Promise.resolve();

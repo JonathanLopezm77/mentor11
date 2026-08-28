@@ -68,24 +68,24 @@
     .ruleta-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:32px 24px; }
     .ruleta-title { font-size:1.25rem; font-weight:800; color:var(--gray-900); text-align:center; }
     .ruleta-subtitle { font-size:.85rem; color:var(--gray-500); text-align:center; margin-top:-14px; }
-    .ruleta-reeles { display:flex; gap:14px; }
-    .ruleta-reel-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .ruleta-reeles { display:flex; gap:18px; }
+    .ruleta-reel-col { display:flex; flex-direction:column; align-items:center; gap:10px; }
     .reel {
       position: relative;
-      width: 68px;
-      height: 192px;
+      width: 96px;
+      height: 270px;
       overflow: hidden;
-      border-radius: 14px;
+      border-radius: 18px;
       background: #131110;
       box-shadow: inset 0 0 0 2px #2b2724, 0 6px 18px rgba(0,0,0,.25);
     }
     .reel__strip { position: absolute; left: 0; top: 0; width: 100%; }
-    .reel__item { height: 64px; display: flex; align-items: center; justify-content: center; }
-    .reel__item img { width: 42px; height: 42px; object-fit: contain; }
-    .reel__linea { position: absolute; left: 6px; right: 6px; height: 0; border-top: 1.5px dashed rgba(255,255,255,.28); pointer-events: none; }
-    .reel__linea--arriba { top: 64px; }
-    .reel__linea--abajo { top: 128px; }
-    .ruleta-poder__name { font-size:.72rem; font-weight:700; color:var(--gray-700); text-align:center; max-width:80px; min-height: 1.4em; opacity: 0; transition: opacity .3s ease; }
+    .reel__item { height: 90px; display: flex; align-items: center; justify-content: center; }
+    .reel__item img { width: 60px; height: 60px; object-fit: contain; }
+    .reel__linea { position: absolute; left: 8px; right: 8px; height: 0; border-top: 2px dashed rgba(255,255,255,.28); pointer-events: none; }
+    .reel__linea--arriba { top: 90px; }
+    .reel__linea--abajo { top: 180px; }
+    .ruleta-poder__name { font-size:.82rem; font-weight:700; color:var(--gray-700); text-align:center; max-width:100px; min-height: 1.4em; opacity: 0; transition: opacity .3s ease; }
     .ruleta-poder__name--listo { opacity: 1; }
     .ruleta-continuar { opacity:0; pointer-events: none; transition: opacity .4s ease; }
     .ruleta-continuar--listo { opacity:1; pointer-events: auto; }
@@ -348,8 +348,8 @@
     }
 
     // ── Carrete tipo tragamonedas: gira y se detiene en el poder final ──
-    const REEL_ITEM_H = 64;
-    const REEL_CENTRO = 96; // centro vertical del viewport (192px de alto)
+    const REEL_ITEM_H = 90;
+    const REEL_CENTRO = 135; // centro vertical del viewport (270px de alto)
     const CLAVES_PODER = Object.keys(ICONOS_PODER);
 
     function crearReel(stripEl, poderFinal, delayMs) {
@@ -386,8 +386,8 @@
             [...stripEl.children].forEach((item, i) => {
               const centroItem = i * REEL_ITEM_H + REEL_ITEM_H / 2 + actual;
               const dist = Math.abs(centroItem - REEL_CENTRO);
-              const escala = Math.max(0.55, 1.3 - dist / 90);
-              const opacidad = Math.max(0.25, 1.15 - dist / 110);
+              const escala = Math.max(0.55, 1.3 - dist / REEL_ITEM_H);
+              const opacidad = Math.max(0.25, 1.15 - dist / (REEL_ITEM_H * 1.22));
               item.style.transform = `scale(${escala})`;
               item.style.opacity = opacidad;
             });

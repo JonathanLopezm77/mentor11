@@ -187,6 +187,7 @@
     let ws = null;
     let esHost = false;
     let rivalNombre = '';
+    let rivalAvatar = null;
 
     // Iconos materias
     const ICONOS = { LC:'📖', MAT:'🔢', CN:'🔬', SOC:'🌍', ING:'🌐' };
@@ -270,9 +271,14 @@
 
         if (datos.type === 'match_found') {
           rivalNombre = datos.rival;
+          rivalAvatar = datos.rival_avatar ?? null;
           esHost = datos.is_host;
           document.getElementById('myName').textContent = miNombre;
           document.getElementById('rivalNameDisplay').textContent = rivalNombre;
+          if (rivalAvatar) {
+            document.querySelector('.match-player--rival .match-player__avatar').innerHTML =
+              `<img src="${rivalAvatar}" alt="Avatar rival" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+          }
           mostrar('screenMatch');
 
           setTimeout(() => {
@@ -302,6 +308,7 @@
           sessionStorage.setItem('online_state', JSON.stringify({
             room_id: datos.room_id,
             rival: rivalNombre,
+            rival_avatar: rivalAvatar,
             modo: datos.mode,
             materia_ids: datos.materia_ids ?? null,
             cantidad: datos.cantidad ?? 10,

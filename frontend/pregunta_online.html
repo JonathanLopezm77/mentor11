@@ -46,6 +46,39 @@
     .dual-bar-fill--yo   { background: var(--orange-500); }
     .dual-bar-fill--rival { background: #f59e0b; }
 
+    /* ── Banner VS con avatares ── */
+    .vs-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: #1c1917;
+      margin: 10px 16px 0;
+      padding: 8px 18px;
+      border-radius: 999px;
+    }
+    .vs-banner__avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 2.5px solid var(--orange-500);
+      background: var(--orange-100);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .vs-banner__avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .vs-banner__avatar span { font-weight: 800; color: var(--orange-600); font-size: 1.1rem; }
+    .vs-banner__vs {
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #fff;
+      letter-spacing: .02em;
+      flex-shrink: 0;
+    }
+
     /* ── Overlays de fin de partida ── */
     .overlay-fin {
       display: none;
@@ -104,6 +137,13 @@
     <h1 class="libre-header__title">Online</h1>
     <span class="libre-contador" id="contador">1 / ?</span>
   </header>
+
+  <!-- ── Banner VS con avatares ─────────────────────────────── -->
+  <div class="vs-banner">
+    <div class="vs-banner__avatar" id="vsAvatarYo"><span id="vsIniYo">?</span></div>
+    <span class="vs-banner__vs">VS</span>
+    <div class="vs-banner__avatar" id="vsAvatarRival"><span id="vsIniRival">?</span></div>
+  </div>
 
   <!-- ── Barras de progreso duales ──────────────────────────── -->
   <div class="dual-bars">
@@ -191,6 +231,32 @@
 
     document.getElementById('labelYo').textContent = username ?? 'Tú';
     document.getElementById('labelRival').textContent = rival ?? 'Rival';
+
+    // ── Banner VS: avatares ────────────────────────────────────
+    document.getElementById('vsIniYo').textContent = (username ?? '?').charAt(0).toUpperCase();
+    document.getElementById('vsIniRival').textContent = (rival ?? '?').charAt(0).toUpperCase();
+
+    function pintarAvatar(contenedorId, iniId, src) {
+      if (!src) return;
+      const cont = document.getElementById(contenedorId);
+      const ini = document.getElementById(iniId);
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Avatar';
+      cont.insertBefore(img, ini);
+      ini.hidden = true;
+    }
+
+    if (onlineState.rival_avatar) pintarAvatar('vsAvatarRival', 'vsIniRival', onlineState.rival_avatar);
+
+    (async () => {
+      try {
+        const res = await fetch(`${API}/perfil/avatar`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.imagen_src) pintarAvatar('vsAvatarYo', 'vsIniYo', data.imagen_src);
+      } catch (_) {}
+    })();
 
     let ws = null;
     let respondida = false;
@@ -386,8 +452,8 @@
           play('/static/error.mp3');
         }
 
-        // Barra llena según preguntas respondidas (no correctas)
-        const pct = Math.round(((actual + 1) / preguntas.length) * 100);
+        // Barra llena según respuestas correctas
+        const pct = Math.round((correctas / preguntas.length) * 100);
         document.getElementById('barYo').style.width = pct + '%';
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'progress', value: pct }));

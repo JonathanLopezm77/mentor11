@@ -9,9 +9,21 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
+
 from app.core.security import decode_token
+from app.db.database import AsyncSessionLocal
+from app.models.usuario import Avatar
 
 router = APIRouter()
+
+
+async def _obtener_avatar(usuario_id: int) -> str | None:
+    async with AsyncSessionLocal() as db:
+        resultado = await db.execute(
+            select(Avatar.imagen_src).where(Avatar.usuario_id == usuario_id)
+        )
+        return resultado.scalar_one_or_none()
 
 _cola: list[dict] = []
 _cola_lock = asyncio.Lock()
@@ -57,7 +69,8 @@ async def online_ws(websocket: WebSocket):
 
     await websocket.accept()
 
-    jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "reconectado": False}
+    avatar = await _obtener_avatar(usuario_id)
+    jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "avatar": avatar, "reconectado": False}
     sala_id: Optional[str] = None
 
     try:
@@ -76,8 +89,13 @@ async def online_ws(websocket: WebSocket):
                     if p["usuario_id"] == usuario_id:
                         p["ws"] = websocket
                         p["reconectado"] = True
-                rival = next((p["nombre"] for p in sala["jugadores"] if p["usuario_id"] != usuario_id), "")
-                await _enviar(websocket, {"type": "rejoined", "room_id": sala_id, "rival": rival})
+                rival_p = next((p for p in sala["jugadores"] if p["usuario_id"] != usuario_id), None)
+                await _enviar(websocket, {
+                    "type": "rejoined",
+                    "room_id": sala_id,
+                    "rival": rival_p["nombre"] if rival_p else "",
+                    "rival_avatar": rival_p["avatar"] if rival_p else None,
+                })
             else:
                 await _enviar(websocket, {"type": "room_not_found"})
                 return
@@ -104,12 +122,14 @@ async def online_ws(websocket: WebSocket):
                         "type": "match_found",
                         "room_id": sala_id,
                         "rival": nombre,
+                        "rival_avatar": jugador["avatar"],
                         "is_host": True,
                     })
                     await _enviar(websocket, {
                         "type": "match_found",
                         "room_id": sala_id,
                         "rival": rival["nombre"],
+                        "rival_avatar": rival["avatar"],
                         "is_host": False,
                     })
                 else:

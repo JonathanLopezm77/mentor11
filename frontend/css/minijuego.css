@@ -83,6 +83,7 @@
   height: 100%;
   width: 100%;
   background: linear-gradient(90deg, var(--orange-400, #FB923C), var(--orange-600, #EA580C));
+  transition: width 0.1s linear;
 }
 
 .mj-grid {
@@ -94,12 +95,31 @@
 }
 
 .mj-tile {
+  position: relative;
   border: none;
   border-radius: 20px;
   background: linear-gradient(180deg, #2E4E7E 0%, #1E3A64 100%);
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.mj-tile__orden {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .mj-tile:active {

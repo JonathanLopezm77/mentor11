@@ -5,14 +5,16 @@
  */
 
 const MJ_DURACION_MS = 15000;
+const MJ_MUESTRA_MS = 4000;
 
 function esperar(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function iniciarMinijuegoSecuencia(onFinish, onPunto) {
+function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemorizarFin) {
   let ronda = 0;
   let terminado = false;
+  let pausado = false;
 
   const overlay = document.createElement('div');
   overlay.className = 'mj-overlay';
@@ -53,20 +55,46 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto) {
     });
   }
 
-  const inicio = Date.now();
-  timerFill.style.transition = `width ${MJ_DURACION_MS}ms linear`;
-  requestAnimationFrame(() => { timerFill.style.width = '0%'; });
+  function mostrarSecuenciaCompleta(secuencia) {
+    const ordenesPorTile = new Map();
+    secuencia.forEach((idx, pos) => {
+      if (!ordenesPorTile.has(idx)) ordenesPorTile.set(idx, []);
+      ordenesPorTile.get(idx).push(pos + 1);
+    });
+    ordenesPorTile.forEach((ordenes, idx) => {
+      tiles[idx].classList.add('mj-tile--lit');
+      const badge = document.createElement('span');
+      badge.className = 'mj-tile__orden';
+      badge.textContent = ordenes.join(', ');
+      tiles[idx].appendChild(badge);
+    });
+  }
+
+  function ocultarSecuenciaCompleta() {
+    tiles.forEach((t) => {
+      t.classList.remove('mj-tile--lit');
+      const badge = t.querySelector('.mj-tile__orden');
+      if (badge) badge.remove();
+    });
+  }
+
+  let restante = MJ_DURACION_MS;
+  let ultimoTick = Date.now();
   const intervalId = setInterval(() => {
-    const restante = Math.max(0, MJ_DURACION_MS - (Date.now() - inicio));
+    const ahora = Date.now();
+    const delta = ahora - ultimoTick;
+    ultimoTick = ahora;
+    if (pausado) return;
+    restante = Math.max(0, restante - delta);
     timerLabel.textContent = Math.ceil(restante / 1000) + 's';
-  }, 200);
-  const finTimeoutId = setTimeout(terminar, MJ_DURACION_MS);
+    timerFill.style.width = (restante / MJ_DURACION_MS * 100) + '%';
+    if (restante <= 0) terminar();
+  }, 100);
 
   function terminar() {
     if (terminado) return;
     terminado = true;
     clearInterval(intervalId);
-    clearTimeout(finTimeoutId);
     overlay.classList.add('mj-overlay--saliendo');
     setTimeout(() => {
       overlay.remove();
@@ -100,12 +128,15 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto) {
     for (let i = 0; i < largo; i++) secuencia.push(Math.floor(Math.random() * 9));
 
     hint.textContent = 'Memoriza la secuencia...';
-    await esperar(500);
-    for (const idx of secuencia) {
-      if (terminado) return;
-      await flash(idx, 'mj-tile--lit', 420);
-      await esperar(160);
-    }
+    await esperar(400);
+    if (terminado) return;
+    pausado = true;
+    if (typeof onMemorizarInicio === 'function') onMemorizarInicio();
+    mostrarSecuenciaCompleta(secuencia);
+    await esperar(MJ_MUESTRA_MS);
+    ocultarSecuenciaCompleta();
+    pausado = false;
+    if (typeof onMemorizarFin === 'function') onMemorizarFin();
     if (terminado) return;
     hint.textContent = 'Tu turno: repite la secuencia';
 

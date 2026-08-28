@@ -50,7 +50,9 @@ function avanzarPregunta() {
       () => {
         puntaje += 2;
         document.getElementById('arcadeScore').textContent = puntaje;
-      }
+      },
+      () => { bgMusic.muted = true; },
+      () => { bgMusic.muted = sessionStorage.getItem('arcade_muted') === '1'; }
     );
   } else {
     mostrarPregunta();

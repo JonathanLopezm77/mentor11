@@ -1,0 +1,97 @@
+/* ============================================================
+   Componente reutilizable de resultado (Arcade + Online)
+   Usado por resultado_arcade.html y los overlays de fin de
+   partida en pregunta_online.html.
+   ============================================================ */
+
+.rc-avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--orange-100, #FFEDD5);
+  border: 2px solid var(--orange-500, #F97316);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rc-avatar__ini { font-weight: 800; color: var(--orange-600, #EA580C); font-size: 1.3rem; }
+
+.rc-avatar--sm { width: 44px; height: 44px; }
+.rc-avatar--sm .rc-avatar__ini { font-size: 1.05rem; }
+
+.rc-avatar--lg { width: 88px; height: 88px; border-width: 3px; }
+.rc-avatar--lg .rc-avatar__ini { font-size: 2rem; }
+
+.rc-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--white, #fff);
+  border: 1.5px solid var(--gray-200, #e5e7eb);
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+}
+
+.rc-player-row--winner {
+  border-color: #F59E0B;
+  background: #FFFBEB;
+}
+
+.rc-player-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rc-player-row__name {
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--gray-900, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.rc-player-row__sub {
+  font-size: .74rem;
+  color: var(--gray-500, #6b7280);
+  margin: 0;
+}
+
+.rc-player-row__puntos {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--gray-900, #111827);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-player-row--winner .rc-player-row__puntos { color: #B45309; }
+
+.rc-player-row__crown {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.rc-comparativa {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.rc-breakdown {
+  font-size: .8rem;
+  color: var(--gray-400, #9ca3af);
+  font-weight: 500;
+  margin-top: 2px;
+}

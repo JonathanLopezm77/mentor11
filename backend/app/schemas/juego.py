@@ -98,6 +98,17 @@ class SetentaCincoRequest(BaseModel):
     pregunta_id: int
 
 
+# ─── Minijuego (modo Arcade) ────────────────────────────────────────────────────
+
+
+class BonusMinijuegoRequest(BaseModel):
+    checkpoint: int  # Identificador creciente de la ronda ganada (idempotencia)
+
+
+class BonusMinijuegoRespuesta(BaseModel):
+    puntos_bonus: int  # Total acumulado de bonus en la sesión hasta ahora
+
+
 class ResultadoSesion(BaseModel):
     """Resumen al finalizar una sesión."""
 
@@ -106,6 +117,8 @@ class ResultadoSesion(BaseModel):
     total_preguntas: int
     total_correctas: int
     puntaje_obtenido: int
+    puntos_preguntas: int = 0  # Desglose: parte del puntaje que viene de preguntas
+    puntos_bonus: int = 0  # Desglose: parte del puntaje que viene del minijuego
     porcentaje_acierto: float
     pistas_usadas: int
     duracion_segundos: int | None

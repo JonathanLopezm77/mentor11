@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/libre.css" />
   <link rel="stylesheet" href="/static/css/progresion.css?v=8" />
+  <link rel="stylesheet" href="/static/css/resultado_componente.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body class="libre-body">
@@ -20,9 +21,10 @@
   <main class="resultado-main">
 
     <div class="resultado-score-card">
-      <span class="resultado-emoji">💀</span>
+      <div id="resultAvatarWrap" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
       <div class="resultado-pct" id="resultPts">0</div>
       <div class="resultado-pct-label">puntos</div>
+      <div class="rc-breakdown" id="resultBreakdown" hidden></div>
     </div>
 
     <div class="resultado-stats-row">
@@ -39,6 +41,7 @@
 
   </main>
 
+  <script src="/static/js/resultado_componente.js"></script>
   <script>
     const sfxEntrada = new Audio('/static/game_over.mp3');
     sfxEntrada.volume = 0.5;
@@ -51,9 +54,32 @@
     const puntaje   = data.puntaje   ?? 0;
     const correctas = data.correctas ?? 0;
     const puntosAntes = data.puntosAntes ?? 0;
+    const puntosPreguntas = data.puntos_preguntas ?? puntaje;
+    const puntosBonus     = data.puntos_bonus ?? 0;
 
     document.getElementById('resultPts').textContent     = puntaje;
     document.getElementById('statCorrectas').textContent = correctas;
+
+    // Desglose: solo se muestra si realmente hubo puntos de minijuego,
+    // para no confundir cuando la sesión no llegó a jugar ninguno.
+    if (puntosBonus > 0) {
+      const breakdown = document.getElementById('resultBreakdown');
+      breakdown.textContent = `${puntosPreguntas} de preguntas + ${puntosBonus} de minijuego`;
+      breakdown.hidden = false;
+    }
+
+    // Avatar del jugador (con caída segura a un ícono si no carga)
+    (async () => {
+      const wrap = document.getElementById('resultAvatarWrap');
+      let src = null;
+      try {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('/api/v1/perfil/avatar', { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) src = (await res.json()).imagen_src;
+      } catch (_) { }
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+      wrap.appendChild(RC.crearAvatar(src, usuario.username, 'lg'));
+    })();
 
     function playBip() { const s = sfxBtn.cloneNode(); s.volume = 0.5; s.play().catch(() => {}); }
 
@@ -66,7 +92,7 @@
       setTimeout(() => location.href = 'dashboard_estudiante.html', 200);
     });
 
-    setTimeout(() => mostrarProgreso(puntosAntes, null), 1000);
+    setTimeout(() => mostrarProgreso(puntosAntes, null, puntaje), 1000);
   </script>
   <script src="/static/js/progresion.js?v=9"></script>
 </body>

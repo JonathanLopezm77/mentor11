@@ -188,6 +188,42 @@ async def responder_pregunta(
     }
 
 
+# ─── Minijuego (modo Arcade) ────────────────────────────────────────────────────
+
+PUNTOS_POR_RONDA_MINIJUEGO = 2
+
+
+async def registrar_bonus_minijuego(
+    db: AsyncSession,
+    sesion_id: int,
+    usuario_id: int,
+    checkpoint: int,
+) -> int:
+    """Acredita los puntos de una ronda ganada del minijuego de Arcade.
+    El monto lo decide el servidor (PUNTOS_POR_RONDA_MINIJUEGO), nunca el
+    cliente. Idempotente: si el checkpoint ya fue procesado o es menor al
+    ultimo registrado (doble clic, reintento de red, reconexion), se ignora
+    y se devuelve el bonus acumulado sin sumar de nuevo.
+    """
+    resultado = await db.execute(
+        select(SesionJuego).where(
+            SesionJuego.id == sesion_id,
+            SesionJuego.usuario_id == usuario_id,
+            SesionJuego.completada == False,
+        )
+    )
+    sesion = resultado.scalar_one_or_none()
+    if not sesion:
+        raise JuegoError("Sesión no encontrada o ya finalizada", 404)
+
+    if checkpoint > sesion.ultimo_bonus_checkpoint:
+        sesion.puntos_bonus += PUNTOS_POR_RONDA_MINIJUEGO
+        sesion.ultimo_bonus_checkpoint = checkpoint
+        await db.commit()
+
+    return sesion.puntos_bonus
+
+
 # ─── Poderes (modo Online) ─────────────────────────────────────────────────────
 
 
@@ -250,7 +286,19 @@ async def finalizar_sesion(
     db: AsyncSession,
     sesion_id: int,
     usuario_id: int,
+    puntaje_override: int | None = None,
 ) -> SesionJuego:
+    """Cierra una sesión y liquida sus puntos.
+
+    - Si `puntaje_override` viene informado (modo Online: el servidor ya
+      calculó el puntaje real de la partida, con x2/protección incluidos),
+      se usa tal cual — no se recalcula nada.
+    - Si no, se usa la fórmula estándar (preguntas - pistas). En Arcade,
+      además se suma `puntos_bonus` del minijuego, pero solo si la sesión
+      tuvo 3 o más respuestas incorrectas (llegó a Game Over de verdad, no
+      salida voluntaria antes) — verificado contando RespuestaUsuario, sin
+      confiar en lo que diga el cliente.
+    """
     resultado = await db.execute(
         select(SesionJuego).where(
             SesionJuego.id == sesion_id,
@@ -265,8 +313,33 @@ async def finalizar_sesion(
     ahora = datetime.utcnow()
     duracion = int((ahora - sesion.iniciada_en).total_seconds())
 
-    puntaje = (sesion.total_correctas * 10) - (sesion.pistas_usadas * 2)
-    puntaje = max(0, puntaje)
+    puntos_preguntas = max(
+        0, (sesion.total_correctas * 10) - (sesion.pistas_usadas * 2)
+    )
+    bonus_incluido = 0
+
+    if puntaje_override is not None:
+        puntaje = max(0, puntaje_override)
+    else:
+        puntaje = puntos_preguntas
+        if sesion.modo_juego == ModoJuego.arcade and sesion.puntos_bonus > 0:
+            resultado_incorrectas = await db.execute(
+                select(func.count())
+                .select_from(RespuestaUsuario)
+                .where(
+                    RespuestaUsuario.sesion_id == sesion_id,
+                    RespuestaUsuario.es_correcta == False,
+                )
+            )
+            total_incorrectas = resultado_incorrectas.scalar_one()
+            if total_incorrectas >= 3:
+                bonus_incluido = sesion.puntos_bonus
+                puntaje += bonus_incluido
+
+    # Atributos transitorios (no persisten) — para que el endpoint arme el
+    # desglose sin tener que recalcularlo.
+    sesion._puntos_preguntas = puntos_preguntas
+    sesion._puntos_bonus_incluido = bonus_incluido
 
     sesion.completada = True
     sesion.finalizada_en = ahora

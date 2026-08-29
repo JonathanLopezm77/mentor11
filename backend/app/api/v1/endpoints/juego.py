@@ -20,6 +20,8 @@ from app.schemas.juego import (
     MitadMitadRequest,
     MitadMitadRespuesta,
     SetentaCincoRequest,
+    BonusMinijuegoRequest,
+    BonusMinijuegoRespuesta,
     OpcionSchema,  # noqa: F401
 )
 from app.services.juego_service import (
@@ -30,6 +32,7 @@ from app.services.juego_service import (
     finalizar_sesion,
     usar_mitad_mitad,
     usar_setenta_cinco,
+    registrar_bonus_minijuego,
     JuegoError,
 )
 
@@ -174,6 +177,26 @@ async def poder_setenta_cinco(
     return resultado
 
 
+@router.post("/sesiones/{sesion_id}/poderes/bonus_minijuego", response_model=BonusMinijuegoRespuesta)
+async def poder_bonus_minijuego(
+    sesion_id: int,
+    datos: BonusMinijuegoRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    """Acredita los puntos de una ronda ganada del minijuego de Arcade.
+    El servidor decide cuántos puntos vale (no el cliente); es idempotente
+    ante reintentos gracias al checkpoint creciente."""
+    try:
+        puntos_bonus = await registrar_bonus_minijuego(
+            db, sesion_id, usuario.id, datos.checkpoint
+        )
+    except JuegoError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+
+    return {"puntos_bonus": puntos_bonus}
+
+
 @router.post("/sesiones/{sesion_id}/finalizar", response_model=ResultadoSesion)
 async def finalizar(
     sesion_id: int,
@@ -198,6 +221,8 @@ async def finalizar(
         "total_preguntas": sesion.total_preguntas,
         "total_correctas": sesion.total_correctas,
         "puntaje_obtenido": sesion.puntaje_obtenido,
+        "puntos_preguntas": getattr(sesion, "_puntos_preguntas", sesion.puntaje_obtenido),
+        "puntos_bonus": getattr(sesion, "_puntos_bonus_incluido", 0),
         "porcentaje_acierto": porcentaje,
         "pistas_usadas": sesion.pistas_usadas,
         "duracion_segundos": sesion.duracion_segundos,

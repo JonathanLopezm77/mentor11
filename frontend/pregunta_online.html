@@ -6,6 +6,7 @@
   <title>Mentor 11 — Online</title>
   <link rel="stylesheet" href="/static/css/styles.css" />
   <link rel="stylesheet" href="/static/css/libre.css" />
+  <link rel="stylesheet" href="/static/css/resultado_componente.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bangers&display=swap" rel="stylesheet" />
   <style>
     /* ── Banner VS con avatares en los bordes y barras debajo ── */
@@ -153,6 +154,7 @@
       gap: 12px;
     }
     .overlay-fin__icon  { font-size: 4rem; line-height: 1; }
+    .overlay-fin__avatarwrap { display: flex; justify-content: center; }
     .overlay-fin__title { font-size: 1.7rem; font-weight: 800; color: var(--gray-900); }
     .overlay-fin__sub   { font-size: .92rem; color: var(--gray-500); }
     .overlay-fin__btn   {
@@ -219,9 +221,10 @@
   <!-- ── Overlay: ganaste ───────────────────────────────────── -->
   <div class="overlay-fin" id="overlayGana">
     <div class="overlay-fin__card">
-      <span class="overlay-fin__icon">🏆</span>
+      <div class="overlay-fin__avatarwrap" id="ganaAvatarWrap"></div>
       <p class="overlay-fin__title">¡Ganaste!</p>
       <p class="overlay-fin__sub" id="ganaSubtitle">¡Excelente!</p>
+      <div class="rc-comparativa" id="ganaComparativa"></div>
       <button class="overlay-fin__btn" id="btnGanaOk">Volver al inicio</button>
     </div>
   </div>
@@ -229,9 +232,10 @@
   <!-- ── Overlay: perdiste ──────────────────────────────────── -->
   <div class="overlay-fin" id="overlayPierde">
     <div class="overlay-fin__card">
-      <span class="overlay-fin__icon">😔</span>
+      <div class="overlay-fin__avatarwrap" id="pierdeAvatarWrap"></div>
       <p class="overlay-fin__title">¡Tu rival ganó!</p>
       <p class="overlay-fin__sub" id="pierdeSubtitle">Sigue practicando, ¡la próxima es tuya!</p>
+      <div class="rc-comparativa" id="pierdeComparativa"></div>
       <button class="overlay-fin__btn" id="btnPierdeOk">Volver al inicio</button>
     </div>
   </div>
@@ -242,6 +246,7 @@
       <span class="overlay-fin__icon">🤝</span>
       <p class="overlay-fin__title">¡Empate!</p>
       <p class="overlay-fin__sub" id="empateSubtitle">Los dos respondieron igual de bien.</p>
+      <div class="rc-comparativa" id="empateComparativa"></div>
       <button class="overlay-fin__btn" id="btnEmpateOk">Volver al inicio</button>
     </div>
   </div>
@@ -256,6 +261,7 @@
     </div>
   </div>
 
+  <script src="/static/js/resultado_componente.js"></script>
   <script>
     // ── Sonidos ────────────────────────────────────────────────
     const SFX = {};
@@ -350,12 +356,19 @@
 
     if (onlineState.rival_avatar) pintarAvatar('vsAvatarRival', 'vsIniRival', onlineState.rival_avatar);
 
+    // Se guarda para reutilizarlo en la pantalla de resultado (evita
+    // pedirlo de nuevo al backend cuando termina la partida).
+    let miAvatarSrc = null;
+
     (async () => {
       try {
         const res = await fetch(`${API}/perfil/avatar`, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) return;
         const data = await res.json();
-        if (data.imagen_src) pintarAvatar('vsAvatarYo', 'vsIniYo', data.imagen_src);
+        if (data.imagen_src) {
+          miAvatarSrc = data.imagen_src;
+          pintarAvatar('vsAvatarYo', 'vsIniYo', data.imagen_src);
+        }
       } catch (_) {}
     })();
 
@@ -533,6 +546,16 @@
       cargandoMas = false;
     }
 
+    // Vincula la sesión REST con la sala del WebSocket para que el servidor
+    // pueda finalizar (y liquidar los puntos de) esta sesión al terminar la partida.
+    // Se llama tanto al abrir la conexión como justo al crear la sesión, porque
+    // cualquiera de las dos puede ocurrir primero.
+    function vincularSesion() {
+      if (sesionId && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'vincular_sesion', sesion_id: sesionId }));
+      }
+    }
+
     // ── WebSocket ─────────────────────────────────────────────
     function conectarWS() {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -540,6 +563,7 @@
 
       ws.onopen = () => {
         ws.send(JSON.stringify({ type: 'join_room', room_id }));
+        vincularSesion();
       };
 
       ws.onmessage = (e) => {
@@ -562,20 +586,66 @@
             ? `${data.rival_puntos} pts (${data.rival_correctas} correctas)`
             : `${data.rival_puntos} pts (se quedó en ${data.rival_progreso_pct ?? 0}% de su barra)`;
 
+          // Bloque comparativo (avatar + nombre + correctas + puntos de cada
+          // jugador), igual para los 3 desenlaces — solo cambia quién gana.
+          function construirComparativa(contenedorId, yoGane, rivalGane) {
+            const cont = document.getElementById(contenedorId);
+            cont.innerHTML = '';
+            cont.appendChild(RC.crearPlayerRow({
+              avatarSrc: miAvatarSrc,
+              nombre: username,
+              correctas: misCorrectasReal,
+              puntos: data.mis_puntos,
+              esGanador: yoGane,
+            }));
+            cont.appendChild(RC.crearPlayerRow({
+              avatarSrc: onlineState.rival_avatar,
+              nombre: rival,
+              correctas: data.rival_correctas,
+              puntos: data.rival_puntos,
+              esGanador: rivalGane,
+              nota: data.rival_correctas != null ? null : `se quedó en ${data.rival_progreso_pct ?? 0}%`,
+            }));
+          }
+
           if (data.empate) {
             document.getElementById('empateSubtitle').textContent = `Ambos con ${data.mis_puntos} puntos.`;
+            construirComparativa('empateComparativa', false, false);
             mostrarOverlay('overlayEmpate');
           } else if (data.ganaste) {
             document.getElementById('ganaSubtitle').textContent = `Tú: ${miTexto} · Rival: ${rivalTexto}`;
+            document.getElementById('ganaAvatarWrap').appendChild(RC.crearAvatar(miAvatarSrc, username, 'lg'));
+            construirComparativa('ganaComparativa', true, false);
             mostrarOverlay('overlayGana');
           } else {
             document.getElementById('pierdeSubtitle').textContent = `Rival: ${rivalTexto} · Tú: ${miTexto}`;
+            document.getElementById('pierdeAvatarWrap').appendChild(RC.crearAvatar(onlineState.rival_avatar, rival, 'lg'));
+            construirComparativa('pierdeComparativa', false, true);
             mostrarOverlay('overlayPierde');
           }
+
+          // Refresca los puntos reales ya liquidados por el servidor, para
+          // que el dashboard muestre el total correcto al volver.
+          (async () => {
+            try {
+              const res = await fetch(`${API}/perfil/me`, { headers: { Authorization: `Bearer ${token}` } });
+              if (res.ok) {
+                const perfil = await res.json();
+                const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+                usuario.puntos_totales = perfil.puntos_totales;
+                localStorage.setItem('usuario', JSON.stringify(usuario));
+              }
+            } catch (_) {}
+          })();
         }
 
         if (data.type === 'rival_disconnected') {
-          mostrarOverlay('overlayGana'); // si el rival se va, ganas tú
+          // La partida se anula sin puntos para nadie — no se muestra como
+          // una victoria (sería engañoso), sino como lo que es: se cortó.
+          partidaTerminada = true;
+          document.querySelectorAll('.opcion-btn').forEach((b) => (b.disabled = true));
+          document.getElementById('siguienteBtn').hidden = true;
+          mostrarOverlay('overlayDesc');
         }
 
         if (data.type === 'room_not_found') {
@@ -667,6 +737,7 @@
         if (!sesRes.ok) throw new Error('sesion');
         const sesData = await sesRes.json();
         sesionId = sesData.sesion_id;
+        vincularSesion();
 
         // Cargar el primer lote de preguntas (no hay límite total — se piden más sobre la marcha)
         await cargarMasPreguntas();
@@ -792,18 +863,15 @@
     }
 
     // ── Finalizar partida (terminé todas las preguntas) ───────
-    async function finalizarPartida() {
+    function finalizarPartida() {
       if (partidaTerminada) return;
       partidaTerminada = true;
 
-      // Guardar sesión en el backend
-      try {
-        await fetch(`${API}/juego/sesiones/${sesionId}/finalizar`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (_) {}
-
+      // El servidor finaliza y liquida los puntos de ambos jugadores al
+      // recibir 'finish' (usa la sesión vinculada con vincularSesion()).
+      // El cliente ya NO llama a /finalizar directamente, para que la
+      // sesión no se liquide dos veces.
+      //
       // Avisar al servidor: mi barra se llenó primero — la partida termina ya
       // para los dos, no hay que esperar a que el rival también termine.
       if (ws && ws.readyState === WebSocket.OPEN) {

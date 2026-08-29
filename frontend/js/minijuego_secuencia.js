@@ -129,7 +129,7 @@ function iniciarMinijuegoSecuencia(onFinish, onPunto, onMemorizarInicio, onMemor
     if (terminado) return;
 
     if (resultado === 'correcta') {
-      if (typeof onPunto === 'function') onPunto();
+      if (typeof onPunto === 'function') onPunto(ronda);
       hint.textContent = '+2 puntos. Siguiente secuencia...';
       tiles.forEach((t) => t.classList.add('mj-tile--exito'));
       await esperar(450);

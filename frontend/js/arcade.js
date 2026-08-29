@@ -47,9 +47,15 @@ function avanzarPregunta() {
   if (preguntasRespondidas % 2 === 0 && typeof iniciarMinijuegoSecuencia === 'function') {
     iniciarMinijuegoSecuencia(
       () => mostrarPregunta(),
-      () => {
+      (ronda) => {
         puntaje += 2;
         document.getElementById('arcadeScore').textContent = puntaje;
+        const checkpoint = preguntasRespondidas * 100 + ronda;
+        fetch(`${API_BASE}/juego/sesiones/${sesionId}/poderes/bonus_minijuego`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ checkpoint }),
+        }).catch(() => { });
       },
       () => { bgMusic.muted = true; },
       () => { bgMusic.muted = sessionStorage.getItem('arcade_muted') === '1'; }
@@ -254,10 +260,21 @@ async function mostrarGameOver() {
   bgMusic.pause();
   playSfx('/static/game_over.mp3');
   const puntosAntes = JSON.parse(localStorage.getItem('usuario') || '{}').puntos_totales || 0;
+  let resultado = { puntaje, correctas, puntosAntes, puntos_preguntas: puntaje, puntos_bonus: 0 };
   try {
-    await fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      resultado = {
+        puntaje: data.puntaje_obtenido,
+        correctas: data.total_correctas,
+        puntosAntes,
+        puntos_preguntas: data.puntos_preguntas,
+        puntos_bonus: data.puntos_bonus,
+      };
+    }
   } catch (_) { }
-  sessionStorage.setItem('resultado_arcade', JSON.stringify({ puntaje, correctas, puntosAntes }));
+  sessionStorage.setItem('resultado_arcade', JSON.stringify(resultado));
   location.href = 'resultado_arcade.html';
 }
 

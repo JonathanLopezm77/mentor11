@@ -42,6 +42,11 @@ class SesionJuego(Base):
     total_preguntas: Mapped[int | None] = mapped_column(Integer)
     total_correctas: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     pistas_usadas: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Puntos bonus del minijuego de Arcade, acumulados server-side (ver Bug 1).
+    puntos_bonus: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Ultimo "checkpoint" de bonus ya procesado — evita duplicar puntos si el
+    # cliente reintenta la misma ronda de minijuego (doble clic, reconexion).
+    ultimo_bonus_checkpoint: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     duracion_segundos: Mapped[int | None] = mapped_column(Integer)
     completada: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

@@ -18,6 +18,7 @@ from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
 from app.models.usuario import Avatar
 from app.services import online_state
+from app.services.juego_service import finalizar_sesion, JuegoError
 
 router = APIRouter()
 
@@ -67,6 +68,24 @@ async def _enviar(ws: WebSocket, datos: dict):
         pass
 
 
+async def _liquidar_puntos_online(usuario_id: int, sesion_id: int | None, puntos: int) -> None:
+    """Guarda en la base de datos los puntos reales de una partida online (ya
+    calculados en online_state, respetando x2/proteccion) usando el mismo
+    finalizar_sesion que usan Libre/Arcade/Aleatorio. No revienta la partida
+    si algo sale mal — solo lo deja en el log para poder depurar."""
+    if sesion_id is None:
+        print(f"[ONLINE] usuario={usuario_id} sin sesion_id vinculada — no se pudieron guardar {puntos} puntos")
+        return
+    try:
+        async with AsyncSessionLocal() as db:
+            await finalizar_sesion(db, sesion_id, usuario_id, puntaje_override=puntos)
+        print(f"[ONLINE] Liquidado: usuario={usuario_id} sesion={sesion_id} puntos={puntos}")
+    except JuegoError as e:
+        print(f"[ONLINE] No se pudo liquidar usuario={usuario_id} sesion={sesion_id}: {e.mensaje}")
+    except Exception as e:
+        print(f"[ONLINE] ERROR liquidando usuario={usuario_id} sesion={sesion_id} puntos={puntos}: {e}")
+
+
 async def _cerrar_sala_delayed(sala_id: str, usuario_id: int):
     """Espera 15s antes de cerrar la sala — permite reconexión al navegar de página."""
     await asyncio.sleep(15)
@@ -101,7 +120,7 @@ async def online_ws(websocket: WebSocket):
     await websocket.accept()
 
     avatar = await _obtener_avatar(usuario_id)
-    jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "avatar": avatar, "reconectado": False}
+    jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "avatar": avatar, "reconectado": False, "sesion_id": None}
     sala_id: Optional[str] = None
 
     try:
@@ -198,6 +217,17 @@ async def online_ws(websocket: WebSocket):
                     if any(p["usuario_id"] == usuario_id for p in s["jugadores"]):
                         sala_id = rid
                         break
+
+            if tipo == "vincular_sesion" and sala_id:
+                # El cliente ya creo su SesionJuego por REST — le avisamos al
+                # servidor cual es la suya para poder liquidarla correctamente
+                # cuando termine la partida (ver bloque "finish").
+                sala = _salas.get(sala_id)
+                if sala:
+                    for p in sala["jugadores"]:
+                        if p["usuario_id"] == usuario_id:
+                            p["sesion_id"] = datos.get("sesion_id")
+                            break
 
             if tipo == "select_mode" and sala_id:
                 sala = _salas.get(sala_id)
@@ -297,6 +327,7 @@ async def online_ws(websocket: WebSocket):
                 sala["terminada"] = True
 
                 mis_correctas = datos.get("correctas", 0)
+                yo_p = next((p for p in sala["jugadores"] if p["usuario_id"] == usuario_id), None)
                 otro = next((p for p in sala["jugadores"] if p["usuario_id"] != usuario_id), None)
                 rival_id = otro["usuario_id"] if otro else None
 
@@ -305,6 +336,13 @@ async def online_ws(websocket: WebSocket):
                 # El rival puede seguir jugando — no sabemos cuantas tiene correctas,
                 # solo su ultimo % de progreso reportado.
                 rival_progreso_pct = sala.get("progreso", {}).get(rival_id, 0) if rival_id is not None else 0
+
+                # Liquidar los puntos reales (con x2/proteccion) a la base de
+                # datos, una sola vez por jugador — protegido por
+                # sala["terminada"] de arriba, nunca se repite.
+                await _liquidar_puntos_online(usuario_id, yo_p.get("sesion_id") if yo_p else None, mis_puntos)
+                if rival_id is not None:
+                    await _liquidar_puntos_online(rival_id, otro.get("sesion_id") if otro else None, rival_puntos)
 
                 if mis_puntos == rival_puntos:
                     resultado_mio = {"type": "resultado", "empate": True, "ganaste": False, "mis_correctas": mis_correctas, "rival_correctas": None, "rival_progreso_pct": rival_progreso_pct, "mis_puntos": mis_puntos, "rival_puntos": rival_puntos}

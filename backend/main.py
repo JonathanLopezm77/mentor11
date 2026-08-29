@@ -32,6 +32,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# ─── Cache para archivos estáticos ─────────────────────────────────────────────
+# Imágenes, audio, JS y CSS bajo /static no cambian seguido — cachearlos evita
+# que el navegador los vuelva a pedir en cada visita. Las páginas .html siguen
+# con NO_CACHE (más abajo) para que los despliegues se vean al instante.
+@app.middleware("http")
+async def agregar_cache_estaticos(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(
     auth.router,

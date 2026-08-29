@@ -33,9 +33,13 @@ aiofiles==23.2.1
 
 # Utilidades
 python-dateutil==2.9.0
-resend==2.26.0
 cloudinary==1.44.1
 openpyxl==3.1.5
+# Base de datos de husos horarios para zoneinfo (America/Bogota) — no todas
+# las imágenes base la traen instalada (ni Windows, ni algunas de Linux
+# minimalistas como python:3.11-slim), zoneinfo la necesita para la racha
+# diaria y las estadísticas por mes.
+tzdata==2024.1
 
 # Procesamiento de imagenes (miniaturas de avatar para el modo Online)
 Pillow==10.4.0

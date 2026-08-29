@@ -36,6 +36,7 @@ from app.services.aula_service import (
     completar_tarea,
     marcar_seguimiento,
     listar_seguimientos_profesor,
+    listar_estudiantes_unicos_profesor,
     AulaError,
 )
 
@@ -189,11 +190,12 @@ async def dashboard_stats(
             _select(func.count()).select_from(_Tarea).where(_Tarea.aula_id.in_(aula_ids))
         )
         total_tareas = res_t.scalar() or 0
+    estudiantes_lista = await listar_estudiantes_unicos_profesor(db, usuario.id)
     return {
         "aulas": len(aulas),
         "estudiantes": total_estudiantes,
         "tareas": total_tareas,
-        "estudiantes_lista": [],
+        "estudiantes_lista": estudiantes_lista,
     }
 
 

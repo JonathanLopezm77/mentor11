@@ -6,7 +6,7 @@ Todo lo relacionado con partidas, respuestas, estadísticas y el modo online.
 import enum
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -88,7 +88,14 @@ class RespuestaUsuario(Base):
     uso_pista: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     solicito_ia: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     tiempo_respuesta_ms: Mapped[int | None] = mapped_column(Integer)
-    respondida_en: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    respondida_en: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    # Identificador único de "este intento concreto" que manda el cliente
+    # (ver DAT-02). Nullable: si no llega (llamadas internas como el poder
+    # 75%), simplemente no hay protección de idempotencia para esa fila,
+    # igual que el comportamiento anterior.
+    checkpoint: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
 
     # Relaciones
     sesion: Mapped["SesionJuego"] = relationship(
@@ -112,9 +119,11 @@ class EstadisticaUsuario(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     usuario_id: Mapped[int] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    materia_id: Mapped[int] = mapped_column(ForeignKey("materias.id"), nullable=False)
+    materia_id: Mapped[int] = mapped_column(
+        ForeignKey("materias.id"), nullable=False, index=True
+    )
 
     total_respondidas: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_correctas: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -128,8 +137,9 @@ class EstadisticaUsuario(Base):
     materia: Mapped["Materia"] = relationship("Materia", back_populates="estadisticas")
 
     __table_args__ = (
-        # Un usuario tiene máximo una fila por materia
-        {"sqlite_autoincrement": False},
+        # Un usuario tiene máximo una fila por materia — antes solo estaba en
+        # este comentario, ahora es una constraint real (ver migración PERF-02).
+        UniqueConstraint("usuario_id", "materia_id", name="uq_estadistica_usuario_materia"),
     )
 
 

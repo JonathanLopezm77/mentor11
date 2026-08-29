@@ -159,7 +159,7 @@ async function responder(opcionId, preguntaId) {
     const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/responder`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId }),
+      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId, checkpoint: actual }),
     });
     const data = await res.json();
 

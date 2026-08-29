@@ -362,26 +362,32 @@ async def listar_seguimientos_profesor(db: AsyncSession, profesor_id: int) -> li
     )
     filas = res.all()
 
-    # Agrupar tareas completadas por estudiante+aula
+    if not filas:
+        return []
+
+    # Total de tareas por aula y tareas completadas por (aula, estudiante),
+    # precalculadas en 2 consultas en vez de 2 por cada fila del listado.
+    aulas_ids = list({aula.id for _, aula, _, _, _ in filas})
+
+    res_total_tareas = await db.execute(
+        select(Tarea.aula_id, func.count())
+        .where(Tarea.aula_id.in_(aulas_ids))
+        .group_by(Tarea.aula_id)
+    )
+    total_tareas_por_aula = {aid: n for aid, n in res_total_tareas.all()}
+
+    res_completadas = await db.execute(
+        select(Tarea.aula_id, TareaProgreso.estudiante_id, func.count())
+        .join(Tarea, TareaProgreso.tarea_id == Tarea.id)
+        .where(Tarea.aula_id.in_(aulas_ids), TareaProgreso.completada == True)
+        .group_by(Tarea.aula_id, TareaProgreso.estudiante_id)
+    )
+    completadas_por_aula_estudiante = {
+        (aid, eid): n for aid, eid, n in res_completadas.all()
+    }
+
     resultado = []
     for ae, aula, usuario, avatar, stat in filas:
-        # Contar tareas completadas para este estudiante en esta aula
-        res_tareas = await db.execute(
-            select(func.count()).select_from(TareaProgreso)
-            .join(Tarea, TareaProgreso.tarea_id == Tarea.id)
-            .where(
-                Tarea.aula_id == aula.id,
-                TareaProgreso.estudiante_id == usuario.id,
-                TareaProgreso.completada == True,
-            )
-        )
-        tareas_completadas = res_tareas.scalar() or 0
-
-        res_total_tareas = await db.execute(
-            select(func.count()).select_from(Tarea).where(Tarea.aula_id == aula.id)
-        )
-        total_tareas = res_total_tareas.scalar() or 0
-
         resultado.append({
             "aula_id": aula.id,
             "aula_nombre": aula.nombre,
@@ -391,8 +397,8 @@ async def listar_seguimientos_profesor(db: AsyncSession, profesor_id: int) -> li
             "avatar": avatar.imagen_src if avatar else None,
             "porcentaje_acierto": float(stat.porcentaje_acierto) if stat else 0.0,
             "total_respondidas": stat.total_respondidas if stat else 0,
-            "tareas_completadas": tareas_completadas,
-            "total_tareas": total_tareas,
+            "tareas_completadas": completadas_por_aula_estudiante.get((aula.id, usuario.id), 0),
+            "total_tareas": total_tareas_por_aula.get(aula.id, 0),
         })
 
     # Cargar nombres de materias
@@ -408,6 +414,31 @@ async def listar_seguimientos_profesor(db: AsyncSession, profesor_id: int) -> li
             r["materia_nombre"] = mapa.get(r["aula_id"])
 
     return resultado
+
+
+# ── Estudiantes únicos del profesor (widget de avatares del dashboard) ────────
+
+async def listar_estudiantes_unicos_profesor(
+    db: AsyncSession, profesor_id: int, limite: int = 12
+) -> list[dict]:
+    """Estudiantes únicos (con avatar) de todas las aulas activas del profesor."""
+    res = await db.execute(
+        select(Usuario.id, Usuario.username, Avatar.imagen_src)
+        .join(AulaEstudiante, AulaEstudiante.estudiante_id == Usuario.id)
+        .join(Aula, AulaEstudiante.aula_id == Aula.id)
+        .outerjoin(Avatar, Avatar.usuario_id == Usuario.id)
+        .where(
+            Aula.profesor_id == profesor_id,
+            Aula.esta_activa == True,
+            AulaEstudiante.esta_activo == True,
+        )
+        .distinct()
+        .limit(limite)
+    )
+    return [
+        {"id": uid, "username": username, "avatar": avatar}
+        for uid, username, avatar in res.all()
+    ]
 
 
 # ── Crear tarea ───────────────────────────────────────────────────────────────

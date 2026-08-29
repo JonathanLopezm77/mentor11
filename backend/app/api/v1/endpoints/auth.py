@@ -3,6 +3,8 @@ app/api/v1/endpoints/auth.py
 Endpoints de autenticación: registro, login, refresh y recuperación de contraseña.
 """
 
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +26,7 @@ from app.services.auth_service import (
 )
 from app.services.email_service import enviar_correo_recuperacion
 from app.core.security import create_access_token, create_refresh_token
+from app.core.rate_limit import rate_limiter
 
 router = APIRouter()
 
@@ -31,7 +34,12 @@ router = APIRouter()
 # ─── Registro ─────────────────────────────────────────────────────────────────
 
 
-@router.post("/registro", response_model=TokenRespuesta, status_code=201)
+@router.post(
+    "/registro",
+    response_model=TokenRespuesta,
+    status_code=201,
+    dependencies=[Depends(rate_limiter(5, 60))],
+)
 async def registro(datos: UsuarioRegistro, db: AsyncSession = Depends(get_db)):
     """Registra un nuevo usuario y retorna los tokens de acceso."""
     try:
@@ -49,7 +57,11 @@ async def registro(datos: UsuarioRegistro, db: AsyncSession = Depends(get_db)):
 # ─── Login ────────────────────────────────────────────────────────────────────
 
 
-@router.post("/login", response_model=TokenRespuesta)
+@router.post(
+    "/login",
+    response_model=TokenRespuesta,
+    dependencies=[Depends(rate_limiter(8, 60))],
+)
 async def login(datos: UsuarioLogin, db: AsyncSession = Depends(get_db)):
     """Autentica un usuario con username/email y contraseña."""
     try:
@@ -87,7 +99,10 @@ class ResetearPasswordRequest(BaseModel):
     confirmar_password: str
 
 
-@router.post("/recuperar-password")
+@router.post(
+    "/recuperar-password",
+    dependencies=[Depends(rate_limiter(3, 300))],
+)
 async def recuperar_password(
     datos: RecuperarPasswordRequest,
     db: AsyncSession = Depends(get_db),
@@ -100,7 +115,9 @@ async def recuperar_password(
 
     if resultado:
         username, email, token = resultado
-        enviar_correo_recuperacion(email, token, username)
+        # Llamada SMTP síncrona y bloqueante — se corre en un hilo aparte para
+        # no congelar el único event loop del servidor mientras se conecta a Gmail.
+        await asyncio.to_thread(enviar_correo_recuperacion, email, token, username)
 
     return {"mensaje": "Si el correo existe, recibirás un enlace de recuperación."}
 

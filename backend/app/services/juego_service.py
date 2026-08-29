@@ -18,6 +18,7 @@ from app.models.juego import (
 )
 from app.schemas.juego import IniciarSesionRequest, ResponderPreguntaRequest
 from app.services import online_state
+from app.utils.tiempo import utc_a_bogota
 
 
 class JuegoError(Exception):
@@ -134,6 +135,45 @@ async def responder_pregunta(
     if not sesion:
         raise JuegoError("Sesión no encontrada o ya finalizada", 404)
 
+    # Idempotencia: si este intento concreto (checkpoint) ya fue procesado
+    # (doble clic, reintento de red), se devuelve el resultado ya guardado
+    # en vez de contarlo de nuevo. No cuenta puntos online de nuevo — esos
+    # ya se acreditaron la primera vez. No aplica si el llamador no manda
+    # checkpoint (ej. el poder 75%, que responde internamente una sola vez).
+    if datos.checkpoint is not None:
+        existe = await db.execute(
+            select(RespuestaUsuario).where(
+                RespuestaUsuario.sesion_id == sesion_id,
+                RespuestaUsuario.checkpoint == datos.checkpoint,
+            )
+        )
+        previa = existe.scalar_one_or_none()
+        if previa:
+            resultado_p = await db.execute(
+                select(Pregunta)
+                .options(selectinload(Pregunta.respuestas), selectinload(Pregunta.pistas))
+                .where(Pregunta.id == previa.pregunta_id)
+            )
+            pregunta_previa = resultado_p.scalar_one_or_none()
+            opcion_correcta_previa = (
+                next((r for r in pregunta_previa.respuestas if r.es_correcta), None)
+                if pregunta_previa
+                else None
+            )
+            return {
+                "es_correcta": previa.es_correcta,
+                "opcion_correcta_id": (
+                    opcion_correcta_previa.id
+                    if opcion_correcta_previa
+                    else previa.opcion_elegida_id
+                ),
+                "opcion_elegida_id": previa.opcion_elegida_id,
+                "explicacion": pregunta_previa.explicacion_texto if pregunta_previa else None,
+                "pista_disponible": bool(pregunta_previa.pistas) if pregunta_previa else False,
+                "puntos_online": 0,
+                "proteccion_usada": False,
+            }
+
     if online_state.efecto_activo(usuario_id, "congelar"):
         raise JuegoError("Estás congelado por el rival, espera unos segundos", 403)
 
@@ -162,6 +202,7 @@ async def responder_pregunta(
         es_correcta=es_correcta,
         uso_pista=datos.uso_pista,
         tiempo_respuesta_ms=datos.tiempo_respuesta_ms,
+        checkpoint=datos.checkpoint,
     )
     db.add(respuesta)
 
@@ -356,7 +397,10 @@ async def finalizar_sesion(
     if usuario:
         usuario.puntos_totales += puntaje
 
-        hoy = ahora.date()
+        # La racha se cuenta por día calendario en Bogotá, no en UTC — si no,
+        # a estudiantes que juegan de noche (después de las 7pm) se les
+        # desfasa el día y la racha se rompe o se infla sin motivo.
+        hoy = utc_a_bogota(ahora).date()
         res_ultima = await db.execute(
             select(SesionJuego)
             .where(
@@ -372,7 +416,7 @@ async def finalizar_sesion(
         if ultima_sesion is None:
             usuario.racha_actual = 1
         else:
-            ultimo_dia = ultima_sesion.finalizada_en.date()
+            ultimo_dia = utc_a_bogota(ultima_sesion.finalizada_en).date()
             if ultimo_dia == hoy:
                 pass
             elif ultimo_dia == hoy - timedelta(days=1):

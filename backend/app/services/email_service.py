@@ -52,7 +52,7 @@ def enviar_correo_recuperacion(email_destino: str, token: str, username: str) ->
 
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
             server.ehlo()
             server.starttls()
             server.login(settings.GMAIL_USER, settings.GMAIL_PASSWORD)

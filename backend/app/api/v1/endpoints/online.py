@@ -16,7 +16,7 @@ from sqlalchemy import select
 
 from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
-from app.models.usuario import Avatar
+from app.models.usuario import Avatar, Usuario
 from app.services import online_state
 from app.services.juego_service import finalizar_sesion, JuegoError
 
@@ -42,6 +42,18 @@ def _redimensionar_avatar_sync(data_uri: str) -> str:
         return f"data:image/png;base64,{nuevo_b64}"
     except Exception:
         return data_uri  # si algo falla, se manda el original como respaldo
+
+
+async def _obtener_username(usuario_id: int) -> str:
+    # El nombre mostrado al rival sale de la BD, nunca del query param del
+    # cliente (ver SEC-03) — evita que alguien conectándose "a mano" al WS
+    # mande cualquier string arbitrario como su nombre.
+    async with AsyncSessionLocal() as db:
+        resultado = await db.execute(
+            select(Usuario.username).where(Usuario.id == usuario_id)
+        )
+        username = resultado.scalar_one_or_none()
+    return username or f"Jugador{usuario_id}"
 
 
 async def _obtener_avatar(usuario_id: int) -> str | None:
@@ -115,9 +127,10 @@ async def online_ws(websocket: WebSocket):
         return
 
     usuario_id: int = int(payload["sub"])
-    nombre: str = websocket.query_params.get("username") or f"Jugador{usuario_id}"
 
     await websocket.accept()
+
+    nombre = await _obtener_username(usuario_id)
 
     avatar = await _obtener_avatar(usuario_id)
     jugador = {"ws": websocket, "usuario_id": usuario_id, "nombre": nombre, "avatar": avatar, "reconectado": False, "sesion_id": None}

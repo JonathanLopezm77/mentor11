@@ -17,6 +17,7 @@ from app.models.contenido import Materia, Pregunta
 from app.services.usuario_service import (
     obtener_perfil, editar_perfil, cambiar_password, UsuarioError
 )
+from app.utils.tiempo import hoy_en_bogota, bogota_a_utc
 
 router = APIRouter()
 
@@ -147,16 +148,18 @@ async def obtener_estadisticas(
         elif periodo == "semana":
             desde = ahora - timedelta(weeks=1)
             hasta = ahora
-        else:  # mes
+        else:  # mes — el límite se calcula en hora de Bogotá, no UTC, para
+            # que no se corran ~5 horas del mes real que vive el estudiante
             if mes:
                 anio, num_mes = int(mes.split("-")[0]), int(mes.split("-")[1])
             else:
-                anio, num_mes = ahora.year, ahora.month
-            desde = datetime(anio, num_mes, 1)
+                hoy_bogota = hoy_en_bogota()
+                anio, num_mes = hoy_bogota.year, hoy_bogota.month
+            desde = bogota_a_utc(datetime(anio, num_mes, 1))
             if num_mes == 12:
-                hasta = datetime(anio + 1, 1, 1)
+                hasta = bogota_a_utc(datetime(anio + 1, 1, 1))
             else:
-                hasta = datetime(anio, num_mes + 1, 1)
+                hasta = bogota_a_utc(datetime(anio, num_mes + 1, 1))
 
         resultado = await db.execute(
             select(

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="/static/js/auth_fetch.js"></script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mentor 11 — Online</title>
@@ -851,7 +853,7 @@
         const res = await fetch(`${API}/juego/sesiones/${sesionId}/responder`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId })
+          body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId, checkpoint: actual })
         });
         const data = await res.json();
         procesarRespuesta(data, opcionId);

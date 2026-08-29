@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="/static/js/auth_fetch.js"></script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mentor 11 — Resultado Arcade</title>
@@ -21,7 +23,7 @@
   <main class="resultado-main">
 
     <div class="resultado-score-card">
-      <div id="resultAvatarWrap" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
+      <span class="resultado-emoji">💀</span>
       <div class="resultado-pct" id="resultPts">0</div>
       <div class="resultado-pct-label">puntos</div>
       <div class="rc-breakdown" id="resultBreakdown" hidden></div>
@@ -41,7 +43,6 @@
 
   </main>
 
-  <script src="/static/js/resultado_componente.js"></script>
   <script>
     const sfxEntrada = new Audio('/static/game_over.mp3');
     sfxEntrada.volume = 0.5;
@@ -67,19 +68,6 @@
       breakdown.textContent = `${puntosPreguntas} de preguntas + ${puntosBonus} de minijuego`;
       breakdown.hidden = false;
     }
-
-    // Avatar del jugador (con caída segura a un ícono si no carga)
-    (async () => {
-      const wrap = document.getElementById('resultAvatarWrap');
-      let src = null;
-      try {
-        const token = localStorage.getItem('access_token');
-        const res = await fetch('/api/v1/perfil/avatar', { headers: { Authorization: `Bearer ${token}` } });
-        if (res.ok) src = (await res.json()).imagen_src;
-      } catch (_) { }
-      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-      wrap.appendChild(RC.crearAvatar(src, usuario.username, 'lg'));
-    })();
 
     function playBip() { const s = sfxBtn.cloneNode(); s.volume = 0.5; s.play().catch(() => {}); }
 

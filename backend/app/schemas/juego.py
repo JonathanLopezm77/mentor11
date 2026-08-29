@@ -72,6 +72,11 @@ class ResponderPreguntaRequest(BaseModel):
     opcion_id: int  # La opción que eligió el usuario
     tiempo_respuesta_ms: int | None = None
     uso_pista: bool = False
+    # Identificador único de este intento concreto (ej. índice de pregunta
+    # dentro de la partida). Si se repite (doble clic, reintento de red),
+    # el servidor devuelve el mismo resultado en vez de contar la respuesta
+    # dos veces. Opcional para no romper otros llamadores (ej. poder 75%).
+    checkpoint: int | None = None
 
 
 class SesionRespuesta(BaseModel):

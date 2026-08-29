@@ -4,12 +4,15 @@ Endpoints del panel de administración.
 Solo accesibles con rol admin_tech.
 """
 
+import logging
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin, get_db
 from app.models.usuario import Usuario
+
+logger = logging.getLogger(__name__)
 from app.schemas.admin import (
     PreguntaCrear,
     PreguntaEditar,
@@ -73,6 +76,27 @@ async def descargar_plantilla(admin: Usuario = Depends(get_admin)):
 
 # ─── Subir imagen ─────────────────────────────────────────────────────────────
 
+MAX_IMAGEN_BYTES = 8 * 1024 * 1024  # 8 MB
+
+_FIRMAS_IMAGEN = {
+    b"\x89PNG\r\n\x1a\n": "png",
+    b"\xff\xd8\xff": "jpeg",
+    b"GIF87a": "gif",
+    b"GIF89a": "gif",
+}
+
+
+def _tipo_imagen_real(contenido: bytes) -> str | None:
+    """Detecta el tipo real de imagen por los primeros bytes del archivo
+    (magic bytes), no por la extensión del nombre — un .png renombrado que
+    en realidad no es una imagen no pasa este chequeo (ver SEC-04)."""
+    for firma, tipo in _FIRMAS_IMAGEN.items():
+        if contenido.startswith(firma):
+            return tipo
+    if contenido[:4] == b"RIFF" and contenido[8:12] == b"WEBP":
+        return "webp"
+    return None
+
 
 @router.post("/imagenes/subir")
 async def subir_imagen_pregunta(
@@ -93,13 +117,21 @@ async def subir_imagen_pregunta(
     contenido = await imagen.read()
     if len(contenido) == 0:
         raise HTTPException(status_code=400, detail="La imagen está vacía")
+    if len(contenido) > MAX_IMAGEN_BYTES:
+        raise HTTPException(status_code=413, detail="La imagen no puede superar 8 MB")
+    if _tipo_imagen_real(contenido) is None:
+        raise HTTPException(
+            status_code=400,
+            detail="El archivo no es una imagen válida (PNG, JPG, WebP o GIF)",
+        )
 
     try:
         nombre = f"pregunta_{uuid.uuid4().hex[:8]}"
         url = await subir_imagen(contenido, nombre)
         return {"imagen_url": url}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al subir imagen: {str(e)}")
+    except Exception:
+        logger.exception("Error al subir imagen (admin_id=%s)", admin.id)
+        raise HTTPException(status_code=500, detail="Error al subir la imagen. Intenta de nuevo.")
 
 
 # ─── Ver detalle de una pregunta ──────────────────────────────────────────────
@@ -165,6 +197,8 @@ async def eliminar(
 
 # ─── Carga masiva desde CSV/Excel ─────────────────────────────────────────────
 
+MAX_CARGA_MASIVA_BYTES = 10 * 1024 * 1024  # 10 MB
+
 
 @router.post("/preguntas/carga-masiva", response_model=ResultadoCargaMasiva)
 async def carga_masiva(
@@ -181,14 +215,17 @@ async def carga_masiva(
     contenido = await archivo.read()
     if len(contenido) == 0:
         raise HTTPException(status_code=400, detail="El archivo está vacío")
+    if len(contenido) > MAX_CARGA_MASIVA_BYTES:
+        raise HTTPException(status_code=413, detail="El archivo no puede superar 10 MB")
 
     try:
         resultado = await cargar_preguntas_csv(
             db, admin.id, contenido, archivo.filename
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("Error procesando carga masiva (admin_id=%s, archivo=%s)", admin.id, archivo.filename)
         raise HTTPException(
-            status_code=500, detail=f"Error procesando el archivo: {str(e)}"
+            status_code=500, detail="Error procesando el archivo. Revisa el formato e intenta de nuevo."
         )
 
     return resultado

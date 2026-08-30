@@ -42,6 +42,8 @@ class PreguntaRespuesta(BaseModel):
     tipo: TipoPregunta
     nivel_dificultad: NivelDificultad
     opciones: list[OpcionSchema]
+    texto_titulo: str | None = None
+    texto_contenido: str | None = None
 
     model_config = {"from_attributes": True}
 

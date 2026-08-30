@@ -60,6 +60,8 @@ def preparar_pregunta(pregunta: Pregunta) -> dict:
             }
             for i, r in enumerate(opciones)
         ],
+        "texto_titulo": pregunta.texto.titulo if pregunta.texto else None,
+        "texto_contenido": pregunta.texto.contenido if pregunta.texto else None,
     }
 
 
@@ -94,7 +96,7 @@ async def obtener_preguntas_aleatorias(
     def _query(excluir: list[int]):
         q = (
             select(Pregunta)
-            .options(selectinload(Pregunta.respuestas))
+            .options(selectinload(Pregunta.respuestas), selectinload(Pregunta.texto))
             .where(
                 Pregunta.materia_id.in_(materia_ids),
                 Pregunta.esta_activa == True,

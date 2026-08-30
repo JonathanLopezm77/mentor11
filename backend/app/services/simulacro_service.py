@@ -96,7 +96,7 @@ async def obtener_preguntas(
 
     res = await db.execute(
         select(Pregunta)
-        .options(selectinload(Pregunta.respuestas), selectinload(Pregunta.materia))
+        .options(selectinload(Pregunta.respuestas), selectinload(Pregunta.materia), selectinload(Pregunta.texto))
         .where(Pregunta.id.in_(ids))
     )
     preguntas_map = {p.id: p for p in res.scalars().all()}
@@ -118,6 +118,8 @@ async def obtener_preguntas(
                 {"id": op.id, "letra": letras[i], "texto": op.texto}
                 for i, op in enumerate(opciones[:4])
             ],
+            "texto_titulo": p.texto.titulo if p.texto else None,
+            "texto_contenido": p.texto.contenido if p.texto else None,
         })
     return resultado
 

@@ -71,23 +71,48 @@ async def obtener_preguntas_aleatorias(
     materia_ids: list[int],
     cantidad: int = 10,
     excluir_ids: list[int] = [],
+    usuario_id: int | None = None,
 ) -> list[dict]:
-    query = (
-        select(Pregunta)
-        .options(selectinload(Pregunta.respuestas))
-        .where(
-            Pregunta.materia_id.in_(materia_ids),
-            Pregunta.esta_activa == True,
+    # Excluir las últimas 30 preguntas respondidas por el usuario en estas materias
+    recientes: list[int] = []
+    if usuario_id:
+        res = await db.execute(
+            select(RespuestaUsuario.pregunta_id)
+            .join(SesionJuego, RespuestaUsuario.sesion_id == SesionJuego.id)
+            .join(Pregunta, RespuestaUsuario.pregunta_id == Pregunta.id)
+            .where(
+                SesionJuego.usuario_id == usuario_id,
+                Pregunta.materia_id.in_(materia_ids),
+            )
+            .order_by(RespuestaUsuario.respondida_en.desc())
+            .limit(30)
         )
-        .order_by(func.random())
-        .limit(cantidad)
-    )
+        recientes = [r[0] for r in res.all()]
 
-    if excluir_ids:
-        query = query.where(Pregunta.id.notin_(excluir_ids))
+    todos_excluir = list(set(excluir_ids + recientes))
 
-    resultado = await db.execute(query)
+    def _query(excluir: list[int]):
+        q = (
+            select(Pregunta)
+            .options(selectinload(Pregunta.respuestas))
+            .where(
+                Pregunta.materia_id.in_(materia_ids),
+                Pregunta.esta_activa == True,
+            )
+            .order_by(func.random())
+            .limit(cantidad)
+        )
+        if excluir:
+            q = q.where(Pregunta.id.notin_(excluir))
+        return q
+
+    resultado = await db.execute(_query(todos_excluir))
     preguntas = resultado.scalars().all()
+
+    # Fallback: si no hay suficientes ignorando el historial, usar solo excluir_ids de sesión
+    if not preguntas:
+        resultado = await db.execute(_query(excluir_ids))
+        preguntas = resultado.scalars().all()
 
     return [preparar_pregunta(p) for p in preguntas]
 

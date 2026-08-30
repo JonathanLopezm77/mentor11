@@ -85,7 +85,7 @@ async def obtener_preguntas(
         except ValueError:
             pass
 
-    preguntas = await obtener_preguntas_aleatorias(db, ids, cantidad, excluir)
+    preguntas = await obtener_preguntas_aleatorias(db, ids, cantidad, excluir, usuario_id=usuario.id)
     if not preguntas:
         raise HTTPException(
             status_code=404,

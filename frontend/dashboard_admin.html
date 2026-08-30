@@ -1343,9 +1343,15 @@
         <label class="form-label">Explicación</label>
         <input class="form-input" type="text" id="editExplicacion" />
       </div>
-      <div class="form-group" style="margin-bottom:20px;">
+      <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">Pista</label>
         <input class="form-input" type="text" id="editPista" />
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Texto de lectura asociado (opcional)</label>
+        <select class="form-select" id="editTextoId">
+          <option value="">Sin texto</option>
+        </select>
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn btn--primary" onclick="guardarEdicion()">Guardar cambios</button>
@@ -1628,7 +1634,24 @@
       document.getElementById('editExplicacion').value = p.explicacion_texto ?? '';
       document.getElementById('editPista').value = p.pista ?? '';
       document.getElementById('msgEditar').className = 'msg';
+      await cargarTextosParaEditar(p.texto_id);
       document.getElementById('modalEditar').classList.add('open');
+    }
+
+    async function cargarTextosParaEditar(textoIdActual) {
+      const sel = document.getElementById('editTextoId');
+      sel.innerHTML = '<option value="">Sin texto</option>';
+      try {
+        const res = await fetch(`${API}/admin/textos`, { headers: authH() });
+        const textos = await res.json();
+        textos.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `${t.titulo} (ID ${t.id})`;
+          if (t.id === textoIdActual) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } catch (_) { /* mantiene solo "Sin texto" */ }
     }
 
     function cerrarModal() {
@@ -1638,6 +1661,7 @@
 
     async function guardarEdicion() {
       const msg = document.getElementById('msgEditar');
+      const textoIdVal = document.getElementById('editTextoId').value;
       const body = {
         enunciado: document.getElementById('editEnunciado').value.trim(),
         nivel_dificultad: document.getElementById('editNivel').value,
@@ -1645,6 +1669,7 @@
         imagen_url: document.getElementById('editImagenUrl').value.trim() || null,
         explicacion_texto: document.getElementById('editExplicacion').value.trim() || null,
         pista: document.getElementById('editPista').value.trim() || null,
+        texto_id: textoIdVal ? Number(textoIdVal) : null,
       };
 
       const res = await fetch(`${API}/admin/preguntas/${editandoId}`, {

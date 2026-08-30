@@ -240,6 +240,9 @@ async def editar_pregunta(
         if datos.pista:
             db.add(Pista(pregunta_id=p.id, texto_pista=datos.pista, orden=1))
 
+    if "texto_id" in datos.model_fields_set:
+        p.texto_id = datos.texto_id  # None quita el texto; int lo vincula
+
     await db.commit()
     p = await _cargar_pregunta_completa(db, pregunta_id)
     return _formatear_pregunta(p)

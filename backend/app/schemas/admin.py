@@ -64,6 +64,7 @@ class PreguntaEditar(BaseModel):
     esta_activa: bool | None = None
     opciones: list[OpcionCrear] | None = None
     pista: str | None = None
+    texto_id: int | None = None  # None = quitar; ausente = no tocar
 
 
 # ─── Pregunta: detalle completo ───────────────────────────────────────────────

@@ -73,7 +73,7 @@ function mostrarPregunta() {
 
   document.getElementById('contador').textContent = `${actual + 1} / ${preguntas.length}`;
   document.getElementById('progresoBarra').style.width = `${(actual / preguntas.length) * 100}%`;
-  document.getElementById('enunciado').textContent = p.enunciado;
+  document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
 
   // Imagen de la pregunta
   const imgPregunta = document.getElementById('preguntaImagen');

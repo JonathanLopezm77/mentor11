@@ -14,6 +14,15 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.hidden = true; });
   }
 
+  window.formatearEnunciado = function (texto) {
+    if (!texto) return '';
+    const seguro = texto
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return seguro.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  };
+
   window.actualizarTextoModal = function (titulo, contenido) {
     const btn = document.getElementById('verTextoBtn');
     if (!btn) return;

@@ -1785,6 +1785,15 @@
 
     // ── Probar pregunta ────────────────────────────────────────────────────────
 
+    function formatearEnunciado(texto) {
+      if (!texto) return '';
+      const seguro = texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return seguro.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+
     let _probarPreguntaActual = null;
 
     async function cargarProbar() {
@@ -1832,7 +1841,7 @@
       `;
 
       document.getElementById('probarMateriaBadge').textContent = p.materia_nombre;
-      document.getElementById('probarEnunciado').textContent = p.enunciado;
+      document.getElementById('probarEnunciado').innerHTML = formatearEnunciado(p.enunciado);
 
       const img = document.getElementById('probarImagen');
       if (p.imagen_url) { img.src = p.imagen_url; img.style.display = 'block'; }

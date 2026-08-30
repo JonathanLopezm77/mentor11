@@ -133,7 +133,7 @@ function mostrarPregunta() {
   }
 
   const p = preguntas[actual];
-  document.getElementById('enunciado').textContent = p.enunciado;
+  document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
 
   const imgPregunta = document.getElementById('preguntaImagen');
   if (imgPregunta) {

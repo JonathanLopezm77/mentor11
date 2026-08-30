@@ -785,7 +785,7 @@
 
       const p = preguntas[actual];
       document.getElementById('contador').textContent = `${correctas} / ${meta} ✔`;
-      document.getElementById('enunciado').textContent = p.enunciado;
+      document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
       document.getElementById('explicacion').hidden = true;
       document.getElementById('explicacion').textContent = '';
       document.getElementById('siguienteBtn').hidden = true;

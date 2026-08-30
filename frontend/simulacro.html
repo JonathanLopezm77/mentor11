@@ -359,7 +359,7 @@
       const esBloque2 = indiceActual >= limiteBloque1;
       document.getElementById('bloqueBadge').textContent = esBloque2 ? 'Bloque 2' : 'Bloque 1';
       document.getElementById('materiaTag').textContent = p.materia;
-      document.getElementById('enunciado').textContent = p.enunciado;
+      document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
       if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 
       // Contador

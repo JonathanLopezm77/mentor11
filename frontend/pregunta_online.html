@@ -210,6 +210,7 @@
   <main class="pregunta-main">
     <div class="pregunta-card">
       <p class="pregunta-enunciado" id="enunciado">Conectando...</p>
+      <button id="verTextoBtn" class="ver-texto-btn" hidden>📄 Ver texto</button>
     </div>
     <div class="opciones-grid" id="opcionesGrid"></div>
     <div class="pregunta-explicacion" id="explicacion" hidden></div>
@@ -263,6 +264,17 @@
     </div>
   </div>
 
+  <div id="textoModalOverlay" class="texto-modal-overlay" hidden>
+    <div class="texto-modal">
+      <div class="texto-modal__header">
+        <h3 class="texto-modal__titulo" id="textoModalTitulo"></h3>
+        <button class="texto-modal__cerrar" id="textoModalCerrar">✕</button>
+      </div>
+      <div class="texto-modal__body" id="textoModalContenido"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/texto_modal.js"></script>
   <script src="/static/js/resultado_componente.js"></script>
   <script>
     // ── Sonidos ────────────────────────────────────────────────
@@ -777,6 +789,8 @@
       document.getElementById('explicacion').hidden = true;
       document.getElementById('explicacion').textContent = '';
       document.getElementById('siguienteBtn').hidden = true;
+
+      if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 
       const grid = document.getElementById('opcionesGrid');
       grid.innerHTML = '';

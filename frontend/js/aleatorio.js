@@ -112,6 +112,8 @@ function mostrarPregunta() {
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
+
+  if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 }
 
 async function responder(opcionId, preguntaId) {

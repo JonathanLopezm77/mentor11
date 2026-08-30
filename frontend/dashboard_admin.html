@@ -1012,6 +1012,44 @@
             </div>
           </div>
 
+          <!-- Texto de lectura asociado (opcional) -->
+          <div style="margin-top:20px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <label class="form-label" style="margin:0;">Texto de lectura asociado</label>
+              <select class="form-select" id="textoModo" style="width:auto;padding:6px 10px;" onchange="onTextoModoChange()">
+                <option value="">Sin texto (opcional)</option>
+                <option value="nuevo">Crear texto nuevo</option>
+                <option value="existente">Usar texto existente</option>
+              </select>
+            </div>
+
+            <div id="textoNuevoPanel" style="display:none;border:1.5px solid var(--gray-200);border-radius:10px;padding:14px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div class="form-group">
+                  <label class="form-label">Título del texto (opcional)</label>
+                  <input class="form-input" type="text" id="textoTitulo" placeholder="Ej: El calentamiento global" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contenido del texto *</label>
+                  <textarea class="form-textarea" id="textoContenido" rows="6"
+                    placeholder="Pega aquí el texto de lectura..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fuente (opcional)</label>
+                  <input class="form-input" type="text" id="textoFuente"
+                    placeholder="Ej: Adaptado de National Geographic, 2022" />
+                </div>
+              </div>
+            </div>
+
+            <div id="textoExistentePanel" style="display:none;">
+              <select class="form-select" id="textoExistenteId">
+                <option value="">— Cargando textos... —</option>
+              </select>
+              <div id="textoExistentePreview" style="display:none;margin-top:8px;padding:10px 14px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;font-size:0.82rem;color:var(--gray-500);line-height:1.5;"></div>
+            </div>
+          </div>
+
           <div style="margin-top:20px;display:flex;gap:10px;">
             <button type="submit" class="btn btn--primary" id="btnCrear">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1295,7 +1333,51 @@
       [0, 1, 2, 3].forEach(i => {
         document.getElementById('opImgPrev' + i).style.display = 'none';
       });
+      document.getElementById('textoModo').value = '';
+      document.getElementById('textoNuevoPanel').style.display = 'none';
+      document.getElementById('textoExistentePanel').style.display = 'none';
+      document.getElementById('textoExistentePreview').style.display = 'none';
     }
+
+    function onTextoModoChange() {
+      const modo = document.getElementById('textoModo').value;
+      document.getElementById('textoNuevoPanel').style.display = modo === 'nuevo' ? 'block' : 'none';
+      document.getElementById('textoExistentePanel').style.display = modo === 'existente' ? 'block' : 'none';
+      if (modo === 'existente') cargarTextosExistentes();
+    }
+
+    async function cargarTextosExistentes() {
+      const sel = document.getElementById('textoExistenteId');
+      sel.innerHTML = '<option value="">Cargando...</option>';
+      try {
+        const materia = document.getElementById('materiaId').value;
+        let url = API + '/admin/textos';
+        if (materia) url += '?materia_id=' + materia;
+        const res = await fetch(url, { headers: authH() });
+        const textos = await res.json();
+        if (!textos.length) {
+          sel.innerHTML = '<option value="">— No hay textos en esta materia —</option>';
+          return;
+        }
+        sel.innerHTML = '<option value="">— Seleccionar texto —</option>' +
+          textos.map(t => `<option value="${t.id}" data-preview="${t.preview.replace(/"/g, '&quot;')}">${t.titulo} (ID ${t.id})</option>`).join('');
+      } catch {
+        sel.innerHTML = '<option value="">Error al cargar textos</option>';
+      }
+    }
+
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'textoExistenteId') {
+        const opt = e.target.selectedOptions[0];
+        const prev = document.getElementById('textoExistentePreview');
+        if (opt && opt.value) {
+          prev.textContent = opt.dataset.preview;
+          prev.style.display = 'block';
+        } else {
+          prev.style.display = 'none';
+        }
+      }
+    });
 
     // Crear pregunta
     document.getElementById('formCrear').addEventListener('submit', async (e) => {
@@ -1320,6 +1402,27 @@
       btn.disabled = true;
       btn.textContent = 'Creando...';
 
+      const textoModo = document.getElementById('textoModo').value;
+      let textoId = null;
+      let textoNuevo = null;
+      if (textoModo === 'existente') {
+        textoId = Number(document.getElementById('textoExistenteId').value) || null;
+      } else if (textoModo === 'nuevo') {
+        const contenido = document.getElementById('textoContenido').value.trim();
+        if (!contenido) {
+          msg.textContent = 'El contenido del texto no puede estar vacío.';
+          msg.className = 'msg err';
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Crear pregunta';
+          return;
+        }
+        textoNuevo = {
+          titulo: document.getElementById('textoTitulo').value.trim() || null,
+          contenido,
+          fuente: document.getElementById('textoFuente').value.trim() || null,
+        };
+      }
+
       const body = {
         materia_id: Number(document.getElementById('materiaId').value),
         enunciado: document.getElementById('enunciado').value.trim(),
@@ -1328,6 +1431,8 @@
         opciones,
         explicacion_texto: document.getElementById('explicacion').value.trim() || null,
         pista: document.getElementById('pista').value.trim() || null,
+        texto_id: textoId,
+        texto_nuevo: textoNuevo,
       };
 
       const res = await fetch(API + '/admin/preguntas', {
@@ -1336,7 +1441,8 @@
 
       if (res.ok) {
         const data = await res.json();
-        msg.textContent = `✓ Pregunta #${data.id} creada correctamente.`;
+        const textoInfo = data.texto_id ? ` (con texto de lectura #${data.texto_id})` : '';
+        msg.textContent = `✓ Pregunta #${data.id} creada correctamente${textoInfo}.`;
         msg.className = 'msg ok';
         limpiarFormulario();
       } else {

@@ -251,6 +251,7 @@
     <div class="sim-materia-tag" id="materiaTag">Lectura Crítica</div>
     <div class="sim-pregunta-card">
       <p id="enunciado" style="margin:0;">Cargando preguntas...</p>
+      <button id="verTextoBtn" class="ver-texto-btn" hidden>📄 Ver texto</button>
     </div>
     <div class="sim-opciones" id="opcionesContainer"></div>
   </main>
@@ -291,6 +292,17 @@
     </div>
   </div>
 
+  <div id="textoModalOverlay" class="texto-modal-overlay" hidden>
+    <div class="texto-modal">
+      <div class="texto-modal__header">
+        <h3 class="texto-modal__titulo" id="textoModalTitulo"></h3>
+        <button class="texto-modal__cerrar" id="textoModalCerrar">✕</button>
+      </div>
+      <div class="texto-modal__body" id="textoModalContenido"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/texto_modal.js"></script>
   <script>
     const API = '/api/v1';
     const token = localStorage.getItem('access_token');
@@ -348,6 +360,7 @@
       document.getElementById('bloqueBadge').textContent = esBloque2 ? 'Bloque 2' : 'Bloque 1';
       document.getElementById('materiaTag').textContent = p.materia;
       document.getElementById('enunciado').textContent = p.enunciado;
+      if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 
       // Contador
       const limActual = esBloque2 ? preguntas.length : limiteBloque1;

@@ -35,8 +35,7 @@
       <p class="pregunta-enunciado" id="enunciado">Cargando...</p>
       <img id="preguntaImagen" src="" alt="Imagen de la pregunta"
         style="display:none;width:100%;border-radius:12px;margin-top:12px;max-height:300px;object-fit:contain;" />
-      <img id="preguntaImagen" src="" alt="Imagen de la pregunta"
-        style="display:none;width:100%;border-radius:12px;margin-top:12px;max-height:300px;object-fit:contain;" />
+      <button id="verTextoBtn" class="ver-texto-btn" hidden>📄 Ver texto</button>
     </div>
     <div class="opciones-grid" id="opcionesGrid"></div>
     <div class="pregunta-explicacion" id="explicacion" hidden></div>
@@ -45,6 +44,17 @@
     <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
     <button class="libre-cta aleat-terminar-btn" id="terminarBtn">Terminar</button>
   </div>
+  <div id="textoModalOverlay" class="texto-modal-overlay" hidden>
+    <div class="texto-modal">
+      <div class="texto-modal__header">
+        <h3 class="texto-modal__titulo" id="textoModalTitulo"></h3>
+        <button class="texto-modal__cerrar" id="textoModalCerrar">✕</button>
+      </div>
+      <div class="texto-modal__body" id="textoModalContenido"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/texto_modal.js"></script>
   <script src="/static/js/aleatorio.js"></script>
 </body>
 

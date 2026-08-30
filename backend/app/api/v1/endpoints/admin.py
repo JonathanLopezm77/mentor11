@@ -34,6 +34,34 @@ from app.services.imagen_service import subir_imagen
 router = APIRouter()
 
 
+# ─── Listar textos existentes ────────────────────────────────────────────────
+
+
+@router.get("/textos")
+async def listar_textos(
+    materia_id: int | None = Query(None),
+    db: AsyncSession = Depends(get_db),
+    admin: Usuario = Depends(get_admin),
+):
+    from sqlalchemy import select as sa_select
+    from app.models.contenido import Texto
+
+    query = sa_select(Texto).where(Texto.esta_activo == True)
+    if materia_id:
+        query = query.where(Texto.materia_id == materia_id)
+    query = query.order_by(Texto.id.desc())
+    res = await db.execute(query)
+    textos = res.scalars().all()
+    return [
+        {
+            "id": t.id,
+            "titulo": t.titulo or f"Texto #{t.id}",
+            "preview": t.contenido[:80] + ("..." if len(t.contenido) > 80 else ""),
+        }
+        for t in textos
+    ]
+
+
 # ─── Listar preguntas ─────────────────────────────────────────────────────────
 
 

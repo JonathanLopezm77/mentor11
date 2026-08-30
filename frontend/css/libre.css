@@ -1147,3 +1147,75 @@
   padding: 6px 0 2px;
   background: var(--white);
 }
+
+/* ── Botón y modal: texto de contexto ─────────────────────── */
+.ver-texto-btn {
+  margin-top: 10px;
+  padding: 6px 16px;
+  background: #fff7ed;
+  border: 1.5px solid #fdba74;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ea580c;
+  cursor: pointer;
+  font-family: var(--font);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background .15s;
+}
+.ver-texto-btn:hover { background: #ffedd5; }
+
+.texto-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.texto-modal-overlay[hidden] { display: none !important; }
+
+.texto-modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.texto-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.texto-modal__titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+.texto-modal__cerrar {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.texto-modal__body {
+  padding: 16px 20px 32px;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #374151;
+  white-space: pre-wrap;
+}

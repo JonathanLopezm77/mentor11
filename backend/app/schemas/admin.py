@@ -25,6 +25,15 @@ class OpcionDetalle(BaseModel):
     es_correcta: bool
 
 
+# ─── Texto de lectura ─────────────────────────────────────────────────────────
+
+
+class TextoNuevo(BaseModel):
+    titulo: str | None = None
+    contenido: str
+    fuente: str | None = None
+
+
 # ─── Pregunta: crear ──────────────────────────────────────────────────────────
 
 
@@ -38,6 +47,8 @@ class PreguntaCrear(BaseModel):
     explicacion_texto: str | None = None
     opciones: list[OpcionCrear]
     pista: str | None = None
+    texto_id: int | None = None      # vincular a texto existente
+    texto_nuevo: TextoNuevo | None = None  # crear texto nuevo al vuelo
 
 
 # ─── Pregunta: editar ─────────────────────────────────────────────────────────
@@ -73,6 +84,9 @@ class PreguntaDetalle(BaseModel):
     veces_incorrecta: int
     opciones: list[OpcionDetalle]
     pista: str | None
+    texto_id: int | None = None
+    texto_titulo: str | None = None
+    texto_contenido: str | None = None
 
     model_config = {"from_attributes": True}
 

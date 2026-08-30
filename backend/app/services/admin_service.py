@@ -15,6 +15,7 @@ from app.models.contenido import (
     Pregunta,
     Respuesta,
     Pista,
+    Texto,
     NivelDificultad,
     TipoPregunta,
 )
@@ -56,6 +57,9 @@ def _formatear_pregunta(p: Pregunta) -> dict:
             for i, o in enumerate(p.respuestas)
         ],
         "pista": p.pistas[0].texto_pista if p.pistas else None,
+        "texto_id": p.texto_id,
+        "texto_titulo": p.texto.titulo if p.texto else None,
+        "texto_contenido": p.texto.contenido if p.texto else None,
     }
 
 
@@ -66,6 +70,7 @@ async def _cargar_pregunta_completa(db: AsyncSession, pregunta_id: int) -> Pregu
             selectinload(Pregunta.respuestas),
             selectinload(Pregunta.pistas),
             selectinload(Pregunta.materia),
+            selectinload(Pregunta.texto),
         )
         .where(Pregunta.id == pregunta_id)
     )
@@ -80,6 +85,19 @@ async def crear_pregunta(db: AsyncSession, admin_id: int, datos: PreguntaCrear) 
     if not resultado.scalar_one_or_none():
         raise AdminError("Materia no encontrada", 404)
 
+    # Resolver texto_id: crear nuevo texto o usar existente
+    texto_id_final = datos.texto_id
+    if datos.texto_nuevo and datos.texto_nuevo.contenido.strip():
+        nuevo_texto = Texto(
+            materia_id=datos.materia_id,
+            titulo=datos.texto_nuevo.titulo,
+            contenido=datos.texto_nuevo.contenido.strip(),
+            fuente=datos.texto_nuevo.fuente,
+        )
+        db.add(nuevo_texto)
+        await db.flush()
+        texto_id_final = nuevo_texto.id
+
     pregunta = Pregunta(
         materia_id=datos.materia_id,
         creada_por=admin_id,
@@ -89,6 +107,7 @@ async def crear_pregunta(db: AsyncSession, admin_id: int, datos: PreguntaCrear) 
         nivel_dificultad=datos.nivel_dificultad,
         competencia=datos.competencia,
         explicacion_texto=datos.explicacion_texto,
+        texto_id=texto_id_final,
     )
     db.add(pregunta)
     await db.flush()

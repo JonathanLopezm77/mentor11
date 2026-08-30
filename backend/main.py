@@ -14,13 +14,16 @@ from app.core.config import settings
 from app.api.v1.endpoints import auth, juego, admin, perfil, online, profesor, simulacro
 
 # ─── Crear la aplicación ──────────────────────────────────────────────────────
+# Swagger/Redoc solo si se prenden a propósito (ENABLE_DOCS=true) -- antes
+# quedaban públicos siempre, exponiendo el esquema completo de la API a
+# cualquiera en internet.
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="API REST para la plataforma de preparación ICFES Saber 11 — Mentor 11",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
+    docs_url="/docs" if settings.ENABLE_DOCS else None,
+    redoc_url="/redoc" if settings.ENABLE_DOCS else None,
+    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json" if settings.ENABLE_DOCS else None,
 )
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
@@ -31,6 +34,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ─── Cabeceras de seguridad ─────────────────────────────────────────────────────
+# La CSP permite 'unsafe-inline' porque todo el frontend usa <script> inline
+# en cada página (no hay build step) -- no protege contra XSS por sí sola,
+# pero sí cierra clickjacking, inyección de <object>/<embed>, secuestro de
+# <base>, y limita a qué hosts externos se puede cargar algo (solo Google
+# Fonts y Cloudinary, que son los únicos que el frontend usa hoy).
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data: https://res.cloudinary.com; "
+    "media-src 'self'; "
+    "connect-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "frame-ancestors 'none'; "
+    "form-action 'self'"
+)
+
+
+@app.middleware("http")
+async def agregar_headers_seguridad(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = _CSP
+    return response
 
 
 # ─── Cache para archivos estáticos ─────────────────────────────────────────────

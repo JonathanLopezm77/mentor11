@@ -2,13 +2,18 @@
 app/core/security.py
 Funciones de seguridad: hash de contraseñas y tokens JWT.
 Usa bcrypt directamente para evitar incompatibilidades con passlib.
+
+JWT con PyJWT (no python-jose): python-jose está sin mantenimiento y tiene
+CVEs conocidos sin parche (confusión de algoritmo, DoS por descompresión) --
+PyJWT es el reemplazo estándar, con la misma firma de funciones.
 """
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 
 from app.core.config import settings
 
@@ -56,5 +61,5 @@ def decode_token(token: str) -> dict | None:
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         return payload
-    except JWTError:
+    except PyJWTError:
         return None

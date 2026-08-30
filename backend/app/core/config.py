@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
+    # Swagger/Redoc apagados por defecto -- seguro por defecto en vez de
+    # depender de que ENVIRONMENT esté bien puesto en cada entorno. Se
+    # encienden a propósito con ENABLE_DOCS=true (solo en desarrollo local).
+    ENABLE_DOCS: bool = False
 
     # ── Base de datos ─────────────────────────────────
     DATABASE_URL: str

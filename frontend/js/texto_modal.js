@@ -26,7 +26,11 @@
   window.actualizarTextoModal = function (titulo, contenido) {
     const btn = document.getElementById('verTextoBtn');
     if (!btn) return;
-    if (contenido) {
+    // Un texto vacío o de solo espacios no debe mostrar el botón — si no,
+    // se abre un modal en blanco (ver captura: preguntas sin texto real
+    // asociado, como las de gráficas, quedaban con el botón visible).
+    const hayContenido = contenido && contenido.trim().length > 0;
+    if (hayContenido) {
       btn.hidden = false;
       document.getElementById('textoModalTitulo').textContent  = titulo || 'Texto de referencia';
       document.getElementById('textoModalContenido').textContent = contenido;

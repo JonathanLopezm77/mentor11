@@ -18,6 +18,19 @@ class UsuarioRegistro(BaseModel):
     fecha_nacimiento: datetime | None = None
     rol: RolUsuario = RolUsuario.estudiante
 
+    @field_validator("rol")
+    @classmethod
+    def rol_permitido_en_registro_publico(cls, v: RolUsuario) -> RolUsuario:
+        # El registro público solo puede crear estudiante o profesor (las
+        # únicas opciones que la UI de registro.html realmente ofrece).
+        # admin_contenido/admin_tech nunca deben poder autoasignarse aquí —
+        # antes el servidor confiaba en cualquier valor que mandara el
+        # cliente, permitiendo volverse admin con una sola llamada a la API.
+        permitidos = {RolUsuario.estudiante, RolUsuario.profesor}
+        if v not in permitidos:
+            raise ValueError("Rol no permitido en el registro público")
+        return v
+
     @field_validator("username")
     @classmethod
     def username_valido(cls, v: str) -> str:

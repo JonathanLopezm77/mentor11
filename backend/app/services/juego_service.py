@@ -16,9 +16,17 @@ from app.models.juego import (
     EstadisticaUsuario,
     ModoJuego,
 )
+from app.models.usuario import Usuario
 from app.schemas.juego import IniciarSesionRequest, ResponderPreguntaRequest
 from app.services import online_state
 from app.utils.tiempo import utc_a_bogota
+
+
+_MODOS_ONLINE = {
+    ModoJuego.online_tradicional,
+    ModoJuego.online_poderes,
+    ModoJuego.online_arcade,
+}
 
 
 class JuegoError(Exception):
@@ -241,6 +249,12 @@ async def responder_pregunta(
     if not es_correcta:
         pregunta.veces_incorrecta += 1
 
+    if es_correcta and sesion.modo_juego not in _MODOS_ONLINE:
+        res_usuario = await db.execute(select(Usuario).where(Usuario.id == usuario_id))
+        usuario_pts = res_usuario.scalar_one_or_none()
+        if usuario_pts:
+            usuario_pts.puntos_totales += 10
+
     await db.commit()
 
     puntos_online, proteccion_usada = online_state.puntos_por_respuesta(usuario_id, es_correcta)
@@ -414,15 +428,22 @@ async def finalizar_sesion(
     sesion.duracion_segundos = duracion
     sesion.puntaje_obtenido = puntaje
 
-    from app.models.usuario import Usuario
-
     resultado_usuario = await db.execute(
         select(Usuario).where(Usuario.id == usuario_id)
     )
     usuario = resultado_usuario.scalar_one_or_none()
 
     if usuario:
-        usuario.puntos_totales += puntaje
+        if puntaje_override is not None:
+            # Online: los puntos no se acreditaron por pregunta, se suman aquí.
+            usuario.puntos_totales += puntaje
+        else:
+            # Offline: +10 por respuesta correcta ya se sumaron en tiempo real.
+            # Solo aplicamos la penalización por pistas y el bonus de arcade.
+            deduccion_pistas = sesion.pistas_usadas * 2
+            usuario.puntos_totales = max(0, usuario.puntos_totales - deduccion_pistas)
+            if bonus_incluido:
+                usuario.puntos_totales += bonus_incluido
 
         # La racha se cuenta por día calendario en Bogotá, no en UTC — si no,
         # a estudiantes que juegan de noche (después de las 7pm) se les

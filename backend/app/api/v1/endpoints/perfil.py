@@ -67,6 +67,13 @@ class CambiarPassword(BaseModel):
     password_nuevo_confirmar: str
 
 
+# ─── Ping de sesión ───────────────────────────────────────────────────────────
+
+@router.get("/ping")
+async def ping_sesion(usuario: Usuario = Depends(get_current_user)):
+    return {"ok": True}
+
+
 # ─── Avatar ───────────────────────────────────────────────────────────────────
 
 @router.get("/avatar", response_model=AvatarRespuesta)

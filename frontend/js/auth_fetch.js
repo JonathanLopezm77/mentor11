@@ -94,4 +94,15 @@
     }
     return _fetchOriginal(input, initNuevo);
   };
+
+  // Heartbeat: verifica la sesión cada 45 s aunque el usuario esté inactivo.
+  // Si otra sesión desplazó la actual, el interceptor de arriba detecta el
+  // 401 "otro dispositivo" y redirige al login automáticamente.
+  setInterval(function () {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    window.fetch('/api/v1/perfil/ping', {
+      headers: { Authorization: 'Bearer ' + token },
+    }).catch(function () {});
+  }, 45000);
 })();

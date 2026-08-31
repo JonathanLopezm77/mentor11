@@ -26,7 +26,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        try {
+          const datos = await res.clone().json();
+          if (datos && typeof datos.detail === 'string' && datos.detail.includes('otro dispositivo')) {
+            localStorage.clear();
+            alert('Tu sesión fue cerrada porque iniciaste sesión en otro dispositivo.');
+            location.href = '/index.html';
+          }
+        } catch (_) {}
+        return null;
+      }
       const data = await res.json();
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);

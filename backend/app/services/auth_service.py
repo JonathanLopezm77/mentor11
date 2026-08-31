@@ -92,7 +92,7 @@ async def login_usuario(db: AsyncSession, datos: UsuarioLogin) -> dict:
 
     return {
         "access_token": create_access_token(usuario.id, sid=sid),
-        "refresh_token": create_refresh_token(usuario.id),
+        "refresh_token": create_refresh_token(usuario.id, sid=sid),
         "usuario": usuario,
     }
 
@@ -113,6 +113,10 @@ async def refrescar_token(db: AsyncSession, refresh_token: str) -> dict:
     if not usuario or not usuario.esta_activo:
         raise AuthError("Usuario no encontrado o desactivado", 401)
 
+    sid_refresh = payload.get("sid")
+    if sid_refresh and usuario.token_sesion != sid_refresh:
+        raise AuthError("Sesión cerrada: iniciaste sesión en otro dispositivo", 401)
+
     sid = str(uuid.uuid4())
     usuario.token_sesion = sid
     await db.commit()
@@ -120,7 +124,7 @@ async def refrescar_token(db: AsyncSession, refresh_token: str) -> dict:
 
     return {
         "access_token": create_access_token(usuario.id, sid=sid),
-        "refresh_token": create_refresh_token(usuario.id),
+        "refresh_token": create_refresh_token(usuario.id, sid=sid),
         "usuario": usuario,
     }
 

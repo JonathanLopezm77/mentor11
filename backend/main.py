@@ -77,7 +77,10 @@ async def agregar_headers_seguridad(request, call_next):
 async def agregar_cache_estaticos(request, call_next):
     response = await call_next(request)
     if request.url.path.startswith("/static/"):
-        response.headers["Cache-Control"] = "public, max-age=86400"
+        if request.url.path.endswith(".js") or request.url.path.endswith(".css"):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=86400"
     return response
 
 # ─── Routers ──────────────────────────────────────────────────────────────────

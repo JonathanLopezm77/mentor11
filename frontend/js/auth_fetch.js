@@ -53,6 +53,18 @@
 
     if (res.status !== 401 || !_esLlamadaApiAutenticada(input)) return res;
 
+    // Detectar sesión desplazada por otro dispositivo — no intentar refresh
+    const resClonado = res.clone();
+    try {
+      const datos = await resClonado.json();
+      if (datos && typeof datos.detail === 'string' && datos.detail.includes('otro dispositivo')) {
+        localStorage.clear();
+        alert('Tu sesión fue cerrada porque iniciaste sesión en otro dispositivo.');
+        location.href = '/index.html';
+        return res;
+      }
+    } catch (_) { /* la respuesta no era JSON, continuar con el flujo normal */ }
+
     if (!_refrescando) {
       _refrescando = _refrescarToken().finally(() => { _refrescando = null; });
     }

@@ -46,6 +46,13 @@ async def get_current_user(
             detail="Usuario no encontrado o desactivado",
         )
 
+    sid = payload.get("sid")
+    if sid and usuario.token_sesion != sid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sesión cerrada: iniciaste sesión en otro dispositivo",
+        )
+
     return usuario
 
 

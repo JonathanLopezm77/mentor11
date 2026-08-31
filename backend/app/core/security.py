@@ -39,11 +39,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 
 
-def create_access_token(subject: Any, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: Any,
+    expires_delta: timedelta | None = None,
+    sid: str | None = None,
+) -> str:
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload = {"sub": str(subject), "exp": expire, "type": "access"}
+    payload: dict[str, Any] = {"sub": str(subject), "exp": expire, "type": "access"}
+    if sid:
+        payload["sid"] = sid
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 

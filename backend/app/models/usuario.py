@@ -50,6 +50,9 @@ class Usuario(Base):
     racha_maxima: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     puntos_totales: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
+    # ── Sesión única ─────────────────────────────────────────────────────────
+    token_sesion: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
     # ── Timestamps ───────────────────────────────────────────────────────────
     ultimo_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     fecha_registro: Mapped[datetime] = mapped_column(

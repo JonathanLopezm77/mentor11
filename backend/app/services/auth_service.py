@@ -4,6 +4,7 @@ Lógica de negocio para registro, login, refresh y recuperación de contraseña.
 """
 
 import secrets
+import uuid
 from datetime import datetime, timedelta
 
 from sqlalchemy import or_, select
@@ -83,12 +84,14 @@ async def login_usuario(db: AsyncSession, datos: UsuarioLogin) -> dict:
     if not usuario.esta_activo:
         raise AuthError("La cuenta está desactivada", 403)
 
+    sid = str(uuid.uuid4())
     usuario.ultimo_login = datetime.utcnow()
+    usuario.token_sesion = sid
     await db.commit()
     await db.refresh(usuario)
 
     return {
-        "access_token": create_access_token(usuario.id),
+        "access_token": create_access_token(usuario.id, sid=sid),
         "refresh_token": create_refresh_token(usuario.id),
         "usuario": usuario,
     }
@@ -110,8 +113,13 @@ async def refrescar_token(db: AsyncSession, refresh_token: str) -> dict:
     if not usuario or not usuario.esta_activo:
         raise AuthError("Usuario no encontrado o desactivado", 401)
 
+    sid = str(uuid.uuid4())
+    usuario.token_sesion = sid
+    await db.commit()
+    await db.refresh(usuario)
+
     return {
-        "access_token": create_access_token(usuario.id),
+        "access_token": create_access_token(usuario.id, sid=sid),
         "refresh_token": create_refresh_token(usuario.id),
         "usuario": usuario,
     }

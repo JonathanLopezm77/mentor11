@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin, get_db
 from app.models.usuario import Usuario
+from app.models.sistema import Reporte, EstadoReporte
 
 logger = logging.getLogger(__name__)
 from app.schemas.admin import (
@@ -32,6 +33,79 @@ from app.services.admin_service import (
 from app.services.imagen_service import subir_imagen
 
 router = APIRouter()
+
+
+# ─── Reportes de preguntas ────────────────────────────────────────────────────
+
+
+@router.get("/reportes")
+async def listar_reportes(
+    estado: str | None = Query(None),
+    pagina: int = Query(1, ge=1),
+    por_pagina: int = Query(30, le=100),
+    db: AsyncSession = Depends(get_db),
+    admin: Usuario = Depends(get_admin),
+):
+    from sqlalchemy import select as sa_select, func as sa_func
+    from sqlalchemy.orm import selectinload
+
+    query = (
+        sa_select(Reporte)
+        .options(
+            selectinload(Reporte.usuario),
+            selectinload(Reporte.pregunta),
+        )
+        .order_by(Reporte.creado_en.desc())
+    )
+    if estado:
+        query = query.where(Reporte.estado == estado)
+
+    total = (await db.execute(sa_select(sa_func.count()).select_from(query.subquery()))).scalar()
+    offset = (pagina - 1) * por_pagina
+    res = await db.execute(query.offset(offset).limit(por_pagina))
+    reportes = res.scalars().all()
+
+    return {
+        "total": total,
+        "pagina": pagina,
+        "por_pagina": por_pagina,
+        "reportes": [
+            {
+                "id": r.id,
+                "pregunta_id": r.pregunta_id,
+                "pregunta_enunciado": (r.pregunta.enunciado[:80] + "..." if r.pregunta and len(r.pregunta.enunciado) > 80 else (r.pregunta.enunciado if r.pregunta else None)),
+                "tipo": r.tipo,
+                "descripcion": r.descripcion,
+                "estado": r.estado,
+                "usuario": r.usuario.username if r.usuario else "—",
+                "creado_en": r.creado_en.isoformat(),
+            }
+            for r in reportes
+        ],
+    }
+
+
+@router.patch("/reportes/{reporte_id}")
+async def actualizar_estado_reporte(
+    reporte_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: Usuario = Depends(get_admin),
+    estado: str = Query(...),
+):
+    from sqlalchemy import select as sa_select
+
+    if estado not in [e.value for e in EstadoReporte]:
+        raise HTTPException(status_code=400, detail="Estado no válido")
+
+    res = await db.execute(sa_select(Reporte).where(Reporte.id == reporte_id))
+    reporte = res.scalar_one_or_none()
+    if not reporte:
+        raise HTTPException(status_code=404, detail="Reporte no encontrado")
+
+    reporte.estado = EstadoReporte(estado)
+    reporte.resuelto_por = admin.id
+    await db.commit()
+    return {"mensaje": f"Reporte marcado como {estado}"}
 
 
 # ─── Listar textos existentes ────────────────────────────────────────────────

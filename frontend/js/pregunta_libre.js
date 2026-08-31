@@ -120,6 +120,7 @@ function mostrarPregunta() {
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
+  document.getElementById('reportarBtn').hidden = true;
 
   if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 }
@@ -176,6 +177,10 @@ async function responder(opcionId, preguntaId) {
     const sigBtn = document.getElementById('siguienteBtn');
     sigBtn.textContent = actual + 1 < preguntas.length ? 'Siguiente →' : 'Ver resultado';
     sigBtn.hidden = false;
+
+    const repBtn = document.getElementById('reportarBtn');
+    repBtn.hidden = false;
+    repBtn.onclick = () => window.abrirReporteModal(p.id);
 
   } catch (err) {
     console.error('[Pregunta] Error al responder:', err);

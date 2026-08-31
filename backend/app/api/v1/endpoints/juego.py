@@ -4,11 +4,13 @@ Endpoints del modo libre de juego.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user
 from app.db.database import get_db
 from app.models.usuario import Usuario
+from app.models.sistema import Reporte, TipoReporte
 from app.schemas.juego import (
     MateriaRespuesta,
     PreguntaRespuesta,
@@ -37,6 +39,32 @@ from app.services.juego_service import (
 )
 
 router = APIRouter()
+
+
+class ReporteRequest(BaseModel):
+    pregunta_id: int
+    tipo: TipoReporte
+    descripcion: str | None = None
+
+
+# ─── Reportar pregunta ────────────────────────────────────────────────────────
+
+
+@router.post("/reportar", status_code=201)
+async def reportar_pregunta(
+    datos: ReporteRequest,
+    db: AsyncSession = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+):
+    reporte = Reporte(
+        usuario_id=usuario.id,
+        pregunta_id=datos.pregunta_id,
+        tipo=datos.tipo,
+        descripcion=datos.descripcion,
+    )
+    db.add(reporte)
+    await db.commit()
+    return {"mensaje": "Reporte enviado. Gracias por ayudarnos a mejorar."}
 
 
 # ─── Materias ─────────────────────────────────────────────────────────────────

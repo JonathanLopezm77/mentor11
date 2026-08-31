@@ -810,6 +810,13 @@
       </svg>
       Probar pregunta
     </button>
+    <button class="nav-item" data-section="reportes" onclick="navTo('reportes', this)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      Reportes
+    </button>
 
     <div class="sidebar__footer">
       <div class="sidebar__user">
@@ -1305,6 +1312,53 @@
 
     </div>
 
+    <!-- REPORTES -->
+    <div class="section" id="section-reportes">
+      <div class="page-header">
+        <h1 class="page-title">Reportes de preguntas</h1>
+      </div>
+
+      <!-- Filtros -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+        <select id="reportesFiltroEstado" onchange="cargarReportes(1)"
+          style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.85rem;background:#fff">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en_revision">En revisión</option>
+          <option value="resuelto">Resuelto</option>
+          <option value="descartado">Descartado</option>
+        </select>
+        <button class="btn btn--primary" onclick="cargarReportes(1)" style="padding:8px 16px;font-size:.85rem;">Actualizar</button>
+        <span id="reportesTotalBadge" style="font-size:.82rem;color:#64748b;"></span>
+      </div>
+
+      <div class="msg" id="msgReportes"></div>
+
+      <!-- Tabla -->
+      <div style="overflow-x:auto;">
+        <table id="reportesTabla" style="width:100%;border-collapse:collapse;font-size:.85rem;display:none;">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">ID rep.</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Pregunta ID</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Enunciado</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Tipo</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Descripción</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Usuario</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Fecha</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Estado</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="reportesCuerpo"></tbody>
+        </table>
+        <p id="reportesVacio" style="display:none;text-align:center;color:#94a3b8;padding:32px;">No hay reportes con ese filtro.</p>
+      </div>
+
+      <!-- Paginación -->
+      <div id="reportesPaginacion" style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;"></div>
+    </div>
+
   </main>
 
   <!-- Modal editar -->
@@ -1384,6 +1438,7 @@
       btn.classList.add('active');
       if (section === 'lista') cargarLista(1);
       if (section === 'inicio') cargarStats();
+      if (section === 'reportes') cargarReportes(1);
     }
 
     async function cargarStats() {
@@ -1976,6 +2031,116 @@
     document.getElementById('probarTextoModal').addEventListener('click', (e) => {
       if (e.target === document.getElementById('probarTextoModal')) cerrarTextoModal();
     });
+
+    // ── Reportes ────────────────────────────────────────────────────────────────
+
+    const ETIQUETA_TIPO = {
+      respuesta_incorrecta: 'Respuesta incorrecta',
+      error_contenido: 'Error en contenido',
+      imagen_rota: 'Imagen rota',
+      error_tecnico: 'Error técnico',
+      otro: 'Otro',
+    };
+    const ETIQUETA_ESTADO = {
+      pendiente: { texto: 'Pendiente', color: '#f59e0b', bg: '#fffbeb' },
+      en_revision: { texto: 'En revisión', color: '#3b82f6', bg: '#eff6ff' },
+      resuelto: { texto: 'Resuelto', color: '#16a34a', bg: '#f0fdf4' },
+      descartado: { texto: 'Descartado', color: '#94a3b8', bg: '#f8fafc' },
+    };
+
+    let _reportesPagina = 1;
+
+    async function cargarReportes(pagina = 1) {
+      _reportesPagina = pagina;
+      const estado = document.getElementById('reportesFiltroEstado').value;
+      const params = new URLSearchParams({ pagina, por_pagina: 30 });
+      if (estado) params.set('estado', estado);
+
+      const msg = document.getElementById('msgReportes');
+      msg.textContent = 'Cargando...';
+
+      try {
+        const res = await fetch(`/api/v1/admin/reportes?${params}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        });
+        if (!res.ok) { msg.textContent = 'Error al cargar reportes.'; return; }
+        const data = await res.json();
+        msg.textContent = '';
+
+        document.getElementById('reportesTotalBadge').textContent = `${data.total} reporte(s) en total`;
+
+        const cuerpo = document.getElementById('reportesCuerpo');
+        const tabla = document.getElementById('reportesTabla');
+        const vacio = document.getElementById('reportesVacio');
+
+        if (!data.reportes.length) {
+          tabla.style.display = 'none';
+          vacio.style.display = 'block';
+          document.getElementById('reportesPaginacion').innerHTML = '';
+          return;
+        }
+
+        tabla.style.display = 'table';
+        vacio.style.display = 'none';
+
+        cuerpo.innerHTML = data.reportes.map(r => {
+          const est = ETIQUETA_ESTADO[r.estado] || ETIQUETA_ESTADO.pendiente;
+          const fecha = new Date(r.creado_en).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+          return `<tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 12px;color:#64748b;">#${r.id}</td>
+            <td style="padding:10px 12px;">
+              <button onclick="irAProbar(${r.pregunta_id})" style="background:#eff6ff;border:none;color:#2563eb;border-radius:6px;padding:3px 8px;font-size:.8rem;cursor:pointer;font-weight:600;">
+                #${r.pregunta_id}
+              </button>
+            </td>
+            <td style="padding:10px 12px;color:#334155;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(r.pregunta_enunciado||'').replace(/"/g,'&quot;')}">${r.pregunta_enunciado || '—'}</td>
+            <td style="padding:10px 12px;color:#475569;">${ETIQUETA_TIPO[r.tipo] || r.tipo}</td>
+            <td style="padding:10px 12px;color:#475569;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(r.descripcion||'').replace(/"/g,'&quot;')}">${r.descripcion || '—'}</td>
+            <td style="padding:10px 12px;font-weight:600;color:#0f172a;">${r.usuario}</td>
+            <td style="padding:10px 12px;color:#64748b;white-space:nowrap;">${fecha}</td>
+            <td style="padding:10px 12px;">
+              <span style="padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;color:${est.color};background:${est.bg};">${est.texto}</span>
+            </td>
+            <td style="padding:10px 12px;">
+              <div style="display:flex;gap:6px;">
+                ${r.estado !== 'resuelto' ? `<button onclick="cambiarEstadoReporte(${r.id},'resuelto')" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:6px;padding:3px 8px;font-size:.75rem;cursor:pointer;">Resuelto</button>` : ''}
+                ${r.estado !== 'descartado' ? `<button onclick="cambiarEstadoReporte(${r.id},'descartado')" style="background:#f8fafc;border:1px solid #e2e8f0;color:#94a3b8;border-radius:6px;padding:3px 8px;font-size:.75rem;cursor:pointer;">Descartar</button>` : ''}
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+
+        // Paginación
+        const totalPags = Math.ceil(data.total / 30);
+        const pag = document.getElementById('reportesPaginacion');
+        pag.innerHTML = '';
+        for (let i = 1; i <= totalPags; i++) {
+          const btn = document.createElement('button');
+          btn.textContent = i;
+          btn.style.cssText = `padding:6px 12px;border-radius:6px;border:1.5px solid ${i===pagina?'var(--primary)':'#e2e8f0'};background:${i===pagina?'var(--primary)':'#fff'};color:${i===pagina?'#fff':'#475569'};cursor:pointer;font-size:.82rem;`;
+          btn.onclick = () => cargarReportes(i);
+          pag.appendChild(btn);
+        }
+      } catch (_) {
+        document.getElementById('msgReportes').textContent = 'Error de conexión.';
+      }
+    }
+
+    async function cambiarEstadoReporte(id, estado) {
+      try {
+        const res = await fetch(`/api/v1/admin/reportes/${id}?estado=${estado}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        });
+        if (res.ok) cargarReportes(_reportesPagina);
+      } catch (_) {}
+    }
+
+    function irAProbar(preguntaId) {
+      navTo('probar', document.querySelector('[data-section="probar"]'));
+      document.getElementById('probarId').value = preguntaId;
+      cargarProbar();
+    }
 
     cargarMaterias();
     cargarStats();

@@ -211,4 +211,15 @@ document.getElementById('siguienteBtn').addEventListener('click', () => {
   mostrarPregunta();
 });
 
+document.querySelector('.libre-back').addEventListener('click', () => {
+  playSfxP('/static/back.mp3');
+  fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {});
+  sessionStorage.removeItem('sesion_id');
+  sessionStorage.removeItem('materia_ids');
+  location.href = 'libre_intro.html';
+});
+
 init();

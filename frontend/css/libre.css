@@ -1166,6 +1166,7 @@
   transition: background .15s;
 }
 .ver-texto-btn:hover { background: #ffedd5; }
+.ver-texto-btn[hidden] { display: none !important; }
 
 .texto-modal-overlay {
   position: fixed;

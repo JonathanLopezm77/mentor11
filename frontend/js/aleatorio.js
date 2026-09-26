@@ -85,7 +85,7 @@ function mostrarPregunta() {
   }
 
   const p = preguntas[actual];
-  document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
+  document.getElementById('enunciado').textContent = p.enunciado;
 
   const imgPregunta = document.getElementById('preguntaImagen');
   if (imgPregunta) {
@@ -109,11 +109,12 @@ function mostrarPregunta() {
     grid.appendChild(btn);
   });
 
+  // Botón reportar: visible siempre, apunta a la pregunta actual
+  const repBtn = document.getElementById('reportarBtn');
+  if (repBtn) repBtn.onclick = () => window.abrirReporteModal(p.id);
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
-
-  if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 }
 
 async function responder(opcionId, preguntaId) {
@@ -125,7 +126,7 @@ async function responder(opcionId, preguntaId) {
     const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/responder`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId, checkpoint: actual }),
+      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId }),
     });
     const data = await res.json();
 

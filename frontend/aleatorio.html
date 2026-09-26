@@ -2,8 +2,6 @@
 <html lang="es">
 
 <head>
-  <script src="/static/js/auth_fetch.js"></script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mentor 11 — Aleatorio</title>
@@ -32,10 +30,17 @@
   </div>
   <main class="pregunta-main">
     <div class="pregunta-card">
+      <button id="reportarBtn" class="reportar-fab" aria-label="Reportar un problema con esta pregunta"
+        title="Reportar un problema con esta pregunta">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+          <line x1="4" y1="22" x2="4" y2="15" />
+        </svg>
+      </button>
       <p class="pregunta-enunciado" id="enunciado">Cargando...</p>
       <img id="preguntaImagen" src="" alt="Imagen de la pregunta"
         style="display:none;width:100%;border-radius:12px;margin-top:12px;max-height:300px;object-fit:contain;" />
-      <button id="verTextoBtn" class="ver-texto-btn" hidden>📄 Ver texto</button>
     </div>
     <div class="opciones-grid" id="opcionesGrid"></div>
     <div class="pregunta-explicacion" id="explicacion" hidden></div>
@@ -44,18 +49,8 @@
     <button class="libre-cta" id="siguienteBtn" hidden>Siguiente →</button>
     <button class="libre-cta aleat-terminar-btn" id="terminarBtn">Terminar</button>
   </div>
-  <div id="textoModalOverlay" class="texto-modal-overlay" hidden>
-    <div class="texto-modal">
-      <div class="texto-modal__header">
-        <h3 class="texto-modal__titulo" id="textoModalTitulo"></h3>
-        <button class="texto-modal__cerrar" id="textoModalCerrar">✕</button>
-      </div>
-      <div class="texto-modal__body" id="textoModalContenido"></div>
-    </div>
-  </div>
-
-  <script src="/static/js/texto_modal.js"></script>
-  <script src="/static/js/aleatorio.js"></script>
+  <script src="/static/js/reporte_modal.js?v=1"></script>
+  <script src="/static/js/aleatorio.js?v=2"></script>
 </body>
 
 </html>

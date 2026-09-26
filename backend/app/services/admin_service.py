@@ -451,3 +451,236 @@ async def cargar_preguntas_csv(
         "total_fallidas": total - exitosas,
         "errores": errores,
     }
+
+
+# ─── Exportar preguntas a Excel ───────────────────────────────────────────────
+
+
+async def exportar_preguntas_excel(
+    db: AsyncSession,
+    materia_id: int | None = None,
+) -> bytes:
+    """
+    Exporta todas las preguntas a un archivo Excel (.xlsx) con columnas:
+    id, materia_codigo, enunciado, nivel, opcion_a, opcion_b, opcion_c, opcion_d,
+    correcta, explicacion, pista, imagen_url, imagen_a, imagen_b, imagen_c, imagen_d
+    Listo para corrección ortográfica y posterior reimportación.
+    """
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    query = (
+        select(Pregunta)
+        .options(
+            selectinload(Pregunta.respuestas),
+            selectinload(Pregunta.pistas),
+            selectinload(Pregunta.materia),
+        )
+        .where(Pregunta.esta_activa == True)
+        .order_by(Pregunta.id.asc())
+    )
+    if materia_id:
+        query = query.where(Pregunta.materia_id == materia_id)
+
+    resultado = await db.execute(query)
+    preguntas = resultado.scalars().all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Preguntas"
+
+    headers = [
+        "id", "materia_codigo", "enunciado", "nivel",
+        "opcion_a", "imagen_a", "opcion_b", "imagen_b",
+        "opcion_c", "imagen_c", "opcion_d", "imagen_d",
+        "correcta", "explicacion", "pista", "imagen_url",
+    ]
+
+    # Estilo encabezado
+    header_fill = PatternFill("solid", fgColor="1F3864")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    ws.row_dimensions[1].height = 22
+
+    # Anchos de columna
+    anchos = {
+        "id": 6, "materia_codigo": 14, "enunciado": 60, "nivel": 10,
+        "opcion_a": 35, "imagen_a": 30, "opcion_b": 35, "imagen_b": 30,
+        "opcion_c": 35, "imagen_c": 30, "opcion_d": 35, "imagen_d": 30,
+        "correcta": 10, "explicacion": 50, "pista": 35, "imagen_url": 30,
+    }
+    for col, h in enumerate(headers, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = anchos.get(h, 20)
+
+    letras = ["A", "B", "C", "D"]
+
+    for fila_idx, p in enumerate(preguntas, start=2):
+        # Ordenar opciones para que A sea correcta al principio no importa
+        opciones = list(p.respuestas)
+
+        def get_op(letra_idx):
+            if letra_idx < len(opciones):
+                return opciones[letra_idx]
+            return None
+
+        correcta_letra = ""
+        for i, op in enumerate(opciones):
+            if op.es_correcta and i < len(letras):
+                correcta_letra = letras[i]
+                break
+
+        pista_txt = p.pistas[0].texto_pista if p.pistas else ""
+
+        fila = [
+            p.id,
+            p.materia.codigo_icfes if p.materia else "",
+            p.enunciado,
+            p.nivel_dificultad.value if hasattr(p.nivel_dificultad, 'value') else str(p.nivel_dificultad),
+            get_op(0).texto if get_op(0) else "",
+            get_op(0).imagen_url if get_op(0) else "",
+            get_op(1).texto if get_op(1) else "",
+            get_op(1).imagen_url if get_op(1) else "",
+            get_op(2).texto if get_op(2) else "",
+            get_op(2).imagen_url if get_op(2) else "",
+            get_op(3).texto if get_op(3) else "",
+            get_op(3).imagen_url if get_op(3) else "",
+            correcta_letra,
+            p.explicacion_texto or "",
+            pista_txt,
+            p.imagen_url or "",
+        ]
+
+        fill_alt = PatternFill("solid", fgColor="EEF2FF") if fila_idx % 2 == 0 else None
+
+        for col_idx, valor in enumerate(fila, 1):
+            cell = ws.cell(row=fila_idx, column=col_idx, value=valor)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            if fill_alt:
+                cell.fill = fill_alt
+
+        ws.row_dimensions[fila_idx].height = 40
+
+    # Freeze header row
+    ws.freeze_panes = "A2"
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.read()
+
+
+# ─── Actualizar preguntas desde Excel corregido ───────────────────────────────
+
+
+async def actualizar_desde_excel(
+    db: AsyncSession,
+    contenido: bytes,
+    nombre_archivo: str,
+) -> dict:
+    """
+    Recibe el Excel exportado (con correcciones) y actualiza las preguntas
+    existentes por ID. Solo actualiza los campos de texto (no toca imágenes
+    ni configuración). No crea preguntas nuevas.
+    Columnas requeridas: id, enunciado, opcion_a..d, correcta, explicacion, pista
+    """
+    import openpyxl
+
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(contenido))
+        ws = wb.active
+        filas = []
+        headers = None
+        for i, row in enumerate(ws.iter_rows(values_only=True)):
+            if i == 0:
+                headers = [str(c).strip().lower() if c else "" for c in row]
+            else:
+                if any(c is not None for c in row):
+                    filas.append(
+                        dict(
+                            zip(
+                                headers,
+                                [str(c).strip() if c is not None else "" for c in row],
+                            )
+                        )
+                    )
+    except Exception as e:
+        raise AdminError(f"No se pudo leer el archivo Excel: {e}")
+
+    if not filas:
+        raise AdminError("El archivo no contiene filas de datos.")
+
+    if "id" not in (headers or []):
+        raise AdminError("El archivo no tiene columna 'id'. Usa el archivo exportado por Mentor 11.")
+
+    actualizadas = 0
+    omitidas = 0
+    errores = []
+
+    for i, fila in enumerate(filas, start=2):
+        fila_num = f"Fila {i}"
+        try:
+            pregunta_id_str = fila.get("id", "").strip()
+            if not pregunta_id_str or not pregunta_id_str.isdigit():
+                errores.append(f"{fila_num}: ID inválido '{pregunta_id_str}'")
+                continue
+
+            pregunta_id = int(pregunta_id_str)
+            p = await _cargar_pregunta_completa(db, pregunta_id)
+            if not p:
+                errores.append(f"{fila_num}: ID {pregunta_id} no encontrado en la BD.")
+                continue
+
+            enunciado = fila.get("enunciado", "").strip()
+            explicacion = fila.get("explicacion", "").strip() or None
+            pista_txt = fila.get("pista", "").strip() or None
+            correcta = fila.get("correcta", "").strip().upper()
+
+            opciones_texto = [
+                fila.get("opcion_a", "").strip(),
+                fila.get("opcion_b", "").strip(),
+                fila.get("opcion_c", "").strip(),
+                fila.get("opcion_d", "").strip(),
+            ]
+            letras = ["A", "B", "C", "D"]
+
+            # Actualizar campos de texto
+            if enunciado:
+                p.enunciado = enunciado
+            if explicacion is not None:
+                p.explicacion_texto = explicacion
+
+            # Actualizar opciones (solo texto, conservar imagen_url)
+            opciones_actuales = list(p.respuestas)
+            for idx, op in enumerate(opciones_actuales):
+                if idx < len(opciones_texto) and opciones_texto[idx]:
+                    op.texto = opciones_texto[idx]
+                if correcta and idx < len(letras):
+                    op.es_correcta = (letras[idx] == correcta)
+
+            # Actualizar pista
+            if pista_txt is not None:
+                if p.pistas:
+                    p.pistas[0].texto_pista = pista_txt
+                elif pista_txt:
+                    db.add(Pista(pregunta_id=p.id, texto_pista=pista_txt, orden=1))
+
+            actualizadas += 1
+
+        except Exception as e:
+            errores.append(f"{fila_num}: error — {str(e)}")
+            omitidas += 1
+
+    await db.commit()
+
+    return {
+        "total_procesadas": len(filas),
+        "total_actualizadas": actualizadas,
+        "total_omitidas": omitidas,
+        "errores": errores,
+    }

@@ -1148,75 +1148,146 @@
   background: var(--white);
 }
 
-/* ── Botón y modal: texto de contexto ─────────────────────── */
-.ver-texto-btn {
-  margin-top: 10px;
-  padding: 6px 16px;
-  background: #fff7ed;
-  border: 1.5px solid #fdba74;
-  border-radius: 99px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #ea580c;
-  cursor: pointer;
-  font-family: var(--font);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: background .15s;
+/* ============================================================
+   Botón flotante "Reportar pregunta"
+   ============================================================ */
+
+.pregunta-card {
+  position: relative;
 }
-.ver-texto-btn:hover { background: #ffedd5; }
-.ver-texto-btn[hidden] { display: none !important; }
+
+.reportar-fab {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--white);
+  background: var(--gray-100);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+  z-index: 5;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.reportar-fab:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+  transform: scale(1.08);
+}
+
+.reportar-fab:active {
+  transform: scale(0.94);
+}
+
+.reportar-fab svg {
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Modal flotante compartido (texto de lectura / reportar pregunta)
+   ============================================================ */
 
 .texto-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 300;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 200;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  animation: modalFadeIn 0.2s ease;
 }
-.texto-modal-overlay[hidden] { display: none !important; }
+
+.texto-modal-overlay[hidden] {
+  display: none;
+}
 
 .texto-modal {
-  background: #fff;
-  border-radius: 24px 24px 0 0;
+  background: var(--white);
   width: 100%;
-  max-width: 480px;
-  max-height: 75vh;
+  max-width: 420px;
+  border-radius: 22px 22px 0 0;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
 }
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .texto-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--gray-100);
   flex-shrink: 0;
 }
+
 .texto-modal__titulo {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--gray-900);
   margin: 0;
 }
+
 .texto-modal__cerrar {
-  background: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   border: none;
-  font-size: 1.2rem;
-  color: #9ca3af;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 4px 8px;
+  font-size: 0.95rem;
   line-height: 1;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
 }
+
+.texto-modal__cerrar:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
 .texto-modal__body {
-  padding: 16px 20px 32px;
+  padding: 20px;
   overflow-y: auto;
-  font-size: 0.88rem;
-  line-height: 1.7;
-  color: #374151;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  line-height: 1.65;
   white-space: pre-wrap;
+}
+
+/* Estilos específicos del formulario de reporte dentro del modal */
+.texto-modal__body select,
+.texto-modal__body textarea {
+  font-family: var(--font);
+}
+
+.texto-modal__body select:focus,
+.texto-modal__body textarea:focus {
+  outline: none;
+  border-color: var(--orange-500) !important;
 }

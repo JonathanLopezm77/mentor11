@@ -4,9 +4,11 @@ Endpoints del panel de administración.
 Solo accesibles con rol admin_tech.
 """
 
+import io
 import logging
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin, get_db
@@ -28,6 +30,8 @@ from app.services.admin_service import (
     editar_pregunta,
     eliminar_pregunta,
     cargar_preguntas_csv,
+    exportar_preguntas_excel,
+    actualizar_desde_excel,
     AdminError,
 )
 from app.services.imagen_service import subir_imagen
@@ -157,8 +161,6 @@ async def listar(
 
 @router.get("/preguntas/plantilla")
 async def descargar_plantilla(admin: Usuario = Depends(get_admin)):
-    from fastapi.responses import Response
-
     plantilla = (
         "materia_codigo;enunciado;nivel;opcion_a;imagen_a;opcion_b;imagen_b;opcion_c;imagen_c;opcion_d;imagen_d;correcta;explicacion;pista;imagen_url\n"
         "MAT;¿Cuánto es 2 + 2?;facil;3;;4;;5;;6;;B;La suma de 2 + 2 es 4;Piensa en contar con los dedos;\n"
@@ -176,6 +178,68 @@ async def descargar_plantilla(admin: Usuario = Depends(get_admin)):
     )
 
 
+# ─── Exportar preguntas para corrección ortográfica ──────────────────────────
+
+
+@router.get("/preguntas/exportar")
+async def exportar_preguntas(
+    materia_id: int | None = Query(None, description="Filtrar por materia (opcional)"),
+    db: AsyncSession = Depends(get_db),
+    admin: Usuario = Depends(get_admin),
+):
+    """
+    Exporta todas las preguntas activas a un Excel (.xlsx) listo para
+    corrección ortográfica con IA. Incluye columna 'id' para reimportación.
+    """
+    try:
+        contenido = await exportar_preguntas_excel(db, materia_id=materia_id)
+    except Exception:
+        logger.exception("Error exportando preguntas (admin_id=%s)", admin.id)
+        raise HTTPException(status_code=500, detail="Error al generar el archivo de exportación.")
+
+    return StreamingResponse(
+        io.BytesIO(contenido),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=preguntas_mentor11.xlsx"},
+    )
+
+
+# ─── Importar correcciones ortográficas ──────────────────────────────────────
+
+
+@router.post("/preguntas/actualizar-masivo")
+async def actualizar_preguntas_masivo(
+    archivo: UploadFile = File(..., description="Excel exportado con correcciones aplicadas"),
+    db: AsyncSession = Depends(get_db),
+    admin: Usuario = Depends(get_admin),
+):
+    """
+    Recibe el Excel exportado (ya corregido por IA u otro medio) y actualiza
+    las preguntas existentes por ID. No crea preguntas nuevas ni elimina
+    las que no estén en el archivo.
+    """
+    if not archivo.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(
+            status_code=400, detail="Solo se aceptan archivos Excel (.xlsx, .xls)"
+        )
+
+    contenido = await archivo.read()
+    if len(contenido) == 0:
+        raise HTTPException(status_code=400, detail="El archivo está vacío")
+    if len(contenido) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="El archivo no puede superar 10 MB")
+
+    try:
+        resultado = await actualizar_desde_excel(db, contenido, archivo.filename)
+    except AdminError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.mensaje)
+    except Exception:
+        logger.exception("Error actualizando preguntas (admin_id=%s)", admin.id)
+        raise HTTPException(status_code=500, detail="Error procesando el archivo.")
+
+    return resultado
+
+
 # ─── Subir imagen ─────────────────────────────────────────────────────────────
 
 MAX_IMAGEN_BYTES = 8 * 1024 * 1024  # 8 MB
@@ -189,9 +253,6 @@ _FIRMAS_IMAGEN = {
 
 
 def _tipo_imagen_real(contenido: bytes) -> str | None:
-    """Detecta el tipo real de imagen por los primeros bytes del archivo
-    (magic bytes), no por la extensión del nombre — un .png renombrado que
-    en realidad no es una imagen no pasa este chequeo (ver SEC-04)."""
     for firma, tipo in _FIRMAS_IMAGEN.items():
         if contenido.startswith(firma):
             return tipo
@@ -205,10 +266,6 @@ async def subir_imagen_pregunta(
     imagen: UploadFile = File(..., description="Imagen PNG, JPG o WebP"),
     admin: Usuario = Depends(get_admin),
 ):
-    """
-    Sube una imagen a Cloudinary y retorna la URL pública.
-    Usar esta URL en el campo imagen_url al crear una pregunta.
-    """
     extensiones_validas = (".png", ".jpg", ".jpeg", ".webp", ".gif")
     if not imagen.filename.lower().endswith(extensiones_validas):
         raise HTTPException(

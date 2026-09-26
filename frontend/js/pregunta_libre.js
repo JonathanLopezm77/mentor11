@@ -120,7 +120,10 @@ function mostrarPregunta() {
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
-  document.getElementById('reportarBtn').hidden = true;
+
+  // Botón reportar: visible siempre, apunta a la pregunta actual
+  const repBtn = document.getElementById('reportarBtn');
+  if (repBtn) repBtn.onclick = () => window.abrirReporteModal(p.id);
 
   if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 }
@@ -178,10 +181,6 @@ async function responder(opcionId, preguntaId) {
     sigBtn.textContent = actual + 1 < preguntas.length ? 'Siguiente →' : 'Ver resultado';
     sigBtn.hidden = false;
 
-    const repBtn = document.getElementById('reportarBtn');
-    repBtn.hidden = false;
-    repBtn.onclick = () => window.abrirReporteModal(p.id);
-
   } catch (err) {
     console.error('[Pregunta] Error al responder:', err);
     document.querySelectorAll('.opcion-btn').forEach(b => (b.disabled = false));
@@ -221,7 +220,7 @@ document.querySelector('.libre-back').addEventListener('click', () => {
   fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {});
+  }).catch(() => { });
   sessionStorage.removeItem('sesion_id');
   sessionStorage.removeItem('materia_ids');
   location.href = 'libre_intro.html';

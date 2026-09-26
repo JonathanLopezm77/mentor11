@@ -13,7 +13,7 @@
         </div>
         <div class="texto-modal__body" style="display:flex;flex-direction:column;gap:12px">
           <label style="font-size:.85rem;font-weight:600;color:#374151">Tipo de error</label>
-          <select id="reporteTipo" style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:.9rem;background:#fff">
+          <select id="reporteTipo" style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:.9rem;background:#fff;width:100%;box-sizing:border-box;">
             <option value="respuesta_incorrecta">Respuesta incorrecta</option>
             <option value="error_contenido">Error en el contenido</option>
             <option value="imagen_rota">Imagen rota o faltante</option>
@@ -23,9 +23,9 @@
           <label style="font-size:.85rem;font-weight:600;color:#374151">Descripción <span style="font-weight:400;color:#6b7280">(opcional)</span></label>
           <textarea id="reporteDescripcion" rows="3"
             placeholder="Describe el problema con detalle..."
-            style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:.9rem;resize:vertical;font-family:inherit"></textarea>
+            style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:.9rem;resize:vertical;font-family:inherit;width:100%;box-sizing:border-box;"></textarea>
           <button id="reporteEnviar"
-            style="padding:12px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer">
+            style="width:100%;box-sizing:border-box;display:block;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.95rem;line-height:1.3;font-family:inherit;text-align:center;letter-spacing:normal !important;font-style:normal !important;transform:none !important;skew:none !important;-webkit-transform:none !important;cursor:pointer;">
             Enviar reporte
           </button>
           <p id="reporteMensaje" style="text-align:center;font-size:.85rem;color:#059669;display:none"></p>
@@ -80,5 +80,8 @@
     document.getElementById('reporteDescripcion').value = '';
     mensaje.style.display = 'none';
     overlay.hidden = false;
+    // Forzar un repintado inmediato (evita un primer render incorrecto
+    // en algunos webviews embebidos, ej. VS Code Simple Browser)
+    void overlay.offsetHeight;
   };
 })();

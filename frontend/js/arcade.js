@@ -4,8 +4,7 @@
 
 const API_BASE = '/api/v1';
 const token = localStorage.getItem('access_token');
-console.log('TOKEN:', token);
-console.log('MATERIAS fetch status:');
+
 if (!token) location.href = '/';
 
 const SFX = {};
@@ -39,31 +38,6 @@ bgMusic.play().catch(() => {
 let sesionId = null, materiaIds = [], preguntas = [], actual = 0;
 let vidas = 3, puntaje = 0, correctas = 0;
 let vistasIds = new Set(), cargandoMas = false, juegoTerminado = false;
-let preguntasRespondidas = 0;
-
-function avanzarPregunta() {
-  actual++;
-  preguntasRespondidas++;
-  if (preguntasRespondidas % 30 === 0 && typeof iniciarMinijuegoSecuencia === 'function') {
-    iniciarMinijuegoSecuencia(
-      () => mostrarPregunta(),
-      (ronda) => {
-        puntaje += 2;
-        document.getElementById('arcadeScore').textContent = puntaje;
-        const checkpoint = preguntasRespondidas * 100 + ronda;
-        fetch(`${API_BASE}/juego/sesiones/${sesionId}/poderes/bonus_minijuego`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ checkpoint }),
-        }).catch(() => { });
-      },
-      () => { bgMusic.muted = true; },
-      () => { bgMusic.muted = sessionStorage.getItem('arcade_muted') === '1'; }
-    );
-  } else {
-    mostrarPregunta();
-  }
-}
 
 async function init() {
   try {
@@ -123,7 +97,7 @@ function mostrarPregunta() {
 
   const p = preguntas[actual];
   document.getElementById('progresoBarra').style.width = `${((correctas % 10) / 10) * 100}%`;
-  document.getElementById('enunciado').innerHTML = formatearEnunciado(p.enunciado);
+  document.getElementById('enunciado').textContent = p.enunciado;
 
   const imgPregunta = document.getElementById('preguntaImagen');
   if (imgPregunta) {
@@ -147,11 +121,12 @@ function mostrarPregunta() {
     grid.appendChild(btn);
   });
 
+  // Botón reportar: visible siempre, apunta a la pregunta actual
+  const repBtn = document.getElementById('reportarBtn');
+  if (repBtn) repBtn.onclick = () => window.abrirReporteModal(p.id);
   document.getElementById('siguienteBtn').hidden = true;
   document.getElementById('explicacion').hidden = true;
   document.getElementById('explicacion').textContent = '';
-
-  if (typeof actualizarTextoModal === 'function') actualizarTextoModal(p.texto_titulo, p.texto_contenido);
 }
 
 async function responder(opcionId, preguntaId) {
@@ -161,7 +136,7 @@ async function responder(opcionId, preguntaId) {
     const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/responder`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId, checkpoint: actual }),
+      body: JSON.stringify({ pregunta_id: preguntaId, opcion_id: opcionId }),
     });
     const data = await res.json();
 
@@ -195,7 +170,7 @@ async function responder(opcionId, preguntaId) {
       puntaje += 10; correctas++;
       document.getElementById('arcadeScore').textContent = puntaje;
       playSfx('/static/correcta.mp3');
-      setTimeout(avanzarPregunta, 900);
+      setTimeout(() => { actual++; mostrarPregunta(); }, 900);
     } else {
       playSfx('/static/error.mp3');
       perderVida();
@@ -262,25 +237,14 @@ async function mostrarGameOver() {
   bgMusic.pause();
   playSfx('/static/game_over.mp3');
   const puntosAntes = JSON.parse(localStorage.getItem('usuario') || '{}').puntos_totales || 0;
-  let resultado = { puntaje, correctas, puntosAntes, puntos_preguntas: puntaje, puntos_bonus: 0 };
   try {
-    const res = await fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    if (res.ok) {
-      const data = await res.json();
-      resultado = {
-        puntaje: data.puntaje_obtenido,
-        correctas: data.total_correctas,
-        puntosAntes,
-        puntos_preguntas: data.puntos_preguntas,
-        puntos_bonus: data.puntos_bonus,
-      };
-    }
+    await fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
   } catch (_) { }
-  sessionStorage.setItem('resultado_arcade', JSON.stringify(resultado));
+  sessionStorage.setItem('resultado_arcade', JSON.stringify({ puntaje, correctas, puntosAntes }));
   location.href = 'resultado_arcade.html';
 }
 
-document.getElementById('siguienteBtn').addEventListener('click', () => { playSfx('/static/bop.mp3'); avanzarPregunta(); });
+document.getElementById('siguienteBtn').addEventListener('click', () => { playSfx('/static/bop.mp3'); actual++; mostrarPregunta(); });
 document.getElementById('arcadeBackBtn').addEventListener('click', () => {
   playSfx('/static/back.mp3');
   const finalize = sesionId ? fetch(`${API_BASE}/juego/sesiones/${sesionId}/finalizar`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => { }) : Promise.resolve();

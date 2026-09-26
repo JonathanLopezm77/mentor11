@@ -24,10 +24,7 @@
           <textarea id="reporteDescripcion" rows="3"
             placeholder="Describe el problema con detalle..."
             style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:.9rem;resize:vertical;font-family:inherit;width:100%;box-sizing:border-box;"></textarea>
-          <button id="reporteEnviar"
-            style="width:100%;box-sizing:border-box;display:block;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.95rem;line-height:1.3;font-family:inherit;text-align:center;letter-spacing:normal !important;font-style:normal !important;transform:none !important;skew:none !important;-webkit-transform:none !important;cursor:pointer;">
-            Enviar reporte
-          </button>
+          <button id="reporteEnviar" style="width:100%;box-sizing:border-box;display:block;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.95rem;line-height:1.3;font-family:inherit;text-align:center;letter-spacing:normal !important;font-style:normal !important;transform:none !important;-webkit-transform:none !important;cursor:pointer;">Enviar reporte</button>
           <p id="reporteMensaje" style="text-align:center;font-size:.85rem;color:#059669;display:none"></p>
         </div>
       </div>
